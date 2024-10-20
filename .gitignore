@@ -414,3 +414,6 @@ vendor/VulkanSDK/
 
 # Exclude compiled shaders
 *.spv
+
+# Ignore generated Makefile
+**/Makefile
