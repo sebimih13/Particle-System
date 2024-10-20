@@ -397,5 +397,20 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+# Solution
+*.sln
+*.vcxproj
+*.vcxproj.*
+
+# Build folder
+bin/
+bin-int/
+[Bb][Uu][Ii][Ll][Dd]/
+[Bb][Ii][Nn]/
+[Bb][Ii][Nn]-[Ii][Nn][Tt]/
+
 # Vulkan SDK
 vendor/VulkanSDK/
+
+# Exclude compiled shaders
+*.spv

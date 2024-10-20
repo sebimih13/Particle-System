@@ -97,6 +97,8 @@ end
 -------------- Workspace and projects --------------
 ----------------------------------------------------
 
+include "dependencies.lua"
+
 workspace 'ParticleSystem'
     architecture "x64"
     startproject "ParticleSystem"
@@ -110,12 +112,9 @@ workspace 'ParticleSystem'
     -- Ouput directories for bin and intermediate files
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-    -- TODO: move to 'dependencies.lua'
-    -- Include directories relative to root folder (solution directory)
-    IncludeDir = {}
-    IncludeDir["VulkanSDK"] = "vendor/VulkanSDK/include"
-    IncludeDir["glfw"] = "vendor/glfw/include"
-    IncludeDir["glm"] = "vendor/glm"
+    group "Dependencies"
+        include "vendor/glfw.lua"
+    group ""
 
 
 
@@ -125,8 +124,8 @@ workspace 'ParticleSystem'
         language "C++"
         cppdialect "C++17"
 
-        targetdir("bin/" .. outputdir .. "/%{prj.name}")
-        objdir("bin-int/" .. outputdir .. "/%{prj.name}")
+        targetdir("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+        objdir("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
         files
         {
@@ -146,13 +145,13 @@ workspace 'ParticleSystem'
 
         libdirs
         {
-            "vendor/VulkanSDK/lib"
+            "%{LibraryDir.VulkanSDK}"
         }
 
         links
         {
             "glfw",
-            "vulkan-1.lib",
+            "%{Library.Vulkan}"
         }
 
         -- TODO: only the files existing at the time of executing this script will be considered
