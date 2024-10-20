@@ -31,7 +31,6 @@ if _ACTION then
         if os.target() == "windows" then
             print("Download installer for Windows")
             print()
-
             local result_str, response_code = http.download(WINDOWS_VULKAN_SDK_INSTALL_URL, WINDOWS_VULKAN_SDK_OUTPUT_FILE, { progress = progress})
             print(result_str)
             print()
@@ -41,15 +40,56 @@ if _ACTION then
             print(command)
             os.execute(command)
 
+            -- set the new vulkanSDKPath
+            vulkanSDKPath = "C:\\VulkanSDK"
+
             print("Remove Vulkan SDK Installer")
-            os.remove(WINDOWS_VULKAN_SDK_OUTPUT_FILE)
+            os.remove(WINDOWS_VULKAN_SDK_OUTPUT_FILE)            
+
         elseif os.target() == "linux" then
             print("Download installer for Linux")
             print()
             local result_str, response_code = http.download(LINUX_VULKAN_SDK_INSTALL_URL, LINUX_VULKAN_SDK_OUTPUT_FILE, { progress = progress})
             print(result_str)
             print()
+
+            -- TODO: implement
+            -- print("Run Vulkan SDK Installer")
+            -- local command = LINUX_VULKAN_SDK_OUTPUT_FILE .. " --root C:\\VulkanSDK --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.vma"
+            -- print(command)
+            -- os.execute(command)
+
+            -- TODO: set the new vulkanSDKPath
+            vulkanSDKPath = "TODO"
+
+            print("Remove Vulkan SDK Installer")
+            os.remove(LINUX_VULKAN_SDK_OUTPUT_FILE)
         end
+    end
+
+    -- create VulkanSDK vendor folder
+    if os.target() == "windows" then
+        print("Copy 'include' folder")
+        local copyIncludeFolderCommand = string.format("xcopy \"%s\\Include\" \"%s\\vendor\\VulkanSDK\\include\" /E /I /Y", vulkanSDKPath, os.getcwd())
+        os.execute(copyIncludeFolderCommand)
+        
+        print("Copy 'lib' folder")
+        local copyLibFolderCommand = string.format("xcopy \"%s\\Lib\" \"%s\\vendor\\VulkanSDK\\lib\" /E /I /Y", vulkanSDKPath, os.getcwd())
+        os.execute(copyLibFolderCommand)
+
+        print("Copy 'glslc.exe'")
+        local copyGLSLCCommand = string.format("xcopy \"%s\\Bin\\glslc.exe\" \"%s\\vendor\\VulkanSDK\" /E /I /Y", vulkanSDKPath, os.getcwd())
+        os.execute(copyGLSLCCommand)
+
+    elseif os.target() == "linux" then
+        print("Copy 'include' folder")
+        -- TODO
+
+        print("Copy 'lib' folder")
+        -- TODO
+
+        print("Copy 'glslc.exe'")
+        -- TODO
     end
 end
 
@@ -124,10 +164,11 @@ workspace 'ParticleSystem'
             buildmessage 'Compiling %{file.name}'
 
             -- One or more commands to run (required)
-            buildcommands 
+            buildcommands
             {
-                '"shaders/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"', -- TODO : compiled shaders for bin directory
-                '"shaders/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+                -- TODO: check
+                '"../vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"', -- TODO : compiled shaders for bin directory
+                '"../vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
             }
 
             -- One or more outputs resulting from the build (required)
