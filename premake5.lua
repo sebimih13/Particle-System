@@ -21,8 +21,9 @@ end
 
 if _ACTION then
     local vulkanSDKPath = os.getenv(VULKAN_SDK_SYSTEM_VARIABLE)
-    
-    if vulkan_sdk then
+    print(vulkanSDKPath)
+
+    if vulkanSDKPath then
         print("Vulkan SDK is already installed")
     else
         print("Vulkan SDK is not installed")
