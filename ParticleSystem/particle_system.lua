@@ -44,15 +44,14 @@ project "ParticleSystem"
         -- One or more commands to run (required)
         buildcommands
         {
-            -- TODO: check
-            '"../vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"', -- TODO : compiled shaders for bin directory
-            '"../vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
+            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
         }
 
         -- One or more outputs resulting from the build (required)
         buildoutputs
         { 
-            '%{cfg.targetdir}/shaders/%{file.name}.spv',    -- TODO : compiled shaders for bin directory
+            '%{cfg.targetdir}/shaders/%{file.name}.spv',
             '%{file.directory}/%{file.name}.spv'
         }
 
