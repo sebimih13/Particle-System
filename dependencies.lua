@@ -3,12 +3,12 @@
 ----------------------------------------------------
 
 IncludeDir = {}
-IncludeDir["VulkanSDK"] = "vendor/VulkanSDK/include"
-IncludeDir["glfw"] = "vendor/glfw/include"
-IncludeDir["glm"] = "vendor/glm"
+IncludeDir["VulkanSDK"] = "%{wks.location}/vendor/VulkanSDK/include"
+IncludeDir["glfw"] = "%{wks.location}/vendor/glfw/include"
+IncludeDir["glm"] = "%{wks.location}/vendor/glm"
 
 LibraryDir = {}
-LibraryDir["VulkanSDK"] = "vendor/VulkanSDK/lib"
+LibraryDir["VulkanSDK"] = "%{wks.location}/vendor/VulkanSDK/lib"
 
 Library = {}
 Library["Vulkan"] = "vulkan-1.lib"
