@@ -7,9 +7,6 @@ VULKAN_SDK_SYSTEM_VARIABLE = "VULKAN_SDK"
 WINDOWS_VULKAN_SDK_INSTALL_URL = "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan_sdk.exe"
 WINDOWS_VULKAN_SDK_OUTPUT_FILE = "VulkanSDK-Installer.exe"
 
-LINUX_VULKAN_SDK_INSTALL_URL = "https://sdk.lunarg.com/sdk/download/latest/linux/vulkan_sdk.tar.xz"
-LINUX_VULKAN_SDK_OUTPUT_FILE = "VulkanSDK-Installer.tar.xz"
-
 function progress(total, current)
     local ratio = current / total;
     ratio = math.min(math.max(ratio, 0), 1);
@@ -44,26 +41,7 @@ if _ACTION then
             vulkanSDKPath = "C:\\VulkanSDK"
 
             print("Remove Vulkan SDK Installer")
-            os.remove(WINDOWS_VULKAN_SDK_OUTPUT_FILE)            
-
-        elseif os.target() == "linux" then
-            -- print("Download installer for Linux")
-            -- print()
-            -- local result_str, response_code = http.download(LINUX_VULKAN_SDK_INSTALL_URL, LINUX_VULKAN_SDK_OUTPUT_FILE, { progress = progress})
-            -- print(result_str)
-            -- print()
-
-            -- TODO: implement
-            -- print("Run Vulkan SDK Installer")
-            -- local command = LINUX_VULKAN_SDK_OUTPUT_FILE .. " --root C:\\VulkanSDK --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.vma"
-            -- print(command)
-            -- os.execute(command)
-
-            -- TODO: set the new vulkanSDKPath
-            -- vulkanSDKPath = "TODO"
-
-            -- print("Remove Vulkan SDK Installer")
-            -- os.remove(LINUX_VULKAN_SDK_OUTPUT_FILE)
+            os.remove(WINDOWS_VULKAN_SDK_OUTPUT_FILE)
         end
     end
 
@@ -80,22 +58,12 @@ if _ACTION then
         print("Copy 'glslc.exe'")
         local copyGLSLCCommand = string.format("xcopy \"%s\\Bin\\glslc.exe\" \"%s\\vendor\\VulkanSDK\" /E /I /Y", vulkanSDKPath, os.getcwd())
         os.execute(copyGLSLCCommand)
-
-    elseif os.target() == "linux" then
-        -- print("Copy 'include' folder")
-        -- TODO
-
-        --print("Copy 'lib' folder")
-        -- TODO
-
-        -- print("Copy 'glslc.exe'")
-        -- TODO
     end
 end
 
-----------------------------------------------------
--------------- Workspace and projects --------------
-----------------------------------------------------
+-------------------------------------------------------
+---------------------- Workspace ----------------------
+-------------------------------------------------------
 
 include "dependencies.lua"
 
