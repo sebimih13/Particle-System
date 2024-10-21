@@ -10,5 +10,14 @@ IncludeDir["glm"] = "%{wks.location}/vendor/glm"
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{wks.location}/vendor/VulkanSDK/lib"
 
-Library = {}
-Library["Vulkan"] = "vulkan-1.lib"
+-- Library = {}
+-- Library["Vulkan"] = "vulkan-1.lib"
+
+Library = {
+    windows = {
+        Vulkan = "vulkan-1.lib"
+    },
+    linux = {
+        Vulkan = "vulkan"
+    }
+}

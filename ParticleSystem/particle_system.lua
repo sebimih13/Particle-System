@@ -30,7 +30,7 @@ project "ParticleSystem"
     links
     {
         "glfw",
-        "%{Library.Vulkan}"
+        Library[os.target()]["Vulkan"]
     }
 
     -- TODO: only the files existing at the time of executing this script will be considered
@@ -42,11 +42,19 @@ project "ParticleSystem"
         buildmessage 'Compiling %{file.name}'
 
         -- One or more commands to run (required)
-        buildcommands
-        {
-            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
-            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
-        }
+        filter "system:windows"
+            buildcommands
+            {
+                '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
+                '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+            }
+
+        filter "system:linux"
+            buildcommands
+            {
+                '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
+                '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+            }
 
         -- One or more outputs resulting from the build (required)
         buildoutputs
