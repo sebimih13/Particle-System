@@ -47,11 +47,11 @@ if _ACTION then
             os.remove(WINDOWS_VULKAN_SDK_OUTPUT_FILE)            
 
         elseif os.target() == "linux" then
-            print("Download installer for Linux")
-            print()
-            local result_str, response_code = http.download(LINUX_VULKAN_SDK_INSTALL_URL, LINUX_VULKAN_SDK_OUTPUT_FILE, { progress = progress})
-            print(result_str)
-            print()
+            -- print("Download installer for Linux")
+            -- print()
+            -- local result_str, response_code = http.download(LINUX_VULKAN_SDK_INSTALL_URL, LINUX_VULKAN_SDK_OUTPUT_FILE, { progress = progress})
+            -- print(result_str)
+            -- print()
 
             -- TODO: implement
             -- print("Run Vulkan SDK Installer")
@@ -60,10 +60,10 @@ if _ACTION then
             -- os.execute(command)
 
             -- TODO: set the new vulkanSDKPath
-            vulkanSDKPath = "TODO"
+            -- vulkanSDKPath = "TODO"
 
-            print("Remove Vulkan SDK Installer")
-            os.remove(LINUX_VULKAN_SDK_OUTPUT_FILE)
+            -- print("Remove Vulkan SDK Installer")
+            -- os.remove(LINUX_VULKAN_SDK_OUTPUT_FILE)
         end
     end
 
@@ -82,13 +82,13 @@ if _ACTION then
         os.execute(copyGLSLCCommand)
 
     elseif os.target() == "linux" then
-        print("Copy 'include' folder")
+        -- print("Copy 'include' folder")
         -- TODO
 
-        print("Copy 'lib' folder")
+        --print("Copy 'lib' folder")
         -- TODO
 
-        print("Copy 'glslc.exe'")
+        -- print("Copy 'glslc.exe'")
         -- TODO
     end
 end
