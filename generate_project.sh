@@ -1,13 +1,24 @@
 #!/bin/bash
 
 # install prerequisites
-# TODO: silent installation
-# sudo apt install build-essential
-# sudo apt install libx11-dev
-# sudo apt install libxcursor-dev
-# sudo apt install libxrandr-dev
-# sudo apt install libxinerama-dev
-# sudo apt install libxi-dev
+packages=(
+    build-essential
+    libx11-dev
+    libxcursor-dev
+    libxrandr-dev
+    libxinerama-dev
+    libxi-dev
+    libgl-dev
+)
+
+for package in "${packages[@]}"; do
+    if dpkg -l | grep -q "^ii\s\+$package"; then
+        echo "$package is already installed"
+    else
+        echo "$package is not installed"
+        sudo apt install -y "$package"
+    fi
+done
 
 # Vulkan SDK
 force_exit=false
