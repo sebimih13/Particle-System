@@ -1,6 +1,7 @@
 # Particle-System
 A performant Particle System using ECS Architecture implemented with Vulkan
 
+
 ## Setup
 
 ### Windows
@@ -58,3 +59,13 @@ make config=release
 ```sh
 ./bin/Release-linux-x86_64/ParticleSystem/ParticleSystem
 ```
+
+
+## Requirements
+### Windows
+- Visual Studio including the *"Desktop development with C++"* workload
+
+### Linux
+- None
+
+
