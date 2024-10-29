@@ -74,7 +74,7 @@ if exist vendor\VulkanSDK (
 )
 
 REM run premake
-REM call vendor\premake5\premake5.exe vs2022
+call vendor\premake5\premake5.exe vs2022
 
 endlocal
 pause
