@@ -86,7 +86,7 @@ set "destination=.git\hooks"
 copy /y "%source%" "%destination%"
 
 REM run premake
-call vendor\premake5\premake5.exe vs2022
+call vendor\premake5\windows\premake5.exe vs2022
 
 endlocal
 pause

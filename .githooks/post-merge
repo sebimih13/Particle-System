@@ -2,9 +2,9 @@
 
 # This hook is invoked by git-merge, which happens when a git pull is done on a local repository.
 if [[ "$OSTYPE" == "msys" ]]; then
-    vendor/premake5/premake5.exe vs2022
+    vendor/premake5/windows/premake5.exe vs2022
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    vendor/premake5/premake5 gmake2
+    vendor/premake5/linux/premake5 gmake2
 else
     echo "post-merge GIT Hook Error: The operating system is not supported"
 fi
