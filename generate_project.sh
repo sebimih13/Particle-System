@@ -84,11 +84,13 @@ echo "Install post-checkout hook"
 source=".githooks/post-checkout"
 destination=".git/hooks/post-checkout"
 cp -f "$source" "$destination"
+chmod +x "$destination"
 
 echo "Install post-merge hook"
 source=".githooks/post-merge"
 destination=".git/hooks/post-merge"
 cp -f "$source" "$destination"
+chmod +x "$destination"
 
 # generate Makefile
 vendor/premake5/premake5 gmake2
