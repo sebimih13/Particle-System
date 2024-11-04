@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# This script is invoked after a branch is checked out.
+if [[ "$OSTYPE" == "msys" ]]; then
+    echo "Windows"
+    # TODO
+    # ./generate_project.bat
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Linux"
+    # TODO
+    # ./generate_project.sh
+else
+    echo "post-checkout GIT Hook Error: The operating system is not supported"
+fi
