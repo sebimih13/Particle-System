@@ -4,7 +4,6 @@
 if [[ "$OSTYPE" == "msys" ]]; then
     vendor/premake5/premake5.exe vs2022
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "Linux" # TODO
     vendor/premake5/premake5 gmake2
 else
     echo "post-merge GIT Hook Error: The operating system is not supported"
