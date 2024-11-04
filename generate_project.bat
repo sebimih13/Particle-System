@@ -73,6 +73,18 @@ if exist vendor\VulkanSDK (
     xcopy %VULKAN_SDK%\Bin\glslc.exe %cd%\vendor\VulkanSDK /E /I /Y
 )
 
+echo Install GIT Hooks
+
+echo Install post-checkout hook
+set "source=.githooks\post-checkout"
+set "destination=.git\hooks"
+copy /y "%source%" "%destination%"
+
+echo Install post-merge hook
+set "source=.githooks\post-merge"
+set "destination=.git\hooks"
+copy /y "%source%" "%destination%"
+
 REM run premake
 call vendor\premake5\premake5.exe vs2022
 

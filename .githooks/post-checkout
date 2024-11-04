@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# This script is invoked after a branch is checked out.
+if [[ "$OSTYPE" == "msys" ]]; then
+    vendor/premake5/premake5.exe vs2022
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    vendor/premake5/premake5 gmake2
+else
+    echo "post-checkout GIT Hook Error: The operating system is not supported"
+fi
