@@ -93,7 +93,7 @@ cp -f "$source" "$destination"
 chmod +x "$destination"
 
 # generate Makefile
-vendor/premake5/premake5 gmake2
+vendor/premake5/linux/premake5 gmake2
 
 # force exit
 if [ "$force_exit" = true ]; then
