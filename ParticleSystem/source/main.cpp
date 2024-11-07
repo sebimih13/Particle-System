@@ -1,24 +1,23 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "VulkanCore/Application.h"
 
 #include <iostream>
 
-static constexpr int WIDTH = 800;
-static constexpr int HEIGHT = 600;
-
-int main()
+int main(int argc, char* argv[])
 {
     std::cout << "Hello World!" << std::endl;
 
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-
-    while (!glfwWindowShouldClose(window))
+    try
     {
-        // loop
+        VulkanCore::WindowConfiguration WindowConfig(600, 800, "Vulkan");
+        VulkanCore::ApplicationConfiguration AppConfig(WindowConfig);
+
+        VulkanCore::Application App(AppConfig);
+        App.Run();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
