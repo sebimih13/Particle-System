@@ -4,8 +4,16 @@
 #include "Window.h"
 
 #include <vector>
+#include <optional>
 
 namespace VulkanCore {
+
+    struct QueueFamilyIndices
+    {
+        std::optional<uint32_t> graphicsFamily;
+
+        inline bool IsComplete() { return graphicsFamily.has_value(); }
+    };
 
     class GPUDevice
     {
@@ -28,6 +36,9 @@ namespace VulkanCore {
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkDevice device;
+
+        VkQueue graphicsQueue;
 
 #ifdef DEBUG
         const bool bEnableValidationLayers = true;
@@ -42,12 +53,15 @@ namespace VulkanCore {
         void CreateInstance();
         void SetupDebugMessenger();
         void PickPhysicalDevice();
+        void CreateLogicalDevice();
 
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
         std::vector<const char*> GetRequiredExtensionNames();
         bool CheckValidationLayerSupport();
         bool IsDeviceSuitable(VkPhysicalDevice device);
+
+        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
         // DEBUG
         void ListAvailableExtensions();

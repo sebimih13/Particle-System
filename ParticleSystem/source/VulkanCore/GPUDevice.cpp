@@ -42,10 +42,13 @@ namespace VulkanCore {
         CreateInstance();
         SetupDebugMessenger();
         PickPhysicalDevice();
+        CreateLogicalDevice();
     }
 
     GPUDevice::~GPUDevice()
     {
+        vkDestroyDevice(device, nullptr);
+
         if (bEnableValidationLayers)
         {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -56,6 +59,12 @@ namespace VulkanCore {
 
     void GPUDevice::CreateInstance()
     {
+#ifdef DEBUG
+        ListAvailableExtensions();
+        ListRequiredGLFWExtensions();
+        ListAvailableValidationLayers();
+#endif // DEBUG
+
         if (bEnableValidationLayers && !CheckValidationLayerSupport())
         {
             throw std::runtime_error("Validation layers requested, but not available!");
@@ -68,12 +77,6 @@ namespace VulkanCore {
         appInfo.pEngineName = "No Engine";                      // TODO: change?
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // TODO: schimba la fiecare milestone
         appInfo.apiVersion = VK_API_VERSION_1_0;
-
-#ifdef DEBUG
-        ListAvailableExtensions();
-        ListRequiredGLFWExtensions();
-        ListAvailableValidationLayers();
-#endif // DEBUG
 
         const std::vector<const char*>& requiredExtensionNames = GetRequiredExtensionNames();
 
@@ -122,6 +125,10 @@ namespace VulkanCore {
 
     void GPUDevice::PickPhysicalDevice()
     {
+#ifdef DEBUG
+        ListAvailablePhysicalDevices();
+#endif // DEBUG
+
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -142,15 +149,50 @@ namespace VulkanCore {
             }
         }
 
-#ifdef DEBUG
-        ListAvailablePhysicalDevices();
-#endif // DEBUG
-
-
         if (physicalDevice == VK_NULL_HANDLE)
         {
             throw std::runtime_error("Failed to find a suitable GPU!");
         }
+    }
+
+    void GPUDevice::CreateLogicalDevice()
+    {
+        QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+
+        float queuePriority = 1.0f;
+
+        VkDeviceQueueCreateInfo queueCreateInfo = {};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        // TODO: adauga features
+        VkPhysicalDeviceFeatures deviceFeatures = {};
+
+        VkDeviceCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.queueCreateInfoCount = 1;
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.enabledExtensionCount = 0;   // TODO: add VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        
+        if (bEnableValidationLayers)
+        {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        }
+        else
+        {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create logical device!");
+        }
+
+        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     }
 
     void GPUDevice::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -211,6 +253,8 @@ namespace VulkanCore {
 
     bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device)
     {
+        QueueFamilyIndices indices = FindQueueFamilies(device);
+
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
@@ -218,7 +262,36 @@ namespace VulkanCore {
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
         // TODO: include mai multe criterii
-        return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+        return indices.IsComplete() && deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+    }
+
+    QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device)
+    {
+        QueueFamilyIndices indices = {};
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        uint32_t i = 0;
+        for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
+        {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            {
+                indices.graphicsFamily = i;
+            }
+
+            if (indices.IsComplete())
+            {
+                break;
+            }
+
+            ++i;
+        }
+
+        return indices;
     }
 
     void GPUDevice::ListAvailableExtensions()
