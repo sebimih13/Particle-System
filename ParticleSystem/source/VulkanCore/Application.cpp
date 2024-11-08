@@ -2,15 +2,15 @@
 
 namespace VulkanCore {
 
-	ApplicationConfiguration::ApplicationConfiguration(const WindowConfiguration& WindowConfig)
-		: WindowConfig(WindowConfig)
+	ApplicationConfiguration::ApplicationConfiguration(const WindowConfiguration& windowConfig)
+		: windowConfig(windowConfig)
 	{
 
 	}
 
 	Application::Application(const ApplicationConfiguration& config)
-		: MainWindow(config.WindowConfig)
-		, MainDevice()
+		: window(config.windowConfig)
+		, device()
 		, bIsRunning(true)
 	{
 
@@ -23,11 +23,11 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
-		while (MainWindow.ShouldClose() && bIsRunning)
+		while (window.ShouldClose() && bIsRunning)
 		{
 			// TODO
 
-			MainWindow.Update();
+			window.Update();
 		}
 	}
 

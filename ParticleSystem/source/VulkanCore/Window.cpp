@@ -2,8 +2,8 @@
 
 namespace VulkanCore {
 
-    WindowConfiguration::WindowConfiguration(const uint32_t& Width, const uint32_t& Height, const std::string& Title)
-        : Width(Width), Height(Height), Title(Title)
+    WindowConfiguration::WindowConfiguration(const uint32_t& width, const uint32_t& height, const std::string& title)
+        : width(width), height(height), title(title)
     {
 
     }
@@ -14,7 +14,7 @@ namespace VulkanCore {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        MainWindow = glfwCreateWindow(config.Width, config.Height, config.Title.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow(config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
         // Set GLFW callbacks
         // TODO: glfwSetWindowSizeCallback
@@ -28,7 +28,7 @@ namespace VulkanCore {
 
     Window::~Window()
     {
-        glfwDestroyWindow(MainWindow);
+        glfwDestroyWindow(window);
         glfwTerminate();
     }
 

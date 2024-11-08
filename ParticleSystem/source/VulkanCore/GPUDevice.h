@@ -25,8 +25,9 @@ namespace VulkanCore {
         GPUDevice& operator = (GPUDevice&&) = delete;
 
     private:
-        VkInstance Instance;
+        VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
 #ifdef DEBUG
         const bool bEnableValidationLayers = true;
@@ -34,12 +35,13 @@ namespace VulkanCore {
         const bool bEnableValidationLayers = false;
 #endif
 
-        const std::vector<const char*> ValidationLayers = {
+        const std::vector<const char*> validationLayers = {
             "VK_LAYER_KHRONOS_validation"
         };
 
         void CreateInstance();
         void SetupDebugMessenger();
+        void PickPhysicalDevice();
 
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 

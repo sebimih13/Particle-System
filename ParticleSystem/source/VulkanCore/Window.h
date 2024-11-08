@@ -9,11 +9,11 @@ namespace VulkanCore {
     
     struct WindowConfiguration
     {
-        const uint32_t Width;
-        const uint32_t Height;
-        const std::string Title;
+        const uint32_t width;
+        const uint32_t height;
+        const std::string title;
 
-        WindowConfiguration(const uint32_t& Width, const uint32_t& Height, const std::string& Title);
+        WindowConfiguration(const uint32_t& width, const uint32_t& height, const std::string& title);
     };
 
     class Window
@@ -36,10 +36,10 @@ namespace VulkanCore {
         void Update();
 
         // TODO: se poate mai frumos
-        inline bool ShouldClose() { return glfwWindowShouldClose(MainWindow); }
+        inline bool ShouldClose() { return glfwWindowShouldClose(window); }
 
     private:
-        GLFWwindow* MainWindow;
+        GLFWwindow* window;
     };
 
 } // namespace VulkanCore

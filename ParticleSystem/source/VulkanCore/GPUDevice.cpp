@@ -6,7 +6,7 @@
 namespace VulkanCore {
 
     // TODO: de declarat static in .h
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
         std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
 
@@ -47,10 +47,10 @@ namespace VulkanCore {
     {
         if (bEnableValidationLayers)
         {
-            DestroyDebugUtilsMessengerEXT(Instance, debugMessenger, nullptr);
+            DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
 
-        vkDestroyInstance(Instance, nullptr);
+        vkDestroyInstance(instance, nullptr);
     }
 
     void GPUDevice::CreateInstance()
@@ -60,13 +60,13 @@ namespace VulkanCore {
             throw std::runtime_error("Validation layers requested, but not available!");
         }
 
-        VkApplicationInfo AppInfo = {};
-        AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        AppInfo.pApplicationName = "Vulkan";                    // TODO: change
-        AppInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: schimba la fiecare milestone
-        AppInfo.pEngineName = "No Engine";                      // TODO: change?
-        AppInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // TODO: schimba la fiecare milestone
-        AppInfo.apiVersion = VK_API_VERSION_1_0;
+        VkApplicationInfo appInfo = {};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Vulkan";                    // TODO: change
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: schimba la fiecare milestone
+        appInfo.pEngineName = "No Engine";                      // TODO: change?
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // TODO: schimba la fiecare milestone
+        appInfo.apiVersion = VK_API_VERSION_1_0;
 
 #ifdef DEBUG
         ListAvailableExtensions();
@@ -74,30 +74,30 @@ namespace VulkanCore {
         ListAvailableValidationLayers();
 #endif // DEBUG
 
-        const std::vector<const char*>& RequiredExtensionNames = GetRequiredExtensionNames();
+        const std::vector<const char*>& requiredExtensionNames = GetRequiredExtensionNames();
 
-        VkInstanceCreateInfo CreateInfo = {};
-        CreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        CreateInfo.pApplicationInfo = &AppInfo;
-        CreateInfo.enabledExtensionCount = static_cast<uint32_t>(RequiredExtensionNames.size());
-        CreateInfo.ppEnabledExtensionNames = RequiredExtensionNames.data();
+        VkInstanceCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = &appInfo;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensionNames.size());
+        createInfo.ppEnabledExtensionNames = requiredExtensionNames.data();
 
-        VkDebugUtilsMessengerCreateInfoEXT DebugCreateInfo = {};
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
         if (bEnableValidationLayers)
         {
-            CreateInfo.enabledLayerCount = static_cast<uint32_t>(ValidationLayers.size());
-            CreateInfo.ppEnabledLayerNames = ValidationLayers.data();
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
 
-            PopulateDebugMessengerCreateInfo(DebugCreateInfo);
-            CreateInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&DebugCreateInfo;
+            PopulateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
         }
         else
         {
-            CreateInfo.enabledLayerCount = 0;
-            CreateInfo.pNext = nullptr;
+            createInfo.enabledLayerCount = 0;
+            createInfo.pNext = nullptr;
         }
 
-        if (vkCreateInstance(&CreateInfo, nullptr, &Instance) != VK_SUCCESS)
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create instance!");
         }
@@ -110,56 +110,61 @@ namespace VulkanCore {
             return;
         }
 
-        VkDebugUtilsMessengerCreateInfoEXT CreateInfo = {};
-        PopulateDebugMessengerCreateInfo(CreateInfo);
+        VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+        PopulateDebugMessengerCreateInfo(createInfo);
 
-        if (CreateDebugUtilsMessengerEXT(Instance, &CreateInfo, nullptr, &debugMessenger) != VK_SUCCESS)
+        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to set up debug messenger!");
         }
     }
 
-    void GPUDevice::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& CreateInfo)
+    void GPUDevice::PickPhysicalDevice()
     {
-        CreateInfo = {};
-        CreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        CreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        CreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        CreateInfo.pfnUserCallback = debugCallback;
-        CreateInfo.pUserData = nullptr;
+        // TODO
+    }
+
+    void GPUDevice::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+    {
+        createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = DebugCallback;
+        createInfo.pUserData = nullptr;
     }
 
     std::vector<const char*> GPUDevice::GetRequiredExtensionNames()
     {
-        uint32_t GLFWExtensionCount = 0;
-        const char** GLFWExtensionNames;
-        GLFWExtensionNames = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensionNames;
+        glfwExtensionNames = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        std::vector<const char*> ExtensionNames(GLFWExtensionNames, GLFWExtensionNames + GLFWExtensionCount);
+        std::vector<const char*> extensionNames(glfwExtensionNames, glfwExtensionNames + glfwExtensionCount);
 
         if (bEnableValidationLayers)
         {
-            ExtensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
 
-        return ExtensionNames;
+        return extensionNames;
     }
 
     bool GPUDevice::CheckValidationLayerSupport()
     {
-        uint32_t LayerCount;
-        vkEnumerateInstanceLayerProperties(&LayerCount, nullptr);
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-        std::vector<VkLayerProperties> AvailableLayers(LayerCount);
-        vkEnumerateInstanceLayerProperties(&LayerCount, AvailableLayers.data());
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (const std::string& LayerName : ValidationLayers)
+        for (const std::string& layerName : validationLayers)
         {
             bool bFound = false;
 
-            for (const VkLayerProperties& LayerProperties : AvailableLayers)
+            for (const VkLayerProperties& layerProperties : availableLayers)
             {
-                if (LayerName == LayerProperties.layerName)
+                if (layerName == layerProperties.layerName)
                 {
                     bFound = true;
                     break;
@@ -177,42 +182,42 @@ namespace VulkanCore {
 
     void GPUDevice::ListAvailableExtensions()
     {
-        uint32_t ExtensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionCount, nullptr);
+        uint32_t extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-        std::vector<VkExtensionProperties> AvailableExtensions(ExtensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionCount, AvailableExtensions.data());
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
         std::cout << "Available extensions:\n";
-        for (const auto& Extension : AvailableExtensions) {
-            std::cout << '\t' << Extension.extensionName << '\n';
+        for (const auto& extension : availableExtensions) {
+            std::cout << '\t' << extension.extensionName << '\n';
         }
         std::cout << '\n';
     }
 
     void GPUDevice::ListRequiredGLFWExtensions()
     {
-        uint32_t GLFWExtensionCount = 0;
-        const char** GLFWExtensionsNames;
-        GLFWExtensionsNames = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensionsNames;
+        glfwExtensionsNames = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
         std::cout << "Required GLFW extensions:\n";
-        for (int i = 0; i < GLFWExtensionCount; ++i) {
-            std::cout << '\t' << GLFWExtensionsNames[i] << '\n';
+        for (uint32_t i = 0; i < glfwExtensionCount; ++i) {
+            std::cout << '\t' << glfwExtensionsNames[i] << '\n';
         }
         std::cout << '\n';
     }
 
     void GPUDevice::ListAvailableValidationLayers()
     {
-        uint32_t LayerCount;
-        vkEnumerateInstanceLayerProperties(&LayerCount, nullptr);
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-        std::vector<VkLayerProperties> AvailableLayers(LayerCount);
-        vkEnumerateInstanceLayerProperties(&LayerCount, AvailableLayers.data());
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
         std::cout << "Available validation layers:\n";
-        for (const auto& Layer : AvailableLayers) {
+        for (const auto& Layer : availableLayers) {
             std::cout << '\t' << Layer.layerName << '\n';
         }
         std::cout << '\n';

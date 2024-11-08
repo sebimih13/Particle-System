@@ -8,11 +8,11 @@ namespace VulkanCore {
 
     struct ApplicationConfiguration
     {
-        const WindowConfiguration WindowConfig;
+        const WindowConfiguration windowConfig;
 
         // TODO: add
 
-        ApplicationConfiguration(const WindowConfiguration& WindowConfig);
+        ApplicationConfiguration(const WindowConfiguration& windowConfig);
     };
 
     class Application
@@ -36,8 +36,8 @@ namespace VulkanCore {
         void Run();
 
     private:
-        Window MainWindow;
-        GPUDevice MainDevice;
+        Window window;
+        GPUDevice device;
 
         bool bIsRunning; // TODO: de facut o functie Close()
     };
