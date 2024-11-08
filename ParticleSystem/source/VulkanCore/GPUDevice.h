@@ -47,10 +47,13 @@ namespace VulkanCore {
 
         std::vector<const char*> GetRequiredExtensionNames();
         bool CheckValidationLayerSupport();
+        bool IsDeviceSuitable(VkPhysicalDevice device);
 
+        // DEBUG
         void ListAvailableExtensions();
         void ListRequiredGLFWExtensions();
         void ListAvailableValidationLayers();
+        void ListAvailablePhysicalDevices();
     };
 
 } // namespace VulkanCore

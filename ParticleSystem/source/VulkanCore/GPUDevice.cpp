@@ -41,6 +41,7 @@ namespace VulkanCore {
     {
         CreateInstance();
         SetupDebugMessenger();
+        PickPhysicalDevice();
     }
 
     GPUDevice::~GPUDevice()
@@ -121,7 +122,35 @@ namespace VulkanCore {
 
     void GPUDevice::PickPhysicalDevice()
     {
-        // TODO
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+        if (deviceCount == 0)
+        {
+            throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+        }
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+        for (const VkPhysicalDevice& device : devices)
+        {
+            if (IsDeviceSuitable(device))
+            {
+                physicalDevice = device;
+                break;
+            }
+        }
+
+#ifdef DEBUG
+        ListAvailablePhysicalDevices();
+#endif // DEBUG
+
+
+        if (physicalDevice == VK_NULL_HANDLE)
+        {
+            throw std::runtime_error("Failed to find a suitable GPU!");
+        }
     }
 
     void GPUDevice::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -180,6 +209,18 @@ namespace VulkanCore {
         return true;
     }
 
+    bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device)
+    {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+        VkPhysicalDeviceFeatures deviceFeatures;
+        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+        // TODO: include mai multe criterii
+        return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+    }
+
     void GPUDevice::ListAvailableExtensions()
     {
         uint32_t extensionCount = 0;
@@ -221,6 +262,40 @@ namespace VulkanCore {
             std::cout << '\t' << Layer.layerName << '\n';
         }
         std::cout << '\n';
+    }
+
+    void GPUDevice::ListAvailablePhysicalDevices()
+    {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+        uint32_t counter = 0;
+        std::cout << "Devices found: " << deviceCount << '\n';
+        for (const VkPhysicalDevice& device : devices)
+        {
+            VkPhysicalDeviceProperties deviceProperties;
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+            std::cout << ++counter << ". " << deviceProperties.deviceName << '\n';
+
+            switch (deviceProperties.deviceType)
+            {
+                case VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: 
+                    std::cout << "\tINTEGRATED_GPU\n";
+                    break;
+
+                case VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+                    std::cout << "\tDISCRETE_GPU\n";
+                    break;
+                
+                default:
+                    std::cout << "\tOTHER\n";
+                    break;
+            }
+        }
     }
 
 } // namespace VulkanCore
