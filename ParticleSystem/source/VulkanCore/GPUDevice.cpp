@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <set>
 
 namespace VulkanCore {
 
@@ -37,10 +38,11 @@ namespace VulkanCore {
         }
     }
 
-    GPUDevice::GPUDevice()
+    GPUDevice::GPUDevice(Window& window)
     {
         CreateInstance();
         SetupDebugMessenger();
+        CreateSurface(window);
         PickPhysicalDevice();
         CreateLogicalDevice();
     }
@@ -54,6 +56,7 @@ namespace VulkanCore {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
 
+        vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
     }
 
@@ -123,6 +126,11 @@ namespace VulkanCore {
         }
     }
 
+    void GPUDevice::CreateSurface(Window& window)
+    {
+        window.createWindowSurface(instance, &surface);
+    }
+
     void GPUDevice::PickPhysicalDevice()
     {
 #ifdef DEBUG
@@ -159,21 +167,32 @@ namespace VulkanCore {
     {
         QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+
+        std::set<uint32_t> uniqueQueueFamilies;
+        uniqueQueueFamilies.insert(indices.graphicsFamily.value());
+        uniqueQueueFamilies.insert(indices.presentFamily.value());
+
         float queuePriority = 1.0f;
 
-        VkDeviceQueueCreateInfo queueCreateInfo = {};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
+        for (uint32_t queueFamily : uniqueQueueFamilies)
+        {
+            VkDeviceQueueCreateInfo queueCreateInfo = {};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+
+            queueCreateInfos.push_back(queueCreateInfo);
+        }
 
         // TODO: adauga features
         VkPhysicalDeviceFeatures deviceFeatures = {};
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.queueCreateInfoCount = 1;
-        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+        createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = 0;   // TODO: add VK_KHR_SWAPCHAIN_EXTENSION_NAME
         
@@ -193,6 +212,7 @@ namespace VulkanCore {
         }
 
         vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
     void GPUDevice::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -283,6 +303,15 @@ namespace VulkanCore {
                 indices.graphicsFamily = i;
             }
 
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+            if (presentSupport)
+            {
+                indices.presentFamily = i;
+            }
+
+            // TODO: add logic to explicitly prefer a physical device that supports drawing and presentation in the same queue for improved performance
+
             if (indices.IsComplete())
             {
                 break;
@@ -294,7 +323,7 @@ namespace VulkanCore {
         return indices;
     }
 
-    void GPUDevice::ListAvailableExtensions()
+    void GPUDevice::ListAvailableExtensions() const
     {
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -309,7 +338,7 @@ namespace VulkanCore {
         std::cout << '\n';
     }
 
-    void GPUDevice::ListRequiredGLFWExtensions()
+    void GPUDevice::ListRequiredGLFWExtensions() const
     {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensionsNames;
@@ -322,7 +351,7 @@ namespace VulkanCore {
         std::cout << '\n';
     }
 
-    void GPUDevice::ListAvailableValidationLayers()
+    void GPUDevice::ListAvailableValidationLayers() const
     {
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -337,7 +366,7 @@ namespace VulkanCore {
         std::cout << '\n';
     }
 
-    void GPUDevice::ListAvailablePhysicalDevices()
+    void GPUDevice::ListAvailablePhysicalDevices() const
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);

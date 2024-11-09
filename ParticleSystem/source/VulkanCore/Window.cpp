@@ -1,5 +1,7 @@
 #include "Window.h"
 
+#include <stdexcept>
+
 namespace VulkanCore {
 
     WindowConfiguration::WindowConfiguration(const uint32_t& width, const uint32_t& height, const std::string& title)
@@ -35,6 +37,14 @@ namespace VulkanCore {
     void Window::Update()
     {
         glfwPollEvents();
+    }
+
+    void Window::createWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
+    {
+        if (glfwCreateWindowSurface(instance, window, nullptr, surface) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create window surface");
+        }
     }
 
 } // namespace VulkanCore

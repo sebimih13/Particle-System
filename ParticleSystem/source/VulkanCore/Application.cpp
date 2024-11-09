@@ -10,7 +10,7 @@ namespace VulkanCore {
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
-		, device()
+		, device(window)
 		, bIsRunning(true)
 	{
 

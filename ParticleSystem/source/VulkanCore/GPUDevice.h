@@ -11,15 +11,16 @@ namespace VulkanCore {
     struct QueueFamilyIndices
     {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
 
-        inline bool IsComplete() { return graphicsFamily.has_value(); }
+        inline bool IsComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
     };
 
     class GPUDevice
     {
     public:
         // Constructor
-        GPUDevice();
+        GPUDevice(Window& window);
 
         // Destructor
         ~GPUDevice();
@@ -29,16 +30,18 @@ namespace VulkanCore {
         GPUDevice& operator = (const GPUDevice&) = delete;
 
         // Not moveable
-        GPUDevice(Window&&) = delete;
+        GPUDevice(GPUDevice&&) = delete;
         GPUDevice& operator = (GPUDevice&&) = delete;
 
     private:
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
+        VkSurfaceKHR surface;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkDevice device;
 
         VkQueue graphicsQueue;
+        VkQueue presentQueue;
 
 #ifdef DEBUG
         const bool bEnableValidationLayers = true;
@@ -52,6 +55,7 @@ namespace VulkanCore {
 
         void CreateInstance();
         void SetupDebugMessenger();
+        void CreateSurface(Window& window);
         void PickPhysicalDevice();
         void CreateLogicalDevice();
 
@@ -64,10 +68,10 @@ namespace VulkanCore {
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
         // DEBUG
-        void ListAvailableExtensions();
-        void ListRequiredGLFWExtensions();
-        void ListAvailableValidationLayers();
-        void ListAvailablePhysicalDevices();
+        void ListAvailableExtensions() const;
+        void ListRequiredGLFWExtensions() const;
+        void ListAvailableValidationLayers() const;
+        void ListAvailablePhysicalDevices() const;
     };
 
 } // namespace VulkanCore
