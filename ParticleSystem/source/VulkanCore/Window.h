@@ -40,6 +40,10 @@ namespace VulkanCore {
 
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
+        // Getters
+        int GetWidth() const;
+        int GetHeight() const;
+
     private:
         GLFWwindow* window;
     };

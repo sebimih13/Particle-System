@@ -16,6 +16,13 @@ namespace VulkanCore {
         inline bool IsComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
     };
 
+    struct SwapChainSupportDetails
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
     class GPUDevice
     {
     public:
@@ -33,6 +40,12 @@ namespace VulkanCore {
         GPUDevice(GPUDevice&&) = delete;
         GPUDevice& operator = (GPUDevice&&) = delete;
 
+        // Getters
+        inline VkSurfaceKHR GetSurface() const { return surface; }  // TODO: return const &
+        inline VkDevice GetDevice() const { return device; }        // TODO: return const &
+        inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
+        inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
+
     private:
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
@@ -49,9 +62,8 @@ namespace VulkanCore {
         const bool bEnableValidationLayers = false;
 #endif
 
-        const std::vector<const char*> validationLayers = {
-            "VK_LAYER_KHRONOS_validation"
-        };
+        static const std::vector<const char*> validationLayers;
+        static const std::vector<const char*> deviceExtensions;
 
         void CreateInstance();
         void SetupDebugMessenger();
@@ -63,9 +75,11 @@ namespace VulkanCore {
 
         std::vector<const char*> GetRequiredExtensionNames();
         bool CheckValidationLayerSupport();
+        bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
         bool IsDeviceSuitable(VkPhysicalDevice device);
 
-        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
+        SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
 
         // DEBUG
         void ListAvailableExtensions() const;

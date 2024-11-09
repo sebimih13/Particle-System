@@ -4,7 +4,18 @@
 #include <iostream>
 #include <set>
 
+// TODO: delete
+#include "SwapChain.h"
+
 namespace VulkanCore {
+
+    const std::vector<const char*> GPUDevice::validationLayers = {
+        "VK_LAYER_KHRONOS_validation"
+    };
+
+    const std::vector<const char*> GPUDevice::deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
 
     // TODO: de declarat static in .h
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
@@ -45,6 +56,9 @@ namespace VulkanCore {
         CreateSurface(window);
         PickPhysicalDevice();
         CreateLogicalDevice();
+
+        // TODO: test
+        SwapChain swapChain(*this, window);
     }
 
     GPUDevice::~GPUDevice()
@@ -194,7 +208,8 @@ namespace VulkanCore {
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.pEnabledFeatures = &deviceFeatures;
-        createInfo.enabledExtensionCount = 0;   // TODO: add VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
         
         if (bEnableValidationLayers)
         {
@@ -249,43 +264,58 @@ namespace VulkanCore {
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (const std::string& layerName : validationLayers)
+        std::set<std::string> requiredLayers(validationLayers.begin(), validationLayers.end());
+        for (const VkLayerProperties& layer : availableLayers)
         {
-            bool bFound = false;
-
-            for (const VkLayerProperties& layerProperties : availableLayers)
-            {
-                if (layerName == layerProperties.layerName)
-                {
-                    bFound = true;
-                    break;
-                }
-            }
-
-            if (!bFound)
-            {
-                return false;
-            }
+            requiredLayers.erase(layer.layerName);
         }
 
-        return true;
+        return requiredLayers.empty();
+    }
+
+    bool GPUDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device)
+    {
+        uint32_t extensionCount;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        for (const VkExtensionProperties& extension : availableExtensions)
+        {
+            requiredExtensions.erase(extension.extensionName);
+        }
+
+        return requiredExtensions.empty();
     }
 
     bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device)
     {
         QueueFamilyIndices indices = FindQueueFamilies(device);
 
+        // TODO: nu stiu daca o sa le folosesc
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
+        // TODO: nu stiu daca o sa le folosesc
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+        const bool bExtensionsSupported = CheckDeviceExtensionSupport(device);
+
+        bool bSwapChainAdequate = false;
+        if (bExtensionsSupported)
+        {
+            SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
+            bSwapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        }
+
         // TODO: include mai multe criterii
-        return indices.IsComplete() && deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+        return indices.IsComplete() && bExtensionsSupported && bSwapChainAdequate;
     }
 
-    QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device)
+    QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device) const
     {
         QueueFamilyIndices indices = {};
 
@@ -321,6 +351,33 @@ namespace VulkanCore {
         }
 
         return indices;
+    }
+
+    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const
+    {
+        SwapChainSupportDetails details;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+
+        if (formatCount != 0)
+        {
+            details.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+        }
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0)
+        {
+            details.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+        }
+
+        return details;
     }
 
     void GPUDevice::ListAvailableExtensions() const
@@ -375,7 +432,7 @@ namespace VulkanCore {
         vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
         uint32_t counter = 0;
-        std::cout << "Devices found: " << deviceCount << '\n';
+        std::cout << "Physical devices found: " << deviceCount << '\n';
         for (const VkPhysicalDevice& device : devices)
         {
             VkPhysicalDeviceProperties deviceProperties;

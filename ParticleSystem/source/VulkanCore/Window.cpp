@@ -47,4 +47,22 @@ namespace VulkanCore {
         }
     }
 
+    // TODO: de revazut
+    int Window::GetWidth() const
+    {
+        int width;
+        glfwGetFramebufferSize(window, &width, nullptr);
+        
+        return width;
+    }
+
+    // TODO: de revazut
+    int Window::GetHeight() const
+    {
+        int height;
+        glfwGetFramebufferSize(window, nullptr, &height);
+
+        return height;
+    }
+
 } // namespace VulkanCore
