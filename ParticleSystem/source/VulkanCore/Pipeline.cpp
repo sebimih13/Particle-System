@@ -82,10 +82,10 @@ namespace VulkanCore {
 		dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicStateInfo.pDynamicStates = dynamicStates.data();
 
-		VkPipelineViewportStateCreateInfo viewportState = {};
-		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportState.viewportCount = 1;
-		viewportState.scissorCount = 1;
+		VkPipelineViewportStateCreateInfo viewportInfo = {};
+		viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportInfo.viewportCount = 1;
+		viewportInfo.scissorCount = 1;
 
 		// Rasterizer
 		VkPipelineRasterizationStateCreateInfo rasterizationInfo = {};
@@ -147,9 +147,29 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
-		// TODO:
-		// VkGraphicsPipelineCreateInfo
-		// vkCreateGraphicsPipelines()
+		// Pipeline
+		VkGraphicsPipelineCreateInfo pipelineInfo = {};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
+		pipelineInfo.pViewportState = &viewportInfo;
+		pipelineInfo.pRasterizationState = &rasterizationInfo;
+		pipelineInfo.pMultisampleState = &multisamplingInfo;
+		pipelineInfo.pDepthStencilState = nullptr;				// optional
+		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
+		pipelineInfo.pDynamicState = &dynamicStateInfo;
+		pipelineInfo.layout = pipelineLayout;
+		pipelineInfo.renderPass = swapChain.GetRenderPass();
+		pipelineInfo.subpass = 0;
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;		// optional
+		pipelineInfo.basePipelineIndex = -1;					// optional
+
+		if (vkCreateGraphicsPipelines(device.GetVKDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create graphics pipeline!");
+		}
 
 		vkDestroyShaderModule(device.GetVKDevice(), fragShaderModule, nullptr);
 		vkDestroyShaderModule(device.GetVKDevice(), vertShaderModule, nullptr);
@@ -157,6 +177,8 @@ namespace VulkanCore {
 
 	Pipeline::~Pipeline()
 	{
+		vkDestroyPipeline(device.GetVKDevice(), graphicsPipeline, nullptr);
+
 		// TODO: move
 		vkDestroyPipelineLayout(device.GetVKDevice(), pipelineLayout, nullptr);
 	}

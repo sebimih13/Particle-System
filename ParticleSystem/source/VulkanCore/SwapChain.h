@@ -27,6 +27,7 @@ namespace VulkanCore {
 
         // Getters
         VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
+        VkRenderPass GetRenderPass() const { return renderPass; }
 
 	private:
         GPUDevice& device; // TODO: const?
