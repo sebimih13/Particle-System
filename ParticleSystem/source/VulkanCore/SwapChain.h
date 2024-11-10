@@ -8,7 +8,7 @@
 
 namespace VulkanCore {
 
-	class SwapChain
+	class SwapChain final
 	{
 	public:
         // Constructor
@@ -28,6 +28,7 @@ namespace VulkanCore {
         // Getters
         VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
         VkRenderPass GetRenderPass() const { return renderPass; }
+        VkFramebuffer GetSwapChainFramebuffer(const size_t& index) const { return swapChainFramebuffers[index]; }
 
 	private:
         GPUDevice& device; // TODO: const?

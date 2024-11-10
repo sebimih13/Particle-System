@@ -7,7 +7,7 @@
 
 namespace VulkanCore {
     
-    struct WindowConfiguration
+    struct WindowConfiguration final
     {
         const uint32_t width;
         const uint32_t height;
@@ -16,7 +16,7 @@ namespace VulkanCore {
         WindowConfiguration(const uint32_t& width, const uint32_t& height, const std::string& title);
     };
 
-    class Window
+    class Window final
     {
     public:
         // Constructors

@@ -11,7 +11,7 @@
 
 namespace VulkanCore {
 
-	class Pipeline
+	class Pipeline final
 	{
 	public:
 		// Constructor
@@ -27,6 +27,8 @@ namespace VulkanCore {
 		// Not moveable
 		Pipeline(Pipeline&&) = delete;
 		Pipeline& operator = (Pipeline&&) = delete;
+
+		void Bind(VkCommandBuffer commandBuffer);
 
 	private:
 		GPUDevice& device;

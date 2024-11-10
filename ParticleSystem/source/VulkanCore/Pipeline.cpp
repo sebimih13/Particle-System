@@ -58,24 +58,6 @@ namespace VulkanCore {
 		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-		// TODO: move in Renderer.cpp
-		// Viewport
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(swapChain.GetSwapChainExtent().width);
-		viewport.height = static_cast<float>(swapChain.GetSwapChainExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		// TODO: move in Renderer.cpp
-		// Scissors
-		VkRect2D scissor = {};
-		scissor.offset = {};
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent = swapChain.GetSwapChainExtent();
-
 		// Viewport + Scissors as Dynamic States
 		VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
 		dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -181,6 +163,11 @@ namespace VulkanCore {
 
 		// TODO: move
 		vkDestroyPipelineLayout(device.GetVKDevice(), pipelineLayout, nullptr);
+	}
+
+	void Pipeline::Bind(VkCommandBuffer commandBuffer)
+	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	}
 
 	std::vector<char> Pipeline::ReadFile(const std::string& filePath)

@@ -8,7 +8,7 @@
 
 namespace VulkanCore {
 
-    struct QueueFamilyIndices
+    struct QueueFamilyIndices final
     {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -16,14 +16,14 @@ namespace VulkanCore {
         inline bool IsComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
     };
 
-    struct SwapChainSupportDetails
+    struct SwapChainSupportDetails final
     {
         VkSurfaceCapabilitiesKHR capabilities;
         std::vector<VkSurfaceFormatKHR> formats;
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class GPUDevice
+    class GPUDevice final
     {
     public:
         // Constructor
@@ -41,10 +41,11 @@ namespace VulkanCore {
         GPUDevice& operator = (GPUDevice&&) = delete;
 
         // Getters
-        inline VkSurfaceKHR GetSurface() const { return surface; }  // TODO: return const &
-        inline VkDevice GetVKDevice() const { return device; }        // TODO: return const &
+        inline VkSurfaceKHR GetSurface() const { return surface; }      // TODO: return const &
+        inline VkDevice GetVKDevice() const { return device; }          // TODO: return const &
         inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
         inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
+        inline VkCommandPool GetCommandPool() const { return commandPool; }     // TODO: return const &
 
     private:
         VkInstance instance;
@@ -55,6 +56,8 @@ namespace VulkanCore {
 
         VkQueue graphicsQueue;
         VkQueue presentQueue;
+
+        VkCommandPool commandPool;
 
 #ifdef DEBUG
         const bool bEnableValidationLayers = true;
@@ -70,6 +73,7 @@ namespace VulkanCore {
         void CreateSurface(Window& window);
         void PickPhysicalDevice();
         void CreateLogicalDevice();
+        void CreateCommandPool();
 
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
