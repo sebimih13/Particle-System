@@ -147,6 +147,10 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
+		// TODO:
+		// VkGraphicsPipelineCreateInfo
+		// vkCreateGraphicsPipelines()
+
 		vkDestroyShaderModule(device.GetVKDevice(), fragShaderModule, nullptr);
 		vkDestroyShaderModule(device.GetVKDevice(), vertShaderModule, nullptr);
 	}

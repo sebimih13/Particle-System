@@ -31,7 +31,7 @@ namespace VulkanCore {
 	private:
 		GPUDevice& device;
 
-		VkPipelineLayout pipelineLayout;
+		VkPipelineLayout pipelineLayout; // TODO: nullptr
 
 		static const std::vector<VkDynamicState> dynamicStates;
 
