@@ -39,12 +39,14 @@ namespace VulkanCore {
         VkExtent2D swapChainExtent;
 
         std::vector<VkImageView> swapChainImageViews;
+        std::vector<VkFramebuffer> swapChainFramebuffers;
 
         VkRenderPass renderPass;
 
         void CreateSwapChain();
         void CreateImageViews();
         void CreateRenderPass();
+        void CreateChainFramebuffers();
 
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);

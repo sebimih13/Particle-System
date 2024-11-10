@@ -13,10 +13,16 @@ namespace VulkanCore {
         CreateSwapChain();
         CreateImageViews();
         CreateRenderPass();
+        CreateChainFramebuffers();
 	}
 
 	SwapChain::~SwapChain()
 	{
+        for (VkFramebuffer framebuffer : swapChainFramebuffers)
+        {
+            vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
+        }
+
         vkDestroyRenderPass(device.GetVKDevice(), renderPass, nullptr);
 
         for (VkImageView imageView : swapChainImageViews)
@@ -145,6 +151,32 @@ namespace VulkanCore {
         if (vkCreateRenderPass(device.GetVKDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create render pass!");
+        }
+    }
+
+    void SwapChain::CreateChainFramebuffers()
+    {
+        swapChainFramebuffers.resize(swapChainImageViews.size());
+
+        for (size_t i = 0; i < swapChainImageViews.size(); ++i)
+        {
+            VkImageView attachments[] = {
+                swapChainImageViews[i]
+            };
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device.GetVKDevice(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("Failed to create framebuffer!");
+            }
         }
     }
 
