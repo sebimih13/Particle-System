@@ -42,7 +42,7 @@ namespace VulkanCore {
 
         // Getters
         inline VkSurfaceKHR GetSurface() const { return surface; }  // TODO: return const &
-        inline VkDevice GetDevice() const { return device; }        // TODO: return const &
+        inline VkDevice GetVKDevice() const { return device; }        // TODO: return const &
         inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
         inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
 
