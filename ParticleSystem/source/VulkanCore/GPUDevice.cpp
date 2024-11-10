@@ -6,6 +6,7 @@
 
 // TODO: delete
 #include "SwapChain.h"
+#include "Pipeline.h"
 
 namespace VulkanCore {
 
@@ -59,6 +60,9 @@ namespace VulkanCore {
 
         // TODO: test
         SwapChain swapChain(*this, window);
+
+        // TODO: test
+        Pipeline pipeline(*this, swapChain);
     }
 
     GPUDevice::~GPUDevice()

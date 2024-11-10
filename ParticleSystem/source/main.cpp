@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        VulkanCore::WindowConfiguration WindowConfig(600, 800, "Vulkan");
+        VulkanCore::WindowConfiguration WindowConfig(1200, 800, "Vulkan");
         VulkanCore::ApplicationConfiguration AppConfig(WindowConfig);
 
         VulkanCore::Application App(AppConfig);

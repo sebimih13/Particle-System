@@ -25,6 +25,9 @@ namespace VulkanCore {
         SwapChain(SwapChain&&) = delete;
         SwapChain& operator = (SwapChain&&) = delete;
 
+        // Getters
+        VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
+
 	private:
         GPUDevice& device; // TODO: const?
         const Window& window;
