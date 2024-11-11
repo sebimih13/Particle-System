@@ -35,6 +35,8 @@ namespace VulkanCore {
 
 			// TODO
 		}
+
+		vkDeviceWaitIdle(device.GetVKDevice());
 	}
 
 } // namespace VulkanCore
