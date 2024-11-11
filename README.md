@@ -41,7 +41,7 @@ cd Particle-System
 
 3. Generate the project
 ```sh
-generate_project.sh
+./generate_project.sh
 ```
 
 4. Compile
