@@ -97,9 +97,7 @@ vendor/premake5/linux/premake5 gmake2
 
 # force exit
 if [ "$force_exit" = true ]; then
-	while true; do
-	    read -p "Close/Restart the terminal"
-	done
-else
-    exit
+    echo "Close/Restart the terminal"
 fi
+
+exit

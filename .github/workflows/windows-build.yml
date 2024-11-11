@@ -41,14 +41,10 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
       run: |
         mkdir ${{ env.ZIP_NAME }}
-        copy bin/Release-windows-x86_64/${{ env.ZIP_NAME }}/*.exe ${{ env.ZIP_NAME }}
-        copy bin/Release-windows-x86_64/${{ env.ZIP_NAME }}/*.dll ${{ env.ZIP_NAME }}
-
-        mkdir -p "${{ env.ZIP_NAME }}\resources"
-        xcopy ${{ env.ZIP_NAME }}\resources "${{ env.ZIP_NAME }}\resources" /E /H
+        copy bin/Release-windows-x86_64/${{ env.PROJECT_NAME }}/*.exe ${{ env.ZIP_NAME }}
 
         mkdir -p "${{ env.ZIP_NAME }}\shaders"
-        xcopy ${{ env.ZIP_NAME }}\shaders "${{ env.ZIP_NAME }}\shaders" /E /H
+        xcopy ${{ env.PROJECT_NAME }}\shaders "${{ env.ZIP_NAME }}\shaders" /E /H
 
         dir /a ${{ env.ZIP_NAME }}
     
