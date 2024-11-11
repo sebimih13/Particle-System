@@ -34,27 +34,38 @@ project "ParticleSystem"
     }
 
     -- TODO: only the files existing at the time of executing this script will be considered
-    --       any new addition will be ignored, so you have to run again this script
+    --       any new addition will be ignored, so you have to run again generate_project script
 
-    -- prebuild command to automatically compile .vert and .frag files
-    filter "files:**.vert or **.frag"
+    -- prebuild command to automatically compile .vert and .frag files for Windows
+    filter { "files:**.vert or **.frag", "system:windows" }
         -- A message to display while this build step is running (optional)
         buildmessage 'Compiling %{file.name}'
 
         -- One or more commands to run (required)
-        filter "system:windows"
-            buildcommands
-            {
-                '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
-                '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
-            }
+        buildcommands 
+        {
+            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
+            '"%{wks.location}/vendor/VulkanSDK/glslc.exe" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+        }
 
-        filter "system:linux"
-            buildcommands
-            {
-                '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
-                '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
-            }
+        -- One or more outputs resulting from the build (required)
+        buildoutputs
+        { 
+            '%{cfg.targetdir}/shaders/%{file.name}.spv',
+            '%{file.directory}/%{file.name}.spv'
+        }
+
+    -- prebuild command to automatically compile .vert and .frag files for Linux
+    filter { "files:**.vert or **.frag", "system:linux" }
+        -- A message to display while this build step is running (optional)
+        buildmessage 'Compiling %{file.name}'
+
+        -- One or more commands to run (required)
+        buildcommands 
+        {
+            '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{cfg.targetdir}/shaders/%{file.name}.spv"',
+            '"%{wks.location}/vendor/VulkanSDK/glslc" "%{file.relpath}" -o "%{file.directory}/%{file.name}.spv"'
+        }
 
         -- One or more outputs resulting from the build (required)
         buildoutputs
@@ -66,6 +77,12 @@ project "ParticleSystem"
     filter "system:windows"
         staticruntime "On"
         systemversion "latest"
+
+    filter "system:linux"
+        prebuildcommands
+        {
+            '[ -d "%{cfg.targetdir}/shaders" ] || mkdir -p "%{cfg.targetdir}/shaders"'
+        }
 
     filter "configurations:Debug"
         symbols "On"
