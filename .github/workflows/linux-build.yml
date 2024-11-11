@@ -38,7 +38,7 @@ jobs:
         cp bin/Release-linux-x86_64/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }} ${{ env.ZIP_NAME }}
 
         mkdir -p ${{ env.ZIP_NAME }}/shaders
-        cp -r ${{ env.PROJECT_NAME }}/shaders/* ${{ env.ZIP_NAME }}/shaders/
+        cp -r ${{ env.PROJECT_NAME }}/shaders/*.spv ${{ env.ZIP_NAME }}/shaders/
 
         ls -la ${{ env.ZIP_NAME }}
     
