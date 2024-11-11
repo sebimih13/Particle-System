@@ -14,9 +14,9 @@ permissions:
 
 jobs:
   windows:
-    name: Build Windows
+    name: Windows
     uses: ./.github/workflows/windows-build.yml
 
   linux:
-    name: Build Linux
+    name: Linux
     uses: ./.github/workflows/linux-build.yml
