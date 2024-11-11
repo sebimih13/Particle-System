@@ -1,0 +1,66 @@
+name: Build Linux
+
+on:
+  workflow_call:
+
+env:
+  PROJECT_NAME: 'ParticleSystem'
+  ZIP_NAME: 'linux-x64'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    
+    strategy:
+        fail-fast: false
+        matrix:
+          build-configuration: [debug, release]
+          build-platform: [x64] # TODO: remove
+
+    steps:
+    - name: Clone Git Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Setup
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: ./generate_project.sh
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: make config=${{matrix.build-configuration}}
+
+    - name: Move artifacts to Release Folder
+      if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
+      run: |
+        mkdir -p "${{ env.ZIP_NAME }}"
+        cp bin/Release-linux-x86_64/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }} ${{ env.ZIP_NAME }}
+
+        mkdir -p ${{ env.ZIP_NAME }}/shaders
+        cp -r ${{ env.PROJECT_NAME }}/shaders/*.spv ${{ env.ZIP_NAME }}/shaders/
+
+        ls -la ${{ env.ZIP_NAME }}
+    
+    - name: Set Tag Name
+      if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
+      shell: bash
+      run: echo "TAG_NAME=${GITHUB_REF#'refs/tags/'}" >> ${GITHUB_ENV}
+    
+    - name: Add tag to folder name
+      if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
+      run: mv ${{ env.ZIP_NAME }} ${{ env.ZIP_NAME }}-${{ env.TAG_NAME }}
+    
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
+      with:
+        type: 'zip'
+        path: ${{ env.ZIP_NAME }}-${{ env.TAG_NAME }}
+        filename: ${{ env.ZIP_NAME }}-${{ env.TAG_NAME }}.zip
+    
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/') && matrix.build-configuration == 'Release'
+      with:
+        files: ${{ env.ZIP_NAME }}-${{ env.TAG_NAME }}.zip
