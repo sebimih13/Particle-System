@@ -15,10 +15,11 @@ namespace VulkanCore {
 	{
 		// TODO: createGraphicsPipeline()
 
-#ifdef _WIN32
+// TODO: test
+#if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
 		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
-#elif __linux__
+#elif defined(PLATFORM_LINUX) && defined(DEBUG)
 		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
 #endif

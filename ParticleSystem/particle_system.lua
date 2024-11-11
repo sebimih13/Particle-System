@@ -78,10 +78,20 @@ project "ParticleSystem"
         staticruntime "On"
         systemversion "latest"
 
+        defines
+        {
+            "PLATFORM_WINDOWS"
+        }
+
     filter "system:linux"
         prebuildcommands
         {
             '[ -d "%{cfg.targetdir}/shaders" ] || mkdir -p "%{cfg.targetdir}/shaders"'
+        }
+
+        defines
+        {
+            "PLATFORM_LINUX"
         }
 
     filter "configurations:Debug"
