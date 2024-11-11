@@ -14,10 +14,15 @@ namespace VulkanCore {
         CreateImageViews();
         CreateRenderPass();
         CreateChainFramebuffers();
+        CreateSyncObjects();
 	}
 
 	SwapChain::~SwapChain()
 	{
+        vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphore, nullptr);
+        vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphore, nullptr);
+        vkDestroyFence(device.GetVKDevice(), inFlightFence, nullptr);
+
         for (VkFramebuffer framebuffer : swapChainFramebuffers)
         {
             vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
@@ -32,6 +37,51 @@ namespace VulkanCore {
 
         vkDestroySwapchainKHR(device.GetVKDevice(), swapChain, nullptr);
 	}
+
+    VkResult SwapChain::AcquireNextImage(uint32_t* imageIndex)
+    {
+        vkWaitForFences(device.GetVKDevice(), 1, &inFlightFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+        vkResetFences(device.GetVKDevice(), 1, &inFlightFence); // TODO: refactor
+
+        return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE, imageIndex);
+    }
+
+    VkResult SwapChain::SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex)
+    {
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = buffer;
+
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        if (vkQueueSubmit(device.GetGraphicsQueue(), 1, &submitInfo, inFlightFence) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to submit draw command buffer!");
+        }
+
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = { swapChain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = imageIndex;
+
+        presentInfo.pResults = nullptr;     // optional
+
+        return vkQueuePresentKHR(device.GetPresentQueue(), &presentInfo);
+    }
 
     void SwapChain::CreateSwapChain()
     {
@@ -141,12 +191,22 @@ namespace VulkanCore {
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
 
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = 1;
         renderPassInfo.pAttachments = &colorAttachment;
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(device.GetVKDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
@@ -177,6 +237,23 @@ namespace VulkanCore {
             {
                 throw std::runtime_error("Failed to create framebuffer!");
             }
+        }
+    }
+
+    void SwapChain::CreateSyncObjects()
+    {
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS 
+            || vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS 
+            || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create semaphores!");
         }
     }
 

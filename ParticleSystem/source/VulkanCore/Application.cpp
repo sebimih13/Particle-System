@@ -11,6 +11,9 @@ namespace VulkanCore {
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
 		, device(window)
+		, swapChain(device, window)
+		, graphicsPipeline(device, swapChain)
+		, renderer(window, device, swapChain, graphicsPipeline)
 		, bIsRunning(true)
 	{
 
@@ -23,11 +26,14 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
-		while (window.ShouldClose() && bIsRunning)
+		while (!window.ShouldClose() && bIsRunning)
 		{
-			// TODO
-
 			window.Update();
+
+			// draw
+			renderer.DrawFrame();
+
+			// TODO
 		}
 	}
 

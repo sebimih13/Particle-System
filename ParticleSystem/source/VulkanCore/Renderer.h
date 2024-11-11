@@ -25,7 +25,8 @@ namespace VulkanCore {
 		Renderer(Renderer&&) = delete;
 		Renderer& operator = (Renderer&&) = delete;
 
-		void BeginFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void DrawFrame();
 
 	private:
 		Window& window;

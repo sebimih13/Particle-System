@@ -57,13 +57,6 @@ namespace VulkanCore {
         CreateSurface(window);
         PickPhysicalDevice();
         CreateLogicalDevice();
-
-        // TODO: test
-        SwapChain swapChain(*this, window);
-
-        // TODO: test
-        Pipeline pipeline(*this, swapChain);
-
         CreateCommandPool();
     }
 

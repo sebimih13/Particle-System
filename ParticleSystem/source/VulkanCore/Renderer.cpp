@@ -20,7 +20,7 @@ namespace VulkanCore {
 	}
 
 	// TODO: refactor
-	void Renderer::BeginFrame(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
 		VkCommandBufferBeginInfo beginInfo = {};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -70,6 +70,18 @@ namespace VulkanCore {
 		{
 			throw std::runtime_error("Failed to record command buffer!");
 		}
+	}
+
+	// TODO: refactor
+	void Renderer::DrawFrame()
+	{
+		uint32_t imageIndex;
+		swapChain.AcquireNextImage(&imageIndex);
+
+		vkResetCommandBuffer(commandBuffer, 0);
+		RecordCommandBuffer(commandBuffer, imageIndex);
+
+		swapChain.SubmitCommandBuffer(&commandBuffer, &imageIndex);
 	}
 
 	void Renderer::CreateCommandBuffer()

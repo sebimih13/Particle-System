@@ -46,6 +46,8 @@ namespace VulkanCore {
         inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
         inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
         inline VkCommandPool GetCommandPool() const { return commandPool; }     // TODO: return const &
+        inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }       // TODO: return const &
+        inline VkQueue GetPresentQueue() const { return presentQueue; }         // TODO: return const &
 
     private:
         VkInstance instance;

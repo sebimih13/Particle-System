@@ -13,6 +13,8 @@ namespace VulkanCore {
 	Pipeline::Pipeline(GPUDevice& device, SwapChain& swapChain)
 		: device(device)
 	{
+		// TODO: createGraphicsPipeline()
+
 		std::vector<char> vertShaderCode = ReadFile("shaders/triangle.vert.spv");
 		std::vector<char> fragShaderCode = ReadFile("shaders/triangle.frag.spv");
 

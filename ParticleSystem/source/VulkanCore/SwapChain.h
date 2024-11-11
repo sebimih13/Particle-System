@@ -25,6 +25,9 @@ namespace VulkanCore {
         SwapChain(SwapChain&&) = delete;
         SwapChain& operator = (SwapChain&&) = delete;
 
+        VkResult AcquireNextImage(uint32_t* imageIndex);
+        VkResult SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex);
+
         // Getters
         VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
         VkRenderPass GetRenderPass() const { return renderPass; }
@@ -44,10 +47,15 @@ namespace VulkanCore {
 
         VkRenderPass renderPass;
 
+        VkSemaphore imageAvailableSemaphore;
+        VkSemaphore renderFinishedSemaphore;
+        VkFence inFlightFence;
+
         void CreateSwapChain();
         void CreateImageViews();
         void CreateRenderPass();
         void CreateChainFramebuffers();
+        void CreateSyncObjects();
 
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);

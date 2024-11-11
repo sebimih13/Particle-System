@@ -3,6 +3,7 @@
 // TODO: Forward Declarations
 #include "Window.h"
 #include "GPUDevice.h"
+#include "Renderer.h"
 
 namespace VulkanCore {
 
@@ -15,6 +16,7 @@ namespace VulkanCore {
         ApplicationConfiguration(const WindowConfiguration& windowConfig);
     };
 
+    // TODO: de facut clasa virtuala
     class Application
     {
     public:
@@ -38,6 +40,9 @@ namespace VulkanCore {
     private:
         Window window;
         GPUDevice device;
+        SwapChain swapChain;
+        Pipeline graphicsPipeline;
+        Renderer renderer;
 
         bool bIsRunning; // TODO: de facut o functie Close()
     };
