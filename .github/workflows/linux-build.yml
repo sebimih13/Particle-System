@@ -1,0 +1,28 @@
+name: Build Linux
+
+on:
+  workflow_call:
+
+env:
+  PROJECT_NAME: 'ParticleSystem'
+  ZIP_NAME: 'linux-x64'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    
+    strategy:
+        fail-fast: false
+        matrix:
+          build-configuration: [Debug, Release]
+          build-platform: [x64]
+
+    steps:
+    - name: Clone Git Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Setup
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: ./generate_project.sh
