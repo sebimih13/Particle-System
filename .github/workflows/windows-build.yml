@@ -1,4 +1,4 @@
-name: Build Windows
+name: Windows
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ env:
   ZIP_NAME: 'windows-x64'
 
 jobs:
-  windows:
+  build:
     runs-on: windows-latest
     
     strategy:

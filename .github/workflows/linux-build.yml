@@ -1,4 +1,4 @@
-name: Build Linux
+name: Linux
 
 on:
   workflow_call:
@@ -8,14 +8,14 @@ env:
   ZIP_NAME: 'linux-x64'
 
 jobs:
-  linux:
+  build:
     runs-on: ubuntu-latest
     
     strategy:
         fail-fast: false
         matrix:
           build-configuration: [debug, release]
-          build-platform: [x64] # TODO: remove
+          build-platform: [x64]
 
     steps:
     - name: Clone Git Repository
