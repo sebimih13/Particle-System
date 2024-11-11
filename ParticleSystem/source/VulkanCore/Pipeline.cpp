@@ -15,8 +15,16 @@ namespace VulkanCore {
 	{
 		// TODO: createGraphicsPipeline()
 
-		std::vector<char> vertShaderCode = ReadFile("shaders/triangle.vert.spv");
-		std::vector<char> fragShaderCode = ReadFile("shaders/triangle.frag.spv");
+#ifdef _WIN32
+        static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
+#elif __linux__
+		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
+#endif
+
+		std::vector<char> vertShaderCode = ReadFile(vertShaderFilePath);
+		std::vector<char> fragShaderCode = ReadFile(fragShaderFilePath);
 
 		// TODO: delete
 		std::cout << "\nLoaded shaders:\n";
