@@ -2,8 +2,6 @@
 
 // TODO: sau Forward Declarations
 #include "GPUDevice.h"
-
-// TODO: remove
 #include "SwapChain.h"
 
 #include <string>
@@ -32,6 +30,7 @@ namespace VulkanCore {
 
 	private:
 		GPUDevice& device;
+		SwapChain& swapChain;
 
 		VkPipeline graphicsPipeline;
 
@@ -41,6 +40,7 @@ namespace VulkanCore {
 
 		static std::vector<char> ReadFile(const std::string& filePath);
 
+		void CreateGraphicsPipeline();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 	};
 

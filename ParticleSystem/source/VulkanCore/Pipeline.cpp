@@ -12,10 +12,47 @@ namespace VulkanCore {
 
 	Pipeline::Pipeline(GPUDevice& device, SwapChain& swapChain)
 		: device(device)
+		, swapChain(swapChain)
 	{
-		// TODO: createGraphicsPipeline()
+		CreateGraphicsPipeline();
+	}
 
-// TODO: test
+	Pipeline::~Pipeline()
+	{
+		vkDestroyPipeline(device.GetVKDevice(), graphicsPipeline, nullptr);
+
+		// TODO: move
+		vkDestroyPipelineLayout(device.GetVKDevice(), pipelineLayout, nullptr);
+	}
+
+	void Pipeline::Bind(VkCommandBuffer commandBuffer)
+	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	}
+
+	std::vector<char> Pipeline::ReadFile(const std::string& filePath)
+	{
+		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
+		if (!file.is_open())
+		{
+			throw std::runtime_error("Failed to open file: " + filePath);
+		}
+
+		size_t fileSize = static_cast<size_t>(file.tellg());
+		std::vector<char> buffer(fileSize);
+
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+
+		file.close();
+		
+		return buffer;
+	}
+
+	void Pipeline::CreateGraphicsPipeline()
+	{
+
+		// TODO: test
 #if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
 		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
@@ -26,11 +63,6 @@ namespace VulkanCore {
 
 		std::vector<char> vertShaderCode = ReadFile(vertShaderFilePath);
 		std::vector<char> fragShaderCode = ReadFile(fragShaderFilePath);
-
-		// TODO: delete
-		std::cout << "\nLoaded shaders:\n";
-		std::cout << '\b' << vertShaderCode.size() << '\n';
-		std::cout << '\b' << fragShaderCode.size() << "\n\n";
 
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
@@ -166,38 +198,6 @@ namespace VulkanCore {
 
 		vkDestroyShaderModule(device.GetVKDevice(), fragShaderModule, nullptr);
 		vkDestroyShaderModule(device.GetVKDevice(), vertShaderModule, nullptr);
-	}
-
-	Pipeline::~Pipeline()
-	{
-		vkDestroyPipeline(device.GetVKDevice(), graphicsPipeline, nullptr);
-
-		// TODO: move
-		vkDestroyPipelineLayout(device.GetVKDevice(), pipelineLayout, nullptr);
-	}
-
-	void Pipeline::Bind(VkCommandBuffer commandBuffer)
-	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-	}
-
-	std::vector<char> Pipeline::ReadFile(const std::string& filePath)
-	{
-		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
-		if (!file.is_open())
-		{
-			throw std::runtime_error("Failed to open file: " + filePath);
-		}
-
-		size_t fileSize = static_cast<size_t>(file.tellg());
-		std::vector<char> buffer(fileSize);
-
-		file.seekg(0);
-		file.read(buffer.data(), fileSize);
-
-		file.close();
-		
-		return buffer;
 	}
 
 	VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code) const
