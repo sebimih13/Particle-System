@@ -40,12 +40,20 @@ namespace VulkanCore {
 
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
+        inline void ResetWindowResizedFlag() { framebufferResized = false; }
+
         // Getters
         int GetWidth() const;
         int GetHeight() const;
+        inline bool GetWasWindowResized() const { return framebufferResized; }
 
     private:
         GLFWwindow* window;
+
+        bool framebufferResized;
+
+        // Callbacks
+        static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
     };
 
 } // namespace VulkanCore

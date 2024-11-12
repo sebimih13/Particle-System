@@ -51,7 +51,6 @@ namespace VulkanCore {
 
 	void Pipeline::CreateGraphicsPipeline()
 	{
-
 		// TODO: test
 #if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
 		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";

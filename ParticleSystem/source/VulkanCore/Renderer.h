@@ -6,6 +6,8 @@
 #include "SwapChain.h"
 #include "Pipeline.h"
 
+#include <memory>
+
 namespace VulkanCore {
 
 	class Renderer
@@ -37,6 +39,7 @@ namespace VulkanCore {
 		std::vector<VkCommandBuffer> commandBuffers;
 
 		void CreateCommandBuffers();
+		void RecreateSwapChain();
 	};
 
 } // namespace VulkanCore

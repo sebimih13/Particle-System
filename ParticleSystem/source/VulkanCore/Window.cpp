@@ -11,14 +11,16 @@ namespace VulkanCore {
     }
 
     Window::Window(const WindowConfiguration& config)
+        : framebufferResized(false)
     {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
         // Set GLFW callbacks
+        glfwSetWindowUserPointer(window, this);
+        glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
         // TODO: glfwSetWindowSizeCallback
         // TODO: glfwSetWindowCloseCallback
         // TODO: glfwSetKeyCallback
@@ -63,6 +65,12 @@ namespace VulkanCore {
         glfwGetFramebufferSize(window, nullptr, &height);
 
         return height;
+    }
+
+    void Window::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
+    {
+        Window* windowPtr = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+        windowPtr->framebufferResized = true;
     }
 
 } // namespace VulkanCore

@@ -29,6 +29,7 @@ namespace VulkanCore {
 
         VkResult AcquireNextImage(uint32_t* imageIndex);
         VkResult SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex);
+        void AdvanceFrameIndex();
 
         // Getters
         VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }

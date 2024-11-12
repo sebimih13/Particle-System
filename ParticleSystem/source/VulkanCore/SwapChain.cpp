@@ -45,8 +45,6 @@ namespace VulkanCore {
     VkResult SwapChain::AcquireNextImage(uint32_t* imageIndex)
     {
         vkWaitForFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
-        vkResetFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex]);
-
         return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrameIndex], VK_NULL_HANDLE, imageIndex);
     }
 
@@ -67,6 +65,9 @@ namespace VulkanCore {
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
+        // Only reset the fence if we are submitting work
+        vkResetFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex]);
+
         if (vkQueueSubmit(device.GetGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrameIndex]) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to submit draw command buffer!");
@@ -83,10 +84,12 @@ namespace VulkanCore {
         presentInfo.pImageIndices = imageIndex;
         presentInfo.pResults = nullptr;     // optional
 
-        // advance to the next frame
-        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-
         return vkQueuePresentKHR(device.GetPresentQueue(), &presentInfo);
+    }
+
+    void SwapChain::AdvanceFrameIndex()
+    {
+        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
     void SwapChain::CreateSwapChain()

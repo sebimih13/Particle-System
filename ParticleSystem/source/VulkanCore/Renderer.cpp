@@ -7,8 +7,8 @@ namespace VulkanCore {
 	Renderer::Renderer(Window& window, GPUDevice& device, SwapChain& swapChain, Pipeline& pipeline)
 		: window(window)
 		, device(device)
-		, swapChain(swapChain)
-		, pipeline(pipeline)
+		, swapChain(swapChain)	// TODO: remove
+		, pipeline(pipeline)	// TODO: remove
 	{
 		CreateCommandBuffers();
 	}
@@ -75,12 +75,32 @@ namespace VulkanCore {
 	void Renderer::DrawFrame()
 	{
 		uint32_t imageIndex;
-		swapChain.AcquireNextImage(&imageIndex);
+		VkResult resultAcquireNextImage = swapChain.AcquireNextImage(&imageIndex);
+		if (resultAcquireNextImage == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			RecreateSwapChain();
+			return;
+		}
+		else if (resultAcquireNextImage != VK_SUCCESS && resultAcquireNextImage != VK_SUBOPTIMAL_KHR)
+		{
+			throw std::runtime_error("Failed to acquire swap chain image!");
+		}
 
 		vkResetCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], 0);
 		RecordCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], imageIndex);
 
-		swapChain.SubmitCommandBuffer(&commandBuffers[swapChain.GetCurrentFrameIndex()], &imageIndex);
+		VkResult resultSubmitCommandBuffer = swapChain.SubmitCommandBuffer(&commandBuffers[swapChain.GetCurrentFrameIndex()], &imageIndex);
+		if (resultSubmitCommandBuffer == VK_ERROR_OUT_OF_DATE_KHR || resultSubmitCommandBuffer == VK_SUBOPTIMAL_KHR || window.GetWasWindowResized())
+		{
+			window.ResetWindowResizedFlag();
+			RecreateSwapChain();
+		}
+		else if (resultSubmitCommandBuffer != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to present swap chain image!");
+		}
+
+		swapChain.AdvanceFrameIndex();
 	}
 
 	void Renderer::CreateCommandBuffers()
@@ -97,6 +117,14 @@ namespace VulkanCore {
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
+	}
+
+	void Renderer::RecreateSwapChain()
+	{
+		vkDeviceWaitIdle(device.GetVKDevice());
+
+		// TODO: use an unique_ptr for swapChain
+		// swapChain = std::make_unique<SwapChain>(device, window);
 	}
 
 } // namespace VulkanCore

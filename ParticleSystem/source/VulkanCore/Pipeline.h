@@ -13,7 +13,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Pipeline(GPUDevice& device, SwapChain& swapChain);
+		Pipeline(GPUDevice& device, SwapChain& swapChain);	// TODO: refactor
 
 		// Destructor
 		~Pipeline();
