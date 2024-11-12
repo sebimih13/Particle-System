@@ -34,9 +34,9 @@ namespace VulkanCore {
 		SwapChain& swapChain;
 		Pipeline& pipeline;		// TODO: move
 
-		VkCommandBuffer commandBuffer;
+		std::vector<VkCommandBuffer> commandBuffers;
 
-		void CreateCommandBuffer();
+		void CreateCommandBuffers();
 	};
 
 } // namespace VulkanCore

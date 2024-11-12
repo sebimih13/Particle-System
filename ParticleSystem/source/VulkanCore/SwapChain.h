@@ -11,6 +11,8 @@ namespace VulkanCore {
 	class SwapChain final
 	{
 	public:
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+        
         // Constructor
         SwapChain(GPUDevice& device, const Window& window);
 
@@ -32,6 +34,7 @@ namespace VulkanCore {
         VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
         VkRenderPass GetRenderPass() const { return renderPass; }
         VkFramebuffer GetSwapChainFramebuffer(const size_t& index) const { return swapChainFramebuffers[index]; }
+        uint32_t GetCurrentFrameIndex() const { return currentFrameIndex; }
 
 	private:
         GPUDevice& device; // TODO: const?
@@ -47,9 +50,10 @@ namespace VulkanCore {
 
         VkRenderPass renderPass;
 
-        VkSemaphore imageAvailableSemaphore;
-        VkSemaphore renderFinishedSemaphore;
-        VkFence inFlightFence;
+        uint32_t currentFrameIndex;
+        std::vector<VkSemaphore> imageAvailableSemaphores;
+        std::vector<VkSemaphore> renderFinishedSemaphores;
+        std::vector<VkFence> inFlightFences;
 
         void CreateSwapChain();
         void CreateImageViews();

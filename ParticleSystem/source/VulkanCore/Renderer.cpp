@@ -10,8 +10,7 @@ namespace VulkanCore {
 		, swapChain(swapChain)
 		, pipeline(pipeline)
 	{
-		// TODO: window + device
-		CreateCommandBuffer();
+		CreateCommandBuffers();
 	}
 
 	Renderer::~Renderer()
@@ -78,21 +77,23 @@ namespace VulkanCore {
 		uint32_t imageIndex;
 		swapChain.AcquireNextImage(&imageIndex);
 
-		vkResetCommandBuffer(commandBuffer, 0);
-		RecordCommandBuffer(commandBuffer, imageIndex);
+		vkResetCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], 0);
+		RecordCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], imageIndex);
 
-		swapChain.SubmitCommandBuffer(&commandBuffer, &imageIndex);
+		swapChain.SubmitCommandBuffer(&commandBuffers[swapChain.GetCurrentFrameIndex()], &imageIndex);
 	}
 
-	void Renderer::CreateCommandBuffer()
+	void Renderer::CreateCommandBuffers()
 	{
+		commandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
 		VkCommandBufferAllocateInfo allocateInfo = {};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocateInfo.commandPool = device.GetCommandPool();
 		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocateInfo.commandBufferCount = 1;
+		allocateInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocateInfo, &commandBuffer) != VK_SUCCESS)
+		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocateInfo, commandBuffers.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
