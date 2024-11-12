@@ -14,7 +14,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Renderer(Window& window, GPUDevice& device, SwapChain& swapChain, Pipeline& pipeline); // TODO: refactor
+		Renderer(Window& window, GPUDevice& device); // TODO: refactor
 
 		// Destructor
 		~Renderer();
@@ -33,8 +33,8 @@ namespace VulkanCore {
 	private:
 		Window& window;
 		GPUDevice& device;
-		SwapChain& swapChain;
-		Pipeline& pipeline;		// TODO: move
+		std::unique_ptr<SwapChain> swapChain;
+		std::unique_ptr<Pipeline> pipeline;
 
 		std::vector<VkCommandBuffer> commandBuffers;
 

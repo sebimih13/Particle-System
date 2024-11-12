@@ -4,12 +4,12 @@
 
 namespace VulkanCore {
 
-	Renderer::Renderer(Window& window, GPUDevice& device, SwapChain& swapChain, Pipeline& pipeline)
+	Renderer::Renderer(Window& window, GPUDevice& device)
 		: window(window)
 		, device(device)
-		, swapChain(swapChain)	// TODO: remove
-		, pipeline(pipeline)	// TODO: remove
 	{
+		RecreateSwapChain();
+		pipeline = std::make_unique<Pipeline>(device, swapChain->GetRenderPass());	// TODO: move
 		CreateCommandBuffers();
 	}
 
@@ -33,10 +33,10 @@ namespace VulkanCore {
 
 		VkRenderPassBeginInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = swapChain.GetRenderPass();
-		renderPassInfo.framebuffer = swapChain.GetSwapChainFramebuffer(imageIndex);
+		renderPassInfo.renderPass = swapChain->GetRenderPass();
+		renderPassInfo.framebuffer = swapChain->GetSwapChainFramebuffer(imageIndex);
 		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = swapChain.GetSwapChainExtent();
+		renderPassInfo.renderArea.extent = swapChain->GetSwapChainExtent();
 
 		VkClearValue clearColor = { };
 		clearColor.color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -45,20 +45,20 @@ namespace VulkanCore {
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			pipeline.Bind(commandBuffer);
+			pipeline->Bind(commandBuffer);
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(swapChain.GetSwapChainExtent().width);
-			viewport.height = static_cast<float>(swapChain.GetSwapChainExtent().height);
+			viewport.width = static_cast<float>(swapChain->GetSwapChainExtent().width);
+			viewport.height = static_cast<float>(swapChain->GetSwapChainExtent().height);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 			VkRect2D scissor{};
 			scissor.offset = { 0, 0 };
-			scissor.extent = swapChain.GetSwapChainExtent();
+			scissor.extent = swapChain->GetSwapChainExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -75,7 +75,7 @@ namespace VulkanCore {
 	void Renderer::DrawFrame()
 	{
 		uint32_t imageIndex;
-		VkResult resultAcquireNextImage = swapChain.AcquireNextImage(&imageIndex);
+		VkResult resultAcquireNextImage = swapChain->AcquireNextImage(&imageIndex);
 		if (resultAcquireNextImage == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			RecreateSwapChain();
@@ -86,10 +86,10 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 
-		vkResetCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], 0);
-		RecordCommandBuffer(commandBuffers[swapChain.GetCurrentFrameIndex()], imageIndex);
+		vkResetCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], 0);
+		RecordCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], imageIndex);
 
-		VkResult resultSubmitCommandBuffer = swapChain.SubmitCommandBuffer(&commandBuffers[swapChain.GetCurrentFrameIndex()], &imageIndex);
+		VkResult resultSubmitCommandBuffer = swapChain->SubmitCommandBuffer(&commandBuffers[swapChain->GetCurrentFrameIndex()], &imageIndex);
 		if (resultSubmitCommandBuffer == VK_ERROR_OUT_OF_DATE_KHR || resultSubmitCommandBuffer == VK_SUBOPTIMAL_KHR || window.GetWasWindowResized())
 		{
 			window.ResetWindowResizedFlag();
@@ -100,7 +100,7 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to present swap chain image!");
 		}
 
-		swapChain.AdvanceFrameIndex();
+		swapChain->AdvanceFrameIndex();
 	}
 
 	void Renderer::CreateCommandBuffers()
@@ -121,10 +121,20 @@ namespace VulkanCore {
 
 	void Renderer::RecreateSwapChain()
 	{
+		// Handling minimization
+		int width = window.GetWidth();
+		int height = window.GetHeight();
+		while (width == 0 || height == 0)
+		{
+			width = window.GetWidth();
+			height = window.GetHeight();
+			glfwWaitEvents();
+		}
+
 		vkDeviceWaitIdle(device.GetVKDevice());
 
-		// TODO: use an unique_ptr for swapChain
-		// swapChain = std::make_unique<SwapChain>(device, window);
+		swapChain.reset(nullptr);
+		swapChain = std::make_unique<SwapChain>(device, window);
 	}
 
 } // namespace VulkanCore

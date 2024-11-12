@@ -471,6 +471,8 @@ namespace VulkanCore {
                     break;
             }
         }
+
+        std::cout << '\n';
     }
 
 } // namespace VulkanCore

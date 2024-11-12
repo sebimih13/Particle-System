@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace VulkanCore {
 
@@ -13,7 +14,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Pipeline(GPUDevice& device, SwapChain& swapChain);	// TODO: refactor
+		Pipeline(GPUDevice& device, const VkRenderPass& renderPass);	// TODO: refactor
 
 		// Destructor
 		~Pipeline();
@@ -30,7 +31,6 @@ namespace VulkanCore {
 
 	private:
 		GPUDevice& device;
-		SwapChain& swapChain;
 
 		VkPipeline graphicsPipeline;
 
@@ -40,7 +40,7 @@ namespace VulkanCore {
 
 		static std::vector<char> ReadFile(const std::string& filePath);
 
-		void CreateGraphicsPipeline();
+		void CreateGraphicsPipeline(const VkRenderPass& renderPass);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 	};
 

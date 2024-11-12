@@ -11,9 +11,7 @@ namespace VulkanCore {
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
 		, device(window)
-		, swapChain(device, window)
-		, graphicsPipeline(device, swapChain)
-		, renderer(window, device, swapChain, graphicsPipeline)
+		, renderer(window, device)
 		, bIsRunning(true)
 	{
 

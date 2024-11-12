@@ -10,11 +10,10 @@ namespace VulkanCore {
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-	Pipeline::Pipeline(GPUDevice& device, SwapChain& swapChain)
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass)
 		: device(device)
-		, swapChain(swapChain)
 	{
-		CreateGraphicsPipeline();
+		CreateGraphicsPipeline(renderPass);
 	}
 
 	Pipeline::~Pipeline()
@@ -49,7 +48,7 @@ namespace VulkanCore {
 		return buffer;
 	}
 
-	void Pipeline::CreateGraphicsPipeline()
+	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass)
 	{
 		// TODO: test
 #if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
@@ -185,7 +184,7 @@ namespace VulkanCore {
 		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
 		pipelineInfo.pDynamicState = &dynamicStateInfo;
 		pipelineInfo.layout = pipelineLayout;
-		pipelineInfo.renderPass = swapChain.GetRenderPass();
+		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;		// optional
 		pipelineInfo.basePipelineIndex = -1;					// optional

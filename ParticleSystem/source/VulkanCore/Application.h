@@ -40,8 +40,6 @@ namespace VulkanCore {
     private:
         Window window;
         GPUDevice device;
-        SwapChain swapChain;
-        Pipeline graphicsPipeline;
         Renderer renderer;
 
         bool bIsRunning; // TODO: de facut o functie Close()
