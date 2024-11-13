@@ -30,9 +30,9 @@ project "glfw"
         staticruntime "On"
 
         defines
-		{
-			"_GLFW_X11"
-		}
+        {
+            "_GLFW_X11"
+        }
 
     filter "configurations:Debug"
         runtime "Debug"
