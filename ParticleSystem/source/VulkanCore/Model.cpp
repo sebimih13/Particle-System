@@ -1,6 +1,7 @@
 #include "Model.h"
 
 #include <stdexcept>
+#include <cstring>
 
 namespace VulkanCore {
 
@@ -109,7 +110,7 @@ namespace VulkanCore {
 
 		void* data;
 		vkMapMemory(device.GetVKDevice(), vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-			memcpy(data, vertices.data(), static_cast<size_t>(bufferInfo.size));
+			std::memcpy(data, vertices.data(), static_cast<size_t>(bufferInfo.size));
 		vkUnmapMemory(device.GetVKDevice(), vertexBufferMemory);
 	}
 
