@@ -75,6 +75,22 @@ namespace VulkanCore {
         vkDestroyInstance(instance, nullptr);
     }
 
+    uint32_t GPUDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memoryProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+        {
+            if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+
+        throw std::runtime_error("Failed to find suitable memory type!");
+    }
+
     void GPUDevice::CreateInstance()
     {
 #ifdef DEBUG

@@ -27,16 +27,21 @@ namespace VulkanCore {
 		Renderer(Renderer&&) = delete;
 		Renderer& operator = (Renderer&&) = delete;
 
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-		void DrawFrame();
+		// TODO: test
+		VkCommandBuffer BeginFrame();
+		void EndFrame();
+
+		void BeginSwapChainRenderPass(VkCommandBuffer commandBuffer);
+		void EndSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
 	private:
 		Window& window;
 		GPUDevice& device;
 		std::unique_ptr<SwapChain> swapChain;
-		std::unique_ptr<Pipeline> pipeline;
+		std::unique_ptr<Pipeline> pipeline;		// TODO: move
 
 		std::vector<VkCommandBuffer> commandBuffers;
+		uint32_t currentImageIndex;
 
 		void CreateCommandBuffers();
 		void RecreateSwapChain();

@@ -40,6 +40,8 @@ namespace VulkanCore {
         GPUDevice(GPUDevice&&) = delete;
         GPUDevice& operator = (GPUDevice&&) = delete;
 
+        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
         // Getters
         inline VkSurfaceKHR GetSurface() const { return surface; }      // TODO: return const &
         inline VkDevice GetVKDevice() const { return device; }          // TODO: return const &
