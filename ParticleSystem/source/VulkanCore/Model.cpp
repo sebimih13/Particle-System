@@ -77,41 +77,74 @@ namespace VulkanCore {
 	{
 		vertexCount = static_cast<uint32_t>(vertices.size());
 
-		// TODO: refactor -> move to GPUDevice
-
-		// Create buffer
-		VkBufferCreateInfo bufferInfo = {};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = sizeof(vertices[0]) * vertices.size();
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(device.GetVKDevice(), &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create vertex buffer!");
-		}
-
-		// Memory allocation
-		VkMemoryRequirements memoryRequirements;
-		vkGetBufferMemoryRequirements(device.GetVKDevice(), vertexBuffer, &memoryRequirements);
+		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 		
-		VkMemoryAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memoryRequirements.size;
-		allocInfo.memoryTypeIndex = device.FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		// Create staging buffer
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory
+		);
 
-		if (vkAllocateMemory(device.GetVKDevice(), &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to allocate vertex buffer memory!");
-		}
-
-		// Filling the vertex buffer
-		vkBindBufferMemory(device.GetVKDevice(), vertexBuffer, vertexBufferMemory, 0);
-
+		// Filling staging buffer
 		void* data;
-		vkMapMemory(device.GetVKDevice(), vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-			std::memcpy(data, vertices.data(), static_cast<size_t>(bufferInfo.size));
-		vkUnmapMemory(device.GetVKDevice(), vertexBufferMemory);
+		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+			std::memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
+
+		// Create vertex buffer
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vertexBuffer,
+			vertexBufferMemory
+		);
+
+		CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
+	}
+
+	// TODO: refactor
+	// TODO: move to GPUDevice or Buffer
+	void Model::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	{
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = device.GetCommandPool();
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(device.GetVKDevice(), &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+			VkBufferCopy copyRegion = {};
+			copyRegion.srcOffset = 0;		// optional
+			copyRegion.dstOffset = 0;		// optional
+			copyRegion.size = size;
+			vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit(device.GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(device.GetGraphicsQueue());
+
+		vkFreeCommandBuffers(device.GetVKDevice(), device.GetCommandPool(), 1, &commandBuffer);
 	}
 
 } // namespace VulkanCore

@@ -41,6 +41,7 @@ namespace VulkanCore {
         GPUDevice& operator = (GPUDevice&&) = delete;
 
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
         // Getters
         inline VkSurfaceKHR GetSurface() const { return surface; }      // TODO: return const &

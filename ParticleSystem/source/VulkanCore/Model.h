@@ -56,6 +56,11 @@ namespace VulkanCore {
 		uint32_t vertexCount;
 
 		void CreateVertexBuffer(const std::vector<Vertex>& vertices);
+
+		// TODO: refactors
+		// TODO: create a new class Buffer
+		// TODO: define in GPUDevice
+		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	};
 
 } // namespace VulkanCore
