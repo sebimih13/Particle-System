@@ -40,22 +40,28 @@ namespace VulkanCore {
 		return attributeDescriptions;
 	}
 
-	Model::Data::Data(const std::vector<Vertex>& vertices)
+	Model::Data::Data(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 		: vertices(vertices)
+		, indices(indices)
 	{
 
 	}
 
 	Model::Model(GPUDevice& device, const Data& builder)
 		: device(device)
+		, vertexCount(0)
+		, indexCount(0)
 	{
 		CreateVertexBuffer(builder.vertices);
-		// TODO: CreateIndexBuffer
+		CreateIndexBuffer(builder.indices);
 	}
 
 	Model::~Model()
 	{
 		// TODO: refactor
+		vkDestroyBuffer(device.GetVKDevice(), indexBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), indexBufferMemory, nullptr);
+
 		vkDestroyBuffer(device.GetVKDevice(), vertexBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), vertexBufferMemory, nullptr);
 	}
@@ -66,11 +72,12 @@ namespace VulkanCore {
 		VkDeviceSize offsets[] = { 0 };
 
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void Model::Draw(VkCommandBuffer commandBuffer)
 	{
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertexCount), 1, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 	}
 
 	void Model::CreateVertexBuffer(const std::vector<Vertex>& vertices)
@@ -106,6 +113,44 @@ namespace VulkanCore {
 		);
 
 		CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
+	}
+
+	void Model::CreateIndexBuffer(const std::vector<uint32_t>& indices)
+	{
+		indexCount = static_cast<uint32_t>(indices.size());
+
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+		// Create staging buffer
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory
+		);
+
+		// Filling staging buffer
+		void* data;
+		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+			std::memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
+
+		// Create index buffer
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			indexBuffer,
+			indexBufferMemory
+		);
+
+		CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);

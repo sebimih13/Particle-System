@@ -32,12 +32,18 @@ namespace VulkanCore {
 	{
 		// TODO: test
 		const std::vector<Model::Vertex> vertices = {
-			Model::Vertex(glm::vec2( 0.0f, -0.5f),	glm::vec3(1.0f, 1.0f, 1.0f)),
-			Model::Vertex(glm::vec2( 0.5f,  0.5f),	glm::vec3(0.0f, 1.0f, 0.0f)),
-			Model::Vertex(glm::vec2(-0.5f,  0.5f),	glm::vec3(0.0f, 0.0f, 1.0f))
+			Model::Vertex(glm::vec2(-0.5f, -0.5f),	glm::vec3(1.0f, 0.0f, 0.0f)),
+			Model::Vertex(glm::vec2( 0.5f, -0.5f),	glm::vec3(0.0f, 1.0f, 0.0f)),
+			Model::Vertex(glm::vec2( 0.5f,  0.5f),	glm::vec3(0.0f, 0.0f, 1.0f)),
+			Model::Vertex(glm::vec2(-0.5f,  0.5f),	glm::vec3(1.0f, 1.0f, 1.0f))
 		};
 
-		Model::Data triangleData(vertices);
+		const std::vector<uint32_t> indices = {
+			0, 1, 2,
+			2, 3, 0
+		};
+
+		Model::Data triangleData(vertices, indices);
 		Model triangle(device, triangleData);
 
 		while (!window.ShouldClose() && bIsRunning)

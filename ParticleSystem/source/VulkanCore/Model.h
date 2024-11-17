@@ -33,9 +33,9 @@ namespace VulkanCore {
 		struct Data
 		{
 			const std::vector<Vertex> vertices;
-			// TODO: const std::vector<uint32_t> indices;
+			const std::vector<uint32_t> indices;
 
-			Data(const std::vector<Vertex>& vertices);
+			Data(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		};
 
 		// Constructor
@@ -55,7 +55,12 @@ namespace VulkanCore {
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;
 
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		uint32_t indexCount;
+
 		void CreateVertexBuffer(const std::vector<Vertex>& vertices);
+		void CreateIndexBuffer(const std::vector<uint32_t>& indices);
 
 		// TODO: refactors
 		// TODO: create a new class Buffer
