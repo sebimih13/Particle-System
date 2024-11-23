@@ -13,9 +13,10 @@ namespace VulkanCore {
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass)
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout)
 		: device(device)
 	{
+		CreatePipelineLayout(descriptorSetLayout);
 		CreateGraphicsPipeline(renderPass);
 	}
 
@@ -49,6 +50,21 @@ namespace VulkanCore {
 		file.close();
 		
 		return buffer;
+	}
+
+	void Pipeline::CreatePipelineLayout(const VkDescriptorSetLayout& descriptorSetLayout)
+	{
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;			// optional
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;		// optional
+
+		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create pipeline layout!");
+		}
 	}
 
 	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass)
@@ -124,7 +140,7 @@ namespace VulkanCore {
 		rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizationInfo.lineWidth = 1.0f;
 		rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // TODO: inapoi la valoare default: VK_FRONT_FACE_CLOCKWISE
 		rasterizationInfo.depthBiasEnable = VK_FALSE;
 		rasterizationInfo.depthBiasConstantFactor = 0.0f;	// optional
 		rasterizationInfo.depthBiasClamp = 0.0f;			// optional
@@ -161,20 +177,6 @@ namespace VulkanCore {
 		colorBlendStateInfo.blendConstants[1] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[2] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[3] = 0.0f;		// optional
-
-		// TODO: move
-		// Pipeline layout
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;				// optional
-		pipelineLayoutInfo.pSetLayouts = nullptr;			// optional
-		pipelineLayoutInfo.pushConstantRangeCount = 0;		// optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;	// optional
-
-		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create pipeline layout!");
-		}
 
 		// Pipeline
 		VkGraphicsPipelineCreateInfo pipelineInfo = {};

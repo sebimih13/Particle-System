@@ -1,10 +1,10 @@
 #pragma once
 
+#include <vector>
+
 // TODO: asta sau alt Window / GPUDevice
 #include "Window.h"
 #include "GPUDevice.h"
-
-#include <vector>
 
 namespace VulkanCore {
 

@@ -1,12 +1,16 @@
 #pragma once
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
+#include <memory>
+
 // TODO: forward declarations?
 #include "Window.h"
 #include "GPUDevice.h"
 #include "SwapChain.h"
 #include "Pipeline.h"
-
-#include <memory>
 
 namespace VulkanCore {
 
@@ -27,18 +31,21 @@ namespace VulkanCore {
 		Renderer(Renderer&&) = delete;
 		Renderer& operator = (Renderer&&) = delete;
 
-		// TODO: test
 		VkCommandBuffer BeginFrame();
 		void EndFrame();
 
 		void BeginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 		void EndSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
+		// Getters
+		// inline const SwapChain* const GetSwapChain() const { return swapChain.get(); }		// TODO: nu cred ca e suficient de safe
+		// TODO: inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
+		inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
+
 	private:
 		Window& window;
 		GPUDevice& device;
 		std::unique_ptr<SwapChain> swapChain;
-		std::unique_ptr<Pipeline> pipeline;		// TODO: move
 
 		std::vector<VkCommandBuffer> commandBuffers;
 		uint32_t currentImageIndex;

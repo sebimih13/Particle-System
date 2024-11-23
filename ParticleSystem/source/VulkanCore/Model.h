@@ -8,11 +8,11 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-// TODO: Forward Declaration
-#include "GPUDevice.h"
-
 #include <vector>
 #include <array>
+
+// TODO: Forward Declaration
+#include "GPUDevice.h"
 
 namespace VulkanCore {
 

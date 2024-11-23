@@ -10,7 +10,6 @@ namespace VulkanCore {
 		, currentImageIndex(0)
 	{
 		RecreateSwapChain();
-		pipeline = std::make_unique<Pipeline>(device, swapChain->GetRenderPass());	// TODO: move
 		CreateCommandBuffers();
 	}
 
@@ -87,7 +86,6 @@ namespace VulkanCore {
 		renderPassInfo.pClearValues = &clearColor;
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		pipeline->Bind(commandBuffer);	// TODO: move - nu e ceva general, putem sa avem mai multe pipelines diferite pe care sa le folosim
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;

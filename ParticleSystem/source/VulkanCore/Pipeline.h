@@ -1,12 +1,12 @@
 #pragma once
 
-// TODO: sau Forward Declarations
-#include "GPUDevice.h"
-#include "SwapChain.h"
-
 #include <string>
 #include <vector>
 #include <memory>
+
+// TODO: sau Forward Declarations
+#include "GPUDevice.h"
+#include "SwapChain.h"
 
 namespace VulkanCore {
 
@@ -14,7 +14,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Pipeline(GPUDevice& device, const VkRenderPass& renderPass);	// TODO: refactor
+		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout);
 
 		// Destructor
 		~Pipeline();
@@ -28,18 +28,21 @@ namespace VulkanCore {
 		Pipeline& operator = (Pipeline&&) = delete;
 
 		void Bind(VkCommandBuffer commandBuffer);
+		
+		// Getters
+		inline VkPipelineLayout GetPipelineLayout() const { return pipelineLayout; }
 
 	private:
 		GPUDevice& device;
 
+		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
-
-		VkPipelineLayout pipelineLayout; // TODO: nullptr
 
 		static const std::vector<VkDynamicState> dynamicStates;
 
 		static std::vector<char> ReadFile(const std::string& filePath);
 
+		void CreatePipelineLayout(const VkDescriptorSetLayout& descriptorSetLayout);
 		void CreateGraphicsPipeline(const VkRenderPass& renderPass);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 	};

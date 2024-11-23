@@ -1,9 +1,14 @@
 #pragma once
 
+// TODO: delete - test
+#include <vector>
+#include <memory>
+
 // TODO: Forward Declarations
 #include "Window.h"
 #include "GPUDevice.h"
 #include "Renderer.h"
+#include "Descriptor.h"
 
 namespace VulkanCore {
 
@@ -14,6 +19,13 @@ namespace VulkanCore {
         // TODO: add
 
         ApplicationConfiguration(const WindowConfiguration& windowConfig);
+    };
+
+    // TODO: move FrameInfo.h
+    struct UniformBufferObject {
+        glm::mat4 model;
+        glm::mat4 view;
+        glm::mat4 proj;
     };
 
     // TODO: de facut clasa virtuala
@@ -43,6 +55,27 @@ namespace VulkanCore {
         Renderer renderer;
 
         bool bIsRunning; // TODO: de facut o functie Close()
+
+        std::unique_ptr<DescriptorSetLayout> globalSetLayout;
+        std::unique_ptr<DescriptorPool> globalPool;
+        std::vector<VkDescriptorSet> globalDescriptorSets;
+        std::unique_ptr<Pipeline> pipeline;
+
+        void UpdateUniformBuffer(uint32_t currentFrame);
+
+        void CreateDescriptorSetLayout();
+        void CreateDescriptorPool();
+        void CreateDescriptorSets();
+        void CreatePipeline();
+
+        // TODO: REFACTOR - use Buffer class
+        void CreateUniformBuffers();
+        void CleanupUniformBuffers();
+
+        // TODO: delete
+        std::vector<VkBuffer> uniformBuffers;
+        std::vector<VkDeviceMemory> uniformBuffersMemory;
+        std::vector<void*> uniformBuffersMapped;
     };
 
 } // namespace VulkanCore
