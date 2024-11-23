@@ -15,6 +15,7 @@ workspace 'ParticleSystem'
 
     group "Dependencies"
         include "vendor/glfw.lua"
+        include "vendor/imgui.lua"
     group ""
 
     include "ParticleSystem/particle_system.lua"

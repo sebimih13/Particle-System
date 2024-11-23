@@ -19,7 +19,8 @@ project "ParticleSystem"
     {
         "%{IncludeDir.glfw}",
         "%{IncludeDir.VulkanSDK}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.imgui}"
     }
 
     libdirs
@@ -30,7 +31,8 @@ project "ParticleSystem"
     links
     {
         "glfw",
-        Library[os.target()]["Vulkan"]
+        Library[os.target()]["Vulkan"],
+        "imgui"
     }
 
     -- TODO: only the files existing at the time of executing this script will be considered
