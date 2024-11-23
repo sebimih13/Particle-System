@@ -67,6 +67,7 @@ namespace VulkanCore {
         void CreateDescriptorPool();
         void CreateDescriptorSets();
         void CreatePipeline();
+        void SetupImGui();
 
         // TODO: REFACTOR - use Buffer class
         void CreateUniformBuffers();

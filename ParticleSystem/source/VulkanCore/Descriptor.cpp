@@ -76,7 +76,7 @@ namespace VulkanCore {
 
 	std::unique_ptr<DescriptorPool> DescriptorPool::Builder::Build() const
 	{
-		return std::make_unique<DescriptorPool>(device, poolSizes, maxSets);
+		return std::make_unique<DescriptorPool>(device, poolSizes, maxSets, descriptorPoolCreateFlags);
 	}
 
 	DescriptorPool::Builder& DescriptorPool::Builder::AddPoolSize(VkDescriptorType type, uint32_t count)
@@ -97,7 +97,14 @@ namespace VulkanCore {
 		return *this;
 	}
 
-	DescriptorPool::DescriptorPool(GPUDevice& device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
+	DescriptorPool::Builder& DescriptorPool::Builder::AddFlags(VkDescriptorPoolCreateFlags flags)
+	{
+		descriptorPoolCreateFlags |= flags;
+
+		return *this;
+	}
+
+	DescriptorPool::DescriptorPool(GPUDevice& device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets, VkDescriptorPoolCreateFlags descriptorPoolCreateFlags)
 		: device(device)
 	{
 		VkDescriptorPoolCreateInfo poolInfo = {};
@@ -105,7 +112,7 @@ namespace VulkanCore {
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = maxSets;
-		// poolInfo.flags = poolFlags;		// TODO: add
+		poolInfo.flags = descriptorPoolCreateFlags;
 
 		if (vkCreateDescriptorPool(device.GetVKDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		{

@@ -1,5 +1,6 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE       // TODO: de pus peste tot? pt ImGui
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
@@ -43,6 +44,7 @@ namespace VulkanCore {
         inline void ResetWindowResizedFlag() { framebufferResized = false; }
 
         // Getters
+        inline GLFWwindow* const GetGLFWWindow() const { return window; }
         int GetWidth() const;
         int GetHeight() const;
         inline bool GetWasWindowResized() const { return framebufferResized; }

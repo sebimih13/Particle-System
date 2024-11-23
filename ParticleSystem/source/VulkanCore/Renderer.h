@@ -18,7 +18,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Renderer(Window& window, GPUDevice& device); // TODO: refactor
+		Renderer(Window& window, GPUDevice& device);
 
 		// Destructor
 		~Renderer();

@@ -13,9 +13,14 @@ namespace VulkanCore {
     Window::Window(const WindowConfiguration& config)
         : framebufferResized(false)
     {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        // TODO: glfwSetErrorCallback(glfw_error_callback);
 
+        if (!glfwInit())
+        {
+            throw std::runtime_error("Could not initalize GLFW!");
+        }
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
         // Set GLFW callbacks

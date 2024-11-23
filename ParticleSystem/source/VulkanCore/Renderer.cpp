@@ -38,7 +38,7 @@ namespace VulkanCore {
 
 		VkCommandBufferBeginInfo beginInfo = {};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = 0;					// optional
+		beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;		// TODO: pentru ImGui
 		beginInfo.pInheritanceInfo = nullptr;	// optional
 
 		if (vkBeginCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], &beginInfo) != VK_SUCCESS)
