@@ -46,6 +46,9 @@ jobs:
         mkdir -p "${{ env.ZIP_NAME }}\shaders"
         xcopy ${{ env.PROJECT_NAME }}\shaders\*.spv "${{ env.ZIP_NAME }}\shaders" /E /H
 
+        mkdir -p "${{ env.ZIP_NAME }}\textures"
+        xcopy ${{ env.PROJECT_NAME }}\textures\ "${{ env.ZIP_NAME }}\textures" /E /H
+
         dir /a ${{ env.ZIP_NAME }}
     
     - name: Set Tag Name

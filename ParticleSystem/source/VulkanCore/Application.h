@@ -75,6 +75,9 @@ namespace VulkanCore {
         void CreateUniformBuffers();
         void CleanupUniformBuffers();
 
+        // TODO: REFACTOR - move
+        void CreateTextureImage();
+
         // TODO: delete
         std::vector<VkBuffer> uniformBuffers;
         std::vector<VkDeviceMemory> uniformBuffersMemory;
