@@ -13,11 +13,11 @@ namespace VulkanCore {
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout)
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
 		: device(device)
 	{
 		CreatePipelineLayout(descriptorSetLayout);
-		CreateGraphicsPipeline(renderPass);
+		CreateGraphicsPipeline(renderPass, vertexShaderFilePath, fragmentShaderFilePath);
 	}
 
 	Pipeline::~Pipeline()
@@ -67,19 +67,10 @@ namespace VulkanCore {
 		}
 	}
 
-	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass)
+	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
 	{
-		// TODO: test
-#if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
-		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
-		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
-#elif defined(PLATFORM_LINUX) && defined(DEBUG)
-		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
-		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
-#endif
-
-		std::vector<char> vertShaderCode = ReadFile(vertShaderFilePath);
-		std::vector<char> fragShaderCode = ReadFile(fragShaderFilePath);
+		std::vector<char> vertShaderCode = ReadFile(vertexShaderFilePath);
+		std::vector<char> fragShaderCode = ReadFile(fragmentShaderFilePath);
 
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);

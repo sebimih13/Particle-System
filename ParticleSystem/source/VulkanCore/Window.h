@@ -43,6 +43,7 @@ namespace VulkanCore {
         inline void ResetWindowResizedFlag() { framebufferResized = false; }
 
         // Getters
+        inline GLFWwindow* const GetGLFWWindow() const { return window; }
         int GetWidth() const;
         int GetHeight() const;
         inline bool GetWasWindowResized() const { return framebufferResized; }

@@ -1,38 +1,28 @@
-project "glfw"
+project "imgui"
     location "%{wks.location}/bin-int/project-files"
     kind "StaticLib"
-    language "C"
-    
+    language "C++"
+    staticruntime "off"
+
     targetdir("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
     objdir("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {
-        "glfw/include/GLFW/glfw3.h",
-        "glfw/include/GLFW/glfw3native.h",
-        "glfw/src/**.c",
-        "glfw/src/**.h"
+        "imgui/*.h",
+        "imgui/*.cpp"
     }
 
     filter "system:windows"
         systemversion "latest"
+        cppdialect "C++17"
         staticruntime "On"
-
-        defines 
-        { 
-            "_GLFW_WIN32",
-            "_CRT_SECURE_NO_WARNINGS"
-        }
 
     filter "system:linux"
         pic "On"
         systemversion "latest"
+        cppdialect "C++17"
         staticruntime "On"
-
-        defines
-        {
-            "_GLFW_X11"
-        }
 
     filter "configurations:Debug"
         runtime "Debug"

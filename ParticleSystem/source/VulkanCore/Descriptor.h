@@ -28,6 +28,7 @@ namespace VulkanCore {
 		private:
 			GPUDevice& device;
 			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
+			VkDescriptorPoolCreateFlags descriptorPoolCreateFlags;
 		};
 
 		// TODO: de pus in private si de facut clasa Builder friend
@@ -70,15 +71,17 @@ namespace VulkanCore {
 
 			Builder& AddPoolSize(VkDescriptorType type, uint32_t count);
 			Builder& SetMaxSets(uint32_t count);
+			Builder& AddFlags(VkDescriptorPoolCreateFlags flags);
 
 		private:
 			GPUDevice& device;
 			std::vector<VkDescriptorPoolSize> poolSizes;
 			uint32_t maxSets;
+			VkDescriptorPoolCreateFlags descriptorPoolCreateFlags;
 		};
 
 		// Constructors
-		DescriptorPool(GPUDevice& device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets);
+		DescriptorPool(GPUDevice& device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets, VkDescriptorPoolCreateFlags descriptorPoolCreateFlags);
 
 		// Destructor
 		~DescriptorPool();
@@ -92,6 +95,9 @@ namespace VulkanCore {
 		DescriptorPool& operator = (DescriptorPool&&) = delete;
 
 		bool AllocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptorSet);
+
+		// Getters
+		inline VkDescriptorPool GetDescriptorPool() const { return descriptorPool; }
 
 	private:
 		GPUDevice& device;

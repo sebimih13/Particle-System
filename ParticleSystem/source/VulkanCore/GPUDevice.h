@@ -44,6 +44,8 @@ namespace VulkanCore {
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
         // Getters
+        inline VkInstance GetInstance() const { return instance; }      // TODO: return const &
+        inline VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }    // TODO: return const &
         inline VkSurfaceKHR GetSurface() const { return surface; }      // TODO: return const &
         inline VkDevice GetVKDevice() const { return device; }          // TODO: return const &
         inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &

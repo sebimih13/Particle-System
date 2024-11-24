@@ -4,6 +4,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
 // TODO: test
 #include <vector>	// TODO: remove
 #include <chrono>
@@ -33,10 +36,16 @@ namespace VulkanCore {
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 		CreatePipeline();
+
+		SetupImGui();
 	}
 
 	Application::~Application()
 	{
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+
 		// TODO: move
 		CleanupUniformBuffers();
 	}
@@ -66,17 +75,36 @@ namespace VulkanCore {
 			// draw
 			if (VkCommandBuffer commandBuffer = renderer.BeginFrame())
 			{
+				// Start frame
 				renderer.BeginSwapChainRenderPass(commandBuffer);
 
-				// update ubo
+				// Update ubo
 				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
 
-				// triangle
+				// Triangle
 				pipeline->Bind(commandBuffer);
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipelineLayout(), 0, 1, &globalDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
 				triangle.Bind(commandBuffer);
 				triangle.Draw(commandBuffer);
 
+				// Start the Dear ImGui frame
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+
+				RenderUI();
+
+				ImGui::Render();
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
+				// Update and Render additional Platform Windows
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
+
+				// End frame
 				renderer.EndSwapChainRenderPass(commandBuffer);
 				renderer.EndFrame();
 			}
@@ -112,8 +140,9 @@ namespace VulkanCore {
 	void Application::CreateDescriptorPool()
 	{
 		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3)
+			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)					// for ImGui backend
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)		// for ImGui backend
 			.Build();
 	}
 
@@ -146,7 +175,63 @@ namespace VulkanCore {
 
 	void Application::CreatePipeline()
 	{
-		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout());
+		// TODO: test
+#if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
+		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
+#elif defined(PLATFORM_LINUX) && defined(DEBUG)
+		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
+#endif
+
+		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), vertShaderFilePath, fragShaderFilePath);
+	}
+
+	void Application::SetupImGui()
+	{
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;		// Enable Keyboard Controls
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;			// Enable Docking
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;			// Enable Multi-Viewport / Platform Windows
+
+		// Setup Dear ImGui style
+		ImGui::StyleColorsDark();
+
+		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
+
+		// Setup Platform/Renderer backends
+		ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
+		ImGui_ImplVulkan_InitInfo initInfoImGui = {};
+		initInfoImGui.Instance = device.GetInstance();
+		initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
+		initInfoImGui.Device = device.GetVKDevice();
+		initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsFamily.value();
+		initInfoImGui.Queue = device.GetGraphicsQueue();
+		initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
+		initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
+		initInfoImGui.Subpass = 0;
+		initInfoImGui.MinImageCount = 2;
+		initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
+		initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		ImGui_ImplVulkan_Init(&initInfoImGui);
+
+		// TODO
+		// beginSingleTimeCommands()
+		// ceva cu fonts
+	}
+
+	void Application::RenderUI()
+	{
+		ImGui::ShowDemoWindow();
+
+		// TODO
 	}
 
 	// TODO: delete

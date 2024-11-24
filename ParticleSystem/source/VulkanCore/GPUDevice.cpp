@@ -124,6 +124,11 @@ namespace VulkanCore {
 
     void GPUDevice::CreateInstance()
     {
+        if (!glfwVulkanSupported())
+        {
+            throw std::runtime_error("GLFW: Vulkan not supported!");
+        }
+
 #ifdef DEBUG
         ListAvailableExtensions();
         ListRequiredGLFWExtensions();
