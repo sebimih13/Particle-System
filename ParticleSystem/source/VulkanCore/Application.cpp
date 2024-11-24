@@ -78,10 +78,10 @@ namespace VulkanCore {
 				// Start frame
 				renderer.BeginSwapChainRenderPass(commandBuffer);
 
-				// update ubo
+				// Update ubo
 				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
 
-				// triangle
+				// Triangle
 				pipeline->Bind(commandBuffer);
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipelineLayout(), 0, 1, &globalDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
 				triangle.Bind(commandBuffer);
@@ -92,7 +92,7 @@ namespace VulkanCore {
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
 
-				ImGui::ShowDemoWindow();
+				RenderUI();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
@@ -225,6 +225,13 @@ namespace VulkanCore {
 		// TODO
 		// beginSingleTimeCommands()
 		// ceva cu fonts
+	}
+
+	void Application::RenderUI()
+	{
+		ImGui::ShowDemoWindow();
+
+		// TODO
 	}
 
 	// TODO: delete

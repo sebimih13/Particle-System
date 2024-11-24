@@ -69,6 +69,8 @@ namespace VulkanCore {
         void CreatePipeline();
         void SetupImGui();
 
+        void RenderUI();
+
         // TODO: REFACTOR - use Buffer class
         void CreateUniformBuffers();
         void CleanupUniformBuffers();

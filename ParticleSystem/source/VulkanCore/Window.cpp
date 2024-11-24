@@ -23,6 +23,8 @@ namespace VulkanCore {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
+        glfwSetWindowPos(window, 350, 150);     // TODO: de pus in WindowConfiguration?
+
         // Set GLFW callbacks
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);

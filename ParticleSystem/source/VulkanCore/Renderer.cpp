@@ -33,7 +33,7 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 		
-		// TODO: ???
+		// TODO: ??? -> poate fi stearsa - ImGui Integration
 		vkResetCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], 0);
 
 		VkCommandBufferBeginInfo beginInfo = {};
