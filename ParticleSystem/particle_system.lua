@@ -20,7 +20,8 @@ project "ParticleSystem"
         "%{IncludeDir.glfw}",
         "%{IncludeDir.VulkanSDK}",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.imgui}"
+        "%{IncludeDir.imgui}",
+        "%{IncludeDir.stb}"
     }
 
     libdirs
