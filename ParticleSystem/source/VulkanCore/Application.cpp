@@ -140,9 +140,9 @@ namespace VulkanCore {
 	void Application::CreateDescriptorPool()
 	{
 		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)					// TODO: pt ImGui
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3)
-			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)		// TODO: pt ImGui
+			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)					// for ImGui backend
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)		// for ImGui backend
 			.Build();
 	}
 
@@ -175,7 +175,16 @@ namespace VulkanCore {
 
 	void Application::CreatePipeline()
 	{
-		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout());
+		// TODO: test
+#if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
+		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
+#elif defined(PLATFORM_LINUX) && defined(DEBUG)
+		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
+		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
+#endif
+
+		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), vertShaderFilePath, fragShaderFilePath);
 	}
 
 	void Application::SetupImGui()

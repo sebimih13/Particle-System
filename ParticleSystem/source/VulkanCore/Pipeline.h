@@ -14,7 +14,7 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout);
+		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
 
 		// Destructor
 		~Pipeline();
@@ -43,7 +43,7 @@ namespace VulkanCore {
 		static std::vector<char> ReadFile(const std::string& filePath);
 
 		void CreatePipelineLayout(const VkDescriptorSetLayout& descriptorSetLayout);
-		void CreateGraphicsPipeline(const VkRenderPass& renderPass);
+		void CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 	};
 

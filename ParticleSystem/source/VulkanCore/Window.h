@@ -1,6 +1,5 @@
 #pragma once
 
-#define GLFW_INCLUDE_NONE       // TODO: de pus peste tot? pt ImGui
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 

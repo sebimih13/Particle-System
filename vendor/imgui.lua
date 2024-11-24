@@ -9,8 +9,8 @@ project "imgui"
 
     files
     {
-		"imgui/*.h",
-		"imgui/*.cpp"
+        "imgui/*.h",
+        "imgui/*.cpp"
     }
 
     filter "system:windows"
