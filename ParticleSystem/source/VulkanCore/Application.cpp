@@ -15,6 +15,7 @@
 #include <vector>	// TODO: remove
 #include <chrono>
 #include <cstring>
+#include <stdexcept>
 
 // TODO: test
 #include "Model.h"
