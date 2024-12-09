@@ -7,10 +7,6 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
-// TODO: move
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 // TODO: test
 #include <vector>	// TODO: remove
 #include <chrono>
@@ -44,8 +40,8 @@ namespace VulkanCore {
 
 		SetupImGui();
 
-		// TODO: remove
-		CreateTextureImage();
+		// TODO: use Texture class
+		// CreateTextureImage();
 	}
 
 	Application::~Application()
@@ -272,18 +268,6 @@ namespace VulkanCore {
 		{
 			vkDestroyBuffer(device.GetVKDevice(), uniformBuffers[i], nullptr);
 			vkFreeMemory(device.GetVKDevice(), uniformBuffersMemory[i], nullptr);
-		}
-	}
-
-	// TODO: move
-	void Application::CreateTextureImage()
-	{
-		int texWidth, texHeight, texChannels;
-		stbi_uc* pixels = stbi_load("textures/statue.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-
-		if (!pixels)
-		{
-			throw std::runtime_error("Failed to load texture image!");
 		}
 	}
 

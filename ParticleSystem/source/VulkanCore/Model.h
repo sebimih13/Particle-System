@@ -61,11 +61,6 @@ namespace VulkanCore {
 
 		void CreateVertexBuffer(const std::vector<Vertex>& vertices);
 		void CreateIndexBuffer(const std::vector<uint32_t>& indices);
-
-		// TODO: refactors
-		// TODO: create a new class Buffer
-		// TODO: define in GPUDevice
-		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	};
 
 } // namespace VulkanCore

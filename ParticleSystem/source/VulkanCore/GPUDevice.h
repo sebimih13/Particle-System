@@ -43,6 +43,14 @@ namespace VulkanCore {
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
+        // Single time command buffer
+        VkCommandBuffer BeginSingleTimeCommandBuffer();
+        void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
+
+        // Copy Buffer
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
         // Getters
         inline VkInstance GetInstance() const { return instance; }      // TODO: return const &
         inline VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }    // TODO: return const &
