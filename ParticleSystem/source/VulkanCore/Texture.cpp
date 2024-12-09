@@ -3,6 +3,7 @@
 #include "stb_image.h"
 
 #include <stdexcept>
+#include <cstring>
 
 namespace VulkanCore {
 
@@ -45,7 +46,7 @@ namespace VulkanCore {
 		// Filling staging buffer
 		void* data;
 		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
-		std::memcpy(data, pixels, static_cast<size_t>(imageSize));
+			std::memcpy(data, pixels, static_cast<size_t>(imageSize));
 		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
 
 		// Clear the original pixel array
