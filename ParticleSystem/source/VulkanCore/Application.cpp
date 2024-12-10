@@ -143,10 +143,10 @@ namespace VulkanCore {
 	void Application::CreateDescriptorPool()
 	{
 		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)											// a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)			// uniform buffer
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT)	// sampler
-			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)								// required for ImGui backend
+			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
+			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
 			.Build();
 	}
 
@@ -222,10 +222,6 @@ namespace VulkanCore {
 		initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
 		initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		ImGui_ImplVulkan_Init(&initInfoImGui);
-
-		// TODO
-		// beginSingleTimeCommands()
-		// ceva cu fonts
 	}
 
 	void Application::RenderUI()
