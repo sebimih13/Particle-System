@@ -9,6 +9,7 @@
 #include "GPUDevice.h"
 #include "Renderer.h"
 #include "Descriptor.h"
+#include "Texture.h"
 
 namespace VulkanCore {
 
@@ -60,6 +61,8 @@ namespace VulkanCore {
         std::unique_ptr<DescriptorPool> globalPool;
         std::vector<VkDescriptorSet> globalDescriptorSets;
         std::unique_ptr<Pipeline> pipeline;
+
+        Texture statueTexture;
 
         void UpdateUniformBuffer(uint32_t currentFrame);
 

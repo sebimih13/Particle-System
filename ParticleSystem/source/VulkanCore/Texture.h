@@ -20,6 +20,10 @@ namespace VulkanCore {
 		// Destructor
 		~Texture();
 
+		// Getters
+		inline VkImageView GetTextureImageView() { return textureImageView; }	// TODO: const &
+		inline VkSampler GetTextureSampler() { return textureSampler; }			// TODO: const &
+
 	private:
 		GPUDevice& device;
 

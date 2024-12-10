@@ -39,6 +39,7 @@ namespace VulkanCore {
 
 	DescriptorSetLayout::DescriptorSetLayout(GPUDevice& device, const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings)
 		: device(device)
+		, bindings(bindings)
 	{
 		std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 		for (const auto& kv : bindings)
@@ -137,6 +138,68 @@ namespace VulkanCore {
 		{
 			return false;
 		}
+
+		return true;
+	}
+
+	DescriptorWriter::DescriptorWriter(DescriptorSetLayout& setLayout, DescriptorPool& pool)
+		: setLayout(setLayout)
+		, pool(pool)
+	{
+
+	}
+
+	DescriptorWriter::~DescriptorWriter()
+	{
+
+	}
+
+	DescriptorWriter& DescriptorWriter::WriteBuffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo)
+	{
+		VkWriteDescriptorSet write = {};
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.descriptorType = setLayout.bindings[binding].descriptorType;
+		write.descriptorCount = 1;
+		write.pBufferInfo = &bufferInfo;
+
+		// save Write Descriptor Set 
+		writes.push_back(write);
+
+		return *this;
+	}
+
+	DescriptorWriter& DescriptorWriter::WriteImage(uint32_t binding, const VkDescriptorImageInfo& imageInfo)
+	{
+		VkWriteDescriptorSet write = {};
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.dstBinding = binding;
+		write.dstArrayElement = 0;
+		write.descriptorType = setLayout.bindings[binding].descriptorType;
+		write.descriptorCount = 1;
+		write.pImageInfo = &imageInfo;
+
+		// save Write Descriptor Set 
+		writes.push_back(write);
+
+		return *this;
+	}
+
+	bool DescriptorWriter::Build(VkDescriptorSet& set)
+	{
+		bool success = pool.AllocateDescriptor(setLayout.GetDescriptorSetLayout(), set);
+		if (!success)
+		{
+			return false;
+		}
+
+		for (auto& write : writes)
+		{
+			write.dstSet = set;
+		}
+
+		vkUpdateDescriptorSets(pool.device.GetVKDevice(), static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 
 		return true;
 	}

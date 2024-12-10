@@ -17,7 +17,6 @@ namespace VulkanCore {
 		class Builder
 		{
 		public:
-			// TODO
 			Builder(GPUDevice& device);
 			~Builder();
 
@@ -53,6 +52,9 @@ namespace VulkanCore {
 		GPUDevice& device;
 
 		VkDescriptorSetLayout descriptorSetLayout;
+		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings;
+
+		friend class DescriptorWriter;
 	};
 
 	class DescriptorPool
@@ -103,6 +105,28 @@ namespace VulkanCore {
 		GPUDevice& device;
 		
 		VkDescriptorPool descriptorPool;
+
+		friend class DescriptorWriter;
+	};
+
+	class DescriptorWriter
+	{
+	public:
+		// Constructors
+		DescriptorWriter(DescriptorSetLayout& setLayout, DescriptorPool& pool);
+
+		// Destructor
+		~DescriptorWriter();
+
+		DescriptorWriter& WriteBuffer(uint32_t binding, const VkDescriptorBufferInfo& bufferInfo);
+		DescriptorWriter& WriteImage(uint32_t binding, const VkDescriptorImageInfo& imageInfo);
+		bool Build(VkDescriptorSet& set);
+
+	private:
+		DescriptorSetLayout& setLayout;
+		DescriptorPool& pool;
+
+		std::vector<VkWriteDescriptorSet> writes;
 	};
 
 } // namespace VulkanCore

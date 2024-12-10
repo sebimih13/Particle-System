@@ -97,7 +97,7 @@ namespace VulkanCore {
 
 		// Vertex Input
 		const VkVertexInputBindingDescription bindingDescription = Model::Vertex::GetBindingDescription();
-		const std::array<VkVertexInputAttributeDescription, 2> attributeDescription = Model::Vertex::GetAttributeDescription();
+		const std::array<VkVertexInputAttributeDescription, 3> attributeDescription = Model::Vertex::GetAttributeDescription();
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

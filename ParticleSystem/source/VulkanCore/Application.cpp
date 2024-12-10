@@ -15,7 +15,6 @@
 
 // TODO: test
 #include "Model.h"
-#include "Texture.h"
 
 namespace VulkanCore {
 
@@ -30,6 +29,7 @@ namespace VulkanCore {
 		, device(window)
 		, renderer(window, device)
 		, bIsRunning(true)
+		, statueTexture(device, "textures/statue.jpg")	// TODO: MOVE
 	{
 		// TODO: move
 		CreateUniformBuffers();
@@ -56,10 +56,10 @@ namespace VulkanCore {
 	{
 		// TODO: test Model
 		const std::vector<Model::Vertex> vertices = {
-			Model::Vertex(glm::vec2(-0.5f, -0.5f),	glm::vec3(1.0f, 0.0f, 0.0f)),
-			Model::Vertex(glm::vec2( 0.5f, -0.5f),	glm::vec3(0.0f, 1.0f, 0.0f)),
-			Model::Vertex(glm::vec2( 0.5f,  0.5f),	glm::vec3(0.0f, 0.0f, 1.0f)),
-			Model::Vertex(glm::vec2(-0.5f,  0.5f),	glm::vec3(1.0f, 1.0f, 1.0f))
+			Model::Vertex(glm::vec2(-0.5f, -0.5f),	glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
+			Model::Vertex(glm::vec2( 0.5f, -0.5f),	glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
+			Model::Vertex(glm::vec2( 0.5f,  0.5f),	glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+			Model::Vertex(glm::vec2(-0.5f,  0.5f),	glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f))
 		};
 
 		const std::vector<uint32_t> indices = {
@@ -69,9 +69,6 @@ namespace VulkanCore {
 
 		Model::Data triangleData(vertices, indices);
 		Model triangle(device, triangleData);
-
-		// TODO: test Texture
-		Texture statueTexture(device, "textures/statue.jpg");
 
 		while (!window.ShouldClose() && bIsRunning)
 		{
@@ -138,16 +135,18 @@ namespace VulkanCore {
 	void Application::CreateDescriptorSetLayout()
 	{
 		globalSetLayout = DescriptorSetLayout::Builder(device)
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
+			.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
 			.Build();
 	}
 
 	void Application::CreateDescriptorPool()
 	{
 		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)					// for ImGui backend
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)		// for ImGui backend
+			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)											// a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)			// uniform buffer
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT)	// sampler
+			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)								// required for ImGui backend
 			.Build();
 	}
 
@@ -156,25 +155,22 @@ namespace VulkanCore {
 		globalDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			globalPool->AllocateDescriptor(globalSetLayout->GetDescriptorSetLayout(), globalDescriptorSets[i]);
+			// TODO: REFACTOR: de pus intr-o clasa Buffer->GetDescriptorInfo()
+			VkDescriptorBufferInfo uboBufferInfo = {};
+			uboBufferInfo.buffer = uniformBuffers[i];
+			uboBufferInfo.offset = 0;
+			uboBufferInfo.range = sizeof(UniformBufferObject);
 
-			VkDescriptorBufferInfo bufferInfo = {};
-			bufferInfo.buffer = uniformBuffers[i];
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
+			// TODO: REFACTOR
+			VkDescriptorImageInfo imageInfo = {};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			imageInfo.imageView = statueTexture.GetTextureImageView();
+			imageInfo.sampler = statueTexture.GetTextureSampler();
 
-			VkWriteDescriptorSet descriptorWrite = {};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = globalDescriptorSets[i];
-			descriptorWrite.dstBinding = 0;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &bufferInfo;
-			descriptorWrite.pImageInfo = nullptr;			// optional
-			descriptorWrite.pTexelBufferView = nullptr;		// optional
-
-			vkUpdateDescriptorSets(device.GetVKDevice(), 1, &descriptorWrite, 0, nullptr);
+			DescriptorWriter(*globalSetLayout, *globalPool)
+				.WriteBuffer(0, uboBufferInfo)
+				.WriteImage(1, imageInfo)
+				.Build(globalDescriptorSets[i]);
 		}
 	}
 
