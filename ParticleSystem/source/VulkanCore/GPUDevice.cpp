@@ -341,6 +341,7 @@ namespace VulkanCore {
 
         // TODO: adauga features
         VkPhysicalDeviceFeatures deviceFeatures = {};
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -452,7 +453,6 @@ namespace VulkanCore {
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-        // TODO: nu stiu daca o sa le folosesc
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
@@ -466,7 +466,9 @@ namespace VulkanCore {
         }
 
         // TODO: include mai multe criterii
-        return indices.IsComplete() && bExtensionsSupported && bSwapChainAdequate;
+        return indices.IsComplete() 
+            && bExtensionsSupported && bSwapChainAdequate 
+            && deviceFeatures.samplerAnisotropy;
     }
 
     QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device) const

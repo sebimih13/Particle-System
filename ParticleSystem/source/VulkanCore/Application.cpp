@@ -15,6 +15,7 @@
 
 // TODO: test
 #include "Model.h"
+#include "Texture.h"
 
 namespace VulkanCore {
 
@@ -39,9 +40,6 @@ namespace VulkanCore {
 		CreatePipeline();
 
 		SetupImGui();
-
-		// TODO: use Texture class
-		// CreateTextureImage();
 	}
 
 	Application::~Application()
@@ -56,7 +54,7 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
-		// TODO: test
+		// TODO: test Model
 		const std::vector<Model::Vertex> vertices = {
 			Model::Vertex(glm::vec2(-0.5f, -0.5f),	glm::vec3(1.0f, 0.0f, 0.0f)),
 			Model::Vertex(glm::vec2( 0.5f, -0.5f),	glm::vec3(0.0f, 1.0f, 0.0f)),
@@ -71,6 +69,9 @@ namespace VulkanCore {
 
 		Model::Data triangleData(vertices, indices);
 		Model triangle(device, triangleData);
+
+		// TODO: test Texture
+		Texture statueTexture(device, "textures/statue.jpg");
 
 		while (!window.ShouldClose() && bIsRunning)
 		{
