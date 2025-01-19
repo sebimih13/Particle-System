@@ -40,8 +40,7 @@ jobs:
         mkdir -p ${{ env.ZIP_NAME }}/shaders
         cp -r ${{ env.PROJECT_NAME }}/shaders/*.spv ${{ env.ZIP_NAME }}/shaders/
 
-        mkdir -p ${{ env.ZIP_NAME }}/textures
-        cp -r ${{ env.PROJECT_NAME }}/textures/ ${{ env.ZIP_NAME }}/textures/
+        cp -r ${{ env.PROJECT_NAME }}/textures/ ${{ env.ZIP_NAME }}/
 
         ls -la ${{ env.ZIP_NAME }}
     
