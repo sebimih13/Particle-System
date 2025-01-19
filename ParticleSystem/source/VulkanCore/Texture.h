@@ -2,10 +2,10 @@
 
 #include <GLFW/glfw3.h>
 
+#include <string>
+
 // TODO: Forward Declaration
 #include "GPUDevice.h"
-
-#include <string>
 
 namespace VulkanCore {
 
