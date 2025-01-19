@@ -36,6 +36,15 @@ project "ParticleSystem"
         "imgui"
     }
 
+    defines
+    {
+        "GLFW_INCLUDE_VULKAN",
+        "GLFW_INCLUDE_NONE",
+
+        "GLM_FORCE_RADIANS",
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+    }
+
     -- TODO: only the files existing at the time of executing this script will be considered
     --       any new addition will be ignored, so you have to run again generate_project script
 

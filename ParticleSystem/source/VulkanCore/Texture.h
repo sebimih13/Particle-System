@@ -1,8 +1,6 @@
 #pragma once
 
-// TODO: remove
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 
 // TODO: Forward Declaration
 #include "GPUDevice.h"

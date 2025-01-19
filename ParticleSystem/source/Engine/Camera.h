@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Engine {
 
@@ -27,6 +28,10 @@ namespace Engine {
 		void ProcessKeyboard(CameraMovement direction, float deltaTime);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 		void ProcessMouseScroll(float yoffset);
+
+		// Getters
+		inline glm::mat4 getViewMatrix() const { return glm::lookAt(position, position + front, up); }
+		inline glm::mat4 getProjectionMatrix(const float width, const float height) const { return glm::perspective(glm::radians(zoom), width / height, 0.1f, 1000.0f); }
 
 	private:
 		// camera attributes
