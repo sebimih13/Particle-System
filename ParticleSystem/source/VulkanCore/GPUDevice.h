@@ -40,8 +40,11 @@ namespace VulkanCore {
         GPUDevice(GPUDevice&&) = delete;
         GPUDevice& operator = (GPUDevice&&) = delete;
 
+        // Utils
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+        void CreateImage(const uint32_t& width, const uint32_t& height, const VkFormat& format, const VkImageTiling& tiling, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory);
 
         // Single time command buffer
         VkCommandBuffer BeginSingleTimeCommandBuffer();

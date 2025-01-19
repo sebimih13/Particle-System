@@ -8,7 +8,7 @@
 #include "backends/imgui_impl_vulkan.h"
 
 // TODO: test
-#include <vector>	// TODO: remove
+#include <vector>
 #include <chrono>
 #include <cstring>
 #include <stdexcept>
@@ -56,15 +56,23 @@ namespace VulkanCore {
 	{
 		// TODO: test Model
 		const std::vector<Model::Vertex> vertices = {
-			Model::Vertex(glm::vec2(-0.5f, -0.5f),	glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
-			Model::Vertex(glm::vec2( 0.5f, -0.5f),	glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
-			Model::Vertex(glm::vec2( 0.5f,  0.5f),	glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-			Model::Vertex(glm::vec2(-0.5f,  0.5f),	glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f))
+			Model::Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
+			Model::Vertex(glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
+			Model::Vertex(glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+			Model::Vertex(glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+
+			Model::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
+			Model::Vertex(glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
+			Model::Vertex(glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+			Model::Vertex(glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f))
 		};
 
 		const std::vector<uint32_t> indices = {
 			0, 1, 2,
-			2, 3, 0
+			2, 3, 0,
+
+			4, 5, 6, 
+			6, 7, 4
 		};
 
 		Model::Data triangleData(vertices, indices);

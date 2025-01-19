@@ -56,15 +56,24 @@ namespace VulkanCore {
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
 
+        // depth image and view
+        VkImage depthImage;
+        VkDeviceMemory depthImageMemory;
+        VkImageView depthImageView;
+
         void CreateSwapChain();
+        VkImageView CreateImageView(const VkImage& image, const VkFormat& format, const VkImageAspectFlags& aspectFlags) const;
         void CreateImageViews();
         void CreateRenderPass();
-        void CreateChainFramebuffers();
+        void CreateFramebuffers();
         void CreateSyncObjects();
+        void CreateDepthResources();
 
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+        VkFormat FindDepthFormat() const;
+        bool HasStencilComponent(VkFormat format) const; // TODO: use
 	};
 
 } // namespace VulkanCore

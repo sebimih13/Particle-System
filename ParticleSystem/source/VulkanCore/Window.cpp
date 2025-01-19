@@ -48,7 +48,7 @@ namespace VulkanCore {
         glfwPollEvents();
     }
 
-    void Window::createWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
+    void Window::CreateWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
     {
         if (glfwCreateWindowSurface(instance, window, nullptr, surface) != VK_SUCCESS)
         {

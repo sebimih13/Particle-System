@@ -38,7 +38,7 @@ namespace VulkanCore {
         // TODO: se poate mai frumos
         inline bool ShouldClose() const { return glfwWindowShouldClose(window); }
 
-        void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
+        void CreateWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
         inline void ResetWindowResizedFlag() { framebufferResized = false; }
 

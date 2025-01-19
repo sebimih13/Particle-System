@@ -21,11 +21,11 @@ namespace VulkanCore {
 	public:
 		struct Vertex
 		{
-			const glm::vec2 position;		// TODO: change to glm::vec3
+			const glm::vec3 position;
 			const glm::vec3 color;			// TODO: change to glm::vec4
 			const glm::vec2 texCoord;
 
-			Vertex(const glm::vec2& position, const glm::vec3& color, const glm::vec2& texCoord);
+			Vertex(const glm::vec3& position, const glm::vec3& color, const glm::vec2& texCoord);
 
 			static VkVertexInputBindingDescription GetBindingDescription();
 			static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescription();

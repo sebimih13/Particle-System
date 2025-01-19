@@ -169,6 +169,19 @@ namespace VulkanCore {
 		colorBlendStateInfo.blendConstants[2] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[3] = 0.0f;		// optional
 
+		// Depth and Stencil State
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
+		depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencilStateInfo.depthTestEnable = VK_TRUE;
+		depthStencilStateInfo.depthWriteEnable = VK_TRUE;
+		depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencilStateInfo.depthBoundsTestEnable = VK_FALSE;
+		depthStencilStateInfo.minDepthBounds = 0.0f; // optional
+		depthStencilStateInfo.maxDepthBounds = 1.0f; // optional
+		depthStencilStateInfo.stencilTestEnable = VK_FALSE;
+		depthStencilStateInfo.front = {}; // optional
+		depthStencilStateInfo.back = {};  // optional
+
 		// Pipeline
 		VkGraphicsPipelineCreateInfo pipelineInfo = {};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -179,7 +192,7 @@ namespace VulkanCore {
 		pipelineInfo.pViewportState = &viewportInfo;
 		pipelineInfo.pRasterizationState = &rasterizationInfo;
 		pipelineInfo.pMultisampleState = &multisamplingInfo;
-		pipelineInfo.pDepthStencilState = nullptr;				// optional
+		pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
 		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
 		pipelineInfo.pDynamicState = &dynamicStateInfo;
 		pipelineInfo.layout = pipelineLayout;

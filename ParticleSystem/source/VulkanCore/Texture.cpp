@@ -57,7 +57,7 @@ namespace VulkanCore {
 		stbi_image_free(pixels);
 
 		// Create Image
-		CreateImage(
+		device.CreateImage(
 			static_cast<uint32_t>(texWidth),
 			static_cast<uint32_t>(texHeight),
 			VK_FORMAT_R8G8B8A8_SRGB,
@@ -78,6 +78,8 @@ namespace VulkanCore {
 
 	void Texture::CreateTextureImageView()
 	{
+		// TODO: use SwapChain::CreateImageView() function
+
 		VkImageViewCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = textureImage;
@@ -126,45 +128,6 @@ namespace VulkanCore {
 		{
 			throw std::runtime_error("Failed to create texture sampler!");
 		}
-	}
-
-	void Texture::CreateImage(const uint32_t& width, const uint32_t& height, const VkFormat& format, const VkImageTiling& tiling, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory)
-	{
-		VkImageCreateInfo imageInfo = {};
-		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = width;
-		imageInfo.extent.height = height;
-		imageInfo.extent.depth = 1;
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.format = format;
-		imageInfo.tiling = tiling;
-		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		imageInfo.usage = usage;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.flags = 0; // optional
-
-		if (vkCreateImage(device.GetVKDevice(), &imageInfo, nullptr, &textureImage) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create image!");
-		}
-
-		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(device.GetVKDevice(), textureImage, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-		if (vkAllocateMemory(device.GetVKDevice(), &allocInfo, nullptr, &textureImageMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to allocate image memory!");
-		}
-
-		vkBindImageMemory(device.GetVKDevice(), textureImage, textureImageMemory, 0);
 	}
 
 	void Texture::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
