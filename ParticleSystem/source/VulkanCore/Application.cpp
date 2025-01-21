@@ -28,7 +28,7 @@ namespace VulkanCore {
 		, device(window)
 		, renderer(window, device)
 		, bIsRunning(true)
-		, statueTexture(device, "textures/statue.jpg")	// TODO: MOVE
+		, statueTexture(device, "resources/textures/statue.jpg")	// TODO: MOVE
 	{
 		// TODO: move
 		CreateUniformBuffers();
@@ -74,8 +74,7 @@ namespace VulkanCore {
 			6, 7, 4
 		};
 
-		Model::Data triangleData(vertices, indices);
-		Model triangle(device, triangleData);
+		Model triangle(device, Model::Data(vertices, indices));
 
 		while (!window.ShouldClose() && bIsRunning)
 		{
