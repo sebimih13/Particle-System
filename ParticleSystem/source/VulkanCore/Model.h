@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <array>
+#include <string>
 
 // TODO: Forward Declaration
 #include "GPUDevice.h"
@@ -17,11 +18,17 @@ namespace VulkanCore {
 	public:
 		struct Vertex
 		{
-			const glm::vec3 position;
-			const glm::vec3 color;			// TODO: change to glm::vec4
-			const glm::vec2 texCoord;
+			// Attributes
+			glm::vec3 position;
+			glm::vec3 color;	// TODO: change to glm::vec4
+			glm::vec2 texCoord;
 
+			// Constructors
+			Vertex();
 			Vertex(const glm::vec3& position, const glm::vec3& color, const glm::vec2& texCoord);
+
+			// Operator ==
+			bool operator == (const Vertex& other) const { return position == other.position && color == other.color && texCoord == other.texCoord; }
 
 			static VkVertexInputBindingDescription GetBindingDescription();
 			static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescription();
@@ -29,10 +36,12 @@ namespace VulkanCore {
 
 		struct Data
 		{
-			const std::vector<Vertex> vertices;
-			const std::vector<uint32_t> indices;
+			std::vector<Vertex> vertices;
+			std::vector<uint32_t> indices;
 
+			// Constructors
 			Data(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+			Data(const std::string& objFilePath);
 		};
 
 		// Constructor

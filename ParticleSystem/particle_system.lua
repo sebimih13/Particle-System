@@ -21,7 +21,8 @@ project "ParticleSystem"
         "%{IncludeDir.VulkanSDK}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.stb}"
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.tinyobjloader}"
     }
 
     libdirs
@@ -42,7 +43,8 @@ project "ParticleSystem"
         "GLFW_INCLUDE_NONE",
 
         "GLM_FORCE_RADIANS",
-        "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE",
+        "GLM_ENABLE_EXPERIMENTAL"
     }
 
     -- TODO: only the files existing at the time of executing this script will be considered

@@ -206,6 +206,7 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to create graphics pipeline!");
 		}
 
+		// Delete shader modules
 		vkDestroyShaderModule(device.GetVKDevice(), fragShaderModule, nullptr);
 		vkDestroyShaderModule(device.GetVKDevice(), vertShaderModule, nullptr);
 	}

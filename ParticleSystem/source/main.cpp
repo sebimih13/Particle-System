@@ -1,5 +1,9 @@
+// Project Global defines
+// #define GLFW_INCLUDE_VULKAN
+// #define GLFW_INCLUDE_NONE
 // #define GLM_FORCE_RADIANS
 // #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+// #define GLM_ENABLE_EXPERIMENTAL
 
 #include "VulkanCore/Application.h"
 
