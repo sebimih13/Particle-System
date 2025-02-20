@@ -32,6 +32,9 @@ namespace VulkanCore {
 		VkCommandBuffer BeginFrame();
 		void EndFrame();
 
+		VkCommandBuffer BeginCompute();
+		void EndCompute();
+
 		void BeginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 		void EndSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
@@ -46,9 +49,11 @@ namespace VulkanCore {
 		std::unique_ptr<SwapChain> swapChain;
 
 		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<VkCommandBuffer> computeCommandBuffers;
 		uint32_t currentImageIndex;
 
 		void CreateCommandBuffers();
+		void CreateComputeCommandBuffers();
 		void RecreateSwapChain();
 	};
 

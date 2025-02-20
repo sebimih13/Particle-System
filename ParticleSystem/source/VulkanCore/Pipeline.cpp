@@ -4,8 +4,6 @@
 #include <iostream>
 #include <array>
 
-#include "Model.h"
-
 namespace VulkanCore {
 
 	const std::vector<VkDynamicState> Pipeline::dynamicStates = {
@@ -13,22 +11,39 @@ namespace VulkanCore {
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
 		: device(device)
+		, hasComputePipeline(false)
 	{
-		CreatePipelineLayout(descriptorSetLayout);
-		CreateGraphicsPipeline(renderPass, vertexShaderFilePath, fragmentShaderFilePath);
+		CreateGraphicsPipeline(renderPass, descriptorSetLayout, bindingDescription, attributeDescription, vertexShaderFilePath, fragmentShaderFilePath);
+	}
+
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& computeShaderFilePath)
+		: device(device)
+		, hasComputePipeline(true)
+	{
+		CreateGraphicsPipeline(renderPass, std::nullopt, bindingDescription, attributeDescription, vertexShaderFilePath, fragmentShaderFilePath);
+		CreateComputePipeline(descriptorSetLayout, computeShaderFilePath);
 	}
 
 	Pipeline::~Pipeline()
 	{
-		vkDestroyPipeline(device.GetVKDevice(), graphicsPipeline, nullptr);
+		if (hasComputePipeline)
+		{
+			vkDestroyPipeline(device.GetVKDevice(), computePipeline, nullptr);
+			vkDestroyPipelineLayout(device.GetVKDevice(), computePipelineLayout, nullptr);
+		}
 
-		// TODO: move
+		vkDestroyPipeline(device.GetVKDevice(), graphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device.GetVKDevice(), pipelineLayout, nullptr);
 	}
 
-	void Pipeline::Bind(VkCommandBuffer commandBuffer)
+	void Pipeline::BindComputePipeline(VkCommandBuffer commandBuffer)
+	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
+	}
+
+	void Pipeline::BindGraphicsPipeline(VkCommandBuffer commandBuffer)
 	{
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	}
@@ -52,26 +67,13 @@ namespace VulkanCore {
 		return buffer;
 	}
 
-	void Pipeline::CreatePipelineLayout(const VkDescriptorSetLayout& descriptorSetLayout)
+	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::optional<VkDescriptorSetLayout>& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
 	{
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;			// optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;		// optional
-
-		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create pipeline layout!");
-		}
-	}
-
-	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
-	{
+		// Shader Code
 		std::vector<char> vertShaderCode = ReadFile(vertexShaderFilePath);
 		std::vector<char> fragShaderCode = ReadFile(fragmentShaderFilePath);
 
+		// Shader Modules
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
 
@@ -96,9 +98,6 @@ namespace VulkanCore {
 		};
 
 		// Vertex Input
-		const VkVertexInputBindingDescription bindingDescription = Model::Vertex::GetBindingDescription();
-		const std::array<VkVertexInputAttributeDescription, 3> attributeDescription = Model::Vertex::GetAttributeDescription();
-
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
@@ -182,6 +181,27 @@ namespace VulkanCore {
 		depthStencilStateInfo.front = {}; // optional
 		depthStencilStateInfo.back = {};  // optional
 
+		// Pipeline Layout
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		if (descriptorSetLayout.has_value())
+		{
+			pipelineLayoutInfo.setLayoutCount = 1;
+			pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout.value();
+		}
+		else
+		{
+			pipelineLayoutInfo.setLayoutCount = 0;
+			pipelineLayoutInfo.pSetLayouts = nullptr;
+		}
+		pipelineLayoutInfo.pushConstantRangeCount = 0;			// optional
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;		// optional
+
+		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create pipeline layout!");
+		}
+
 		// Pipeline
 		VkGraphicsPipelineCreateInfo pipelineInfo = {};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -209,6 +229,47 @@ namespace VulkanCore {
 		// Delete shader modules
 		vkDestroyShaderModule(device.GetVKDevice(), fragShaderModule, nullptr);
 		vkDestroyShaderModule(device.GetVKDevice(), vertShaderModule, nullptr);
+	}
+
+	void Pipeline::CreateComputePipeline(const VkDescriptorSetLayout& descriptorSetLayout, const std::string& computeShaderFilePath)
+	{
+		// Shader Code
+		std::vector<char> computeShaderCode = ReadFile(computeShaderFilePath);
+
+		// Shader Modules
+		VkShaderModule computeShaderModule = CreateShaderModule(computeShaderCode);
+
+		// Compute Shader
+		VkPipelineShaderStageCreateInfo computeShaderStageInfo = {};
+		computeShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+		computeShaderStageInfo.module = computeShaderModule;
+		computeShaderStageInfo.pName = "main";
+
+		// Pipeline Layout
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &computePipelineLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create compute pipeline layout!");
+		}
+
+		// Pipeline
+		VkComputePipelineCreateInfo pipelineInfo = {};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+		pipelineInfo.layout = computePipelineLayout;
+		pipelineInfo.stage = computeShaderStageInfo;
+
+		if (vkCreateComputePipelines(device.GetVKDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &computePipeline) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create compute pipeline!");
+		}
+
+		// Delete shader modules
+		vkDestroyShaderModule(device.GetVKDevice(), computeShaderModule, nullptr);
 	}
 
 	VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code) const

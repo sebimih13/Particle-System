@@ -27,7 +27,10 @@ namespace VulkanCore {
         {
             vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphores[i], nullptr);
             vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(device.GetVKDevice(), computeFinishedSemaphores[i], nullptr);
+
             vkDestroyFence(device.GetVKDevice(), inFlightFences[i], nullptr);
+            vkDestroyFence(device.GetVKDevice(), computeInFlightFences[i], nullptr);
         }
 
         // cleanup framebuffers
@@ -60,22 +63,45 @@ namespace VulkanCore {
         return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrameIndex], VK_NULL_HANDLE, imageIndex);
     }
 
+    void SwapChain::AcquireNextCompute()
+    {
+        vkWaitForFences(device.GetVKDevice(), 1, &computeInFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
+    }
+
+    void SwapChain::SubmitComputeCommandBuffer(const VkCommandBuffer* buffer)
+    {
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = buffer;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &computeFinishedSemaphores[currentFrameIndex];
+
+        // Only reset the fence if we are submitting work
+        vkResetFences(device.GetVKDevice(), 1, &computeInFlightFences[currentFrameIndex]);
+
+        if (vkQueueSubmit(device.GetComputeQueue(), 1, &submitInfo, computeInFlightFences[currentFrameIndex]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to submit compute command buffer!");
+        }
+    }
+
     VkResult SwapChain::SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex)
     {
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrameIndex]};
+        // TODO: compute parameter
+
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrameIndex] };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = buffer;
-
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrameIndex]};
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.pSignalSemaphores = &renderFinishedSemaphores[currentFrameIndex];
 
         // Only reset the fence if we are submitting work
         vkResetFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex]);
@@ -88,7 +114,7 @@ namespace VulkanCore {
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = &renderFinishedSemaphores[currentFrameIndex];
 
         VkSwapchainKHR swapChains[] = { swapChain };
         presentInfo.swapchainCount = 1;
@@ -129,9 +155,9 @@ namespace VulkanCore {
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         QueueFamilyIndices indices = device.GetPhysicalQueueFamilies();
-        uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value()};
+        uint32_t queueFamilyIndices[] = { indices.graphicsAndComputeFamily.value(), indices.presentFamily.value()};
 
-        if (indices.graphicsFamily != indices.presentFamily)
+        if (indices.graphicsAndComputeFamily != indices.presentFamily)
         {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
             createInfo.queueFamilyIndexCount = 2;
@@ -289,7 +315,10 @@ namespace VulkanCore {
     {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        computeFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        computeInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -305,6 +334,12 @@ namespace VulkanCore {
                 || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
             {
                 throw std::runtime_error("Failed to create synchronization objects for a frame!");
+            }
+
+            if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &computeFinishedSemaphores[i]) != VK_SUCCESS
+                || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &computeInFlightFences[i]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("Failed to create compute synchronization objects for a frame!");
             }
         }
     }

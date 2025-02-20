@@ -382,7 +382,7 @@ namespace VulkanCore {
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
         std::set<uint32_t> uniqueQueueFamilies;
-        uniqueQueueFamilies.insert(indices.graphicsFamily.value());
+        uniqueQueueFamilies.insert(indices.graphicsAndComputeFamily.value());
         uniqueQueueFamilies.insert(indices.presentFamily.value());
 
         float queuePriority = 1.0f;
@@ -425,7 +425,8 @@ namespace VulkanCore {
             throw std::runtime_error("Failed to create logical device!");
         }
 
-        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(device, indices.graphicsAndComputeFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(device, indices.graphicsAndComputeFamily.value(), 0, &computeQueue);
         vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
@@ -436,7 +437,7 @@ namespace VulkanCore {
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsAndComputeFamily.value();
 
         if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
         {
@@ -543,9 +544,9 @@ namespace VulkanCore {
         uint32_t i = 0;
         for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
         {
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
             {
-                indices.graphicsFamily = i;
+                indices.graphicsAndComputeFamily = i;
             }
 
             VkBool32 presentSupport = false;

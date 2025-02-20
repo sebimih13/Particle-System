@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 // TODO: sau Forward Declarations
 #include "GPUDevice.h"
@@ -14,7 +15,8 @@ namespace VulkanCore {
 	{
 	public:
 		// Constructor
-		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
+		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
+		Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& computeShaderFilePath);
 
 		// Destructor
 		~Pipeline();
@@ -27,10 +29,12 @@ namespace VulkanCore {
 		Pipeline(Pipeline&&) = delete;
 		Pipeline& operator = (Pipeline&&) = delete;
 
-		void Bind(VkCommandBuffer commandBuffer);
+		void BindComputePipeline(VkCommandBuffer commandBuffer);
+		void BindGraphicsPipeline(VkCommandBuffer commandBuffer);
 		
 		// Getters
-		inline VkPipelineLayout GetPipelineLayout() const { return pipelineLayout; }
+		inline VkPipelineLayout GetGraphicsPipelineLayout() const { return pipelineLayout; }
+		inline VkPipelineLayout GetComputePipelineLayout() const { return computePipelineLayout; }
 
 	private:
 		GPUDevice& device;
@@ -38,12 +42,16 @@ namespace VulkanCore {
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 
+		bool hasComputePipeline;
+		VkPipelineLayout computePipelineLayout;
+		VkPipeline computePipeline;
+
 		static const std::vector<VkDynamicState> dynamicStates;
 
 		static std::vector<char> ReadFile(const std::string& filePath);
 
-		void CreatePipelineLayout(const VkDescriptorSetLayout& descriptorSetLayout);
-		void CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
+		void CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::optional<VkDescriptorSetLayout>& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
+		void CreateComputePipeline(const VkDescriptorSetLayout& descriptorSetLayout, const std::string& computeShaderFilePath);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 	};
 

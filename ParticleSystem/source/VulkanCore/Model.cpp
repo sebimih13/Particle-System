@@ -49,9 +49,9 @@ namespace VulkanCore {
 		return bindingDescription;
 	}
 
-	std::array<VkVertexInputAttributeDescription, 3> Model::Vertex::GetAttributeDescription()
+	std::vector<VkVertexInputAttributeDescription> Model::Vertex::GetAttributeDescription()
 	{
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
 		
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;

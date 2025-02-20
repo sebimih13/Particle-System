@@ -10,10 +10,10 @@ namespace VulkanCore {
 
     struct QueueFamilyIndices final
     {
-        std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> graphicsAndComputeFamily;
         std::optional<uint32_t> presentFamily;
 
-        inline bool IsComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+        inline bool IsComplete() { return graphicsAndComputeFamily.has_value() && presentFamily.has_value(); }
     };
 
     struct SwapChainSupportDetails final
@@ -63,6 +63,7 @@ namespace VulkanCore {
         inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
         inline VkCommandPool GetCommandPool() const { return commandPool; }     // TODO: return const &
         inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }       // TODO: return const &
+        inline VkQueue GetComputeQueue() const { return computeQueue; }       // TODO: return const &
         inline VkQueue GetPresentQueue() const { return presentQueue; }         // TODO: return const &
 
     private:
@@ -73,6 +74,7 @@ namespace VulkanCore {
         VkDevice device;
 
         VkQueue graphicsQueue;
+        VkQueue computeQueue;
         VkQueue presentQueue;
 
         VkCommandPool commandPool;

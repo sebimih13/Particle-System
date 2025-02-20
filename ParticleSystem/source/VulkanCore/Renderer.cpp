@@ -12,6 +12,7 @@ namespace VulkanCore {
 	{
 		RecreateSwapChain();
 		CreateCommandBuffers();
+		CreateComputeCommandBuffers();
 	}
 
 	Renderer::~Renderer()
@@ -19,6 +20,33 @@ namespace VulkanCore {
 		// TODO: check
 		// vkFreeCommandBuffers
 		// commandBuffers.clear()
+	}
+
+	VkCommandBuffer Renderer::BeginCompute()
+	{
+		swapChain->AcquireNextCompute();
+
+		vkResetCommandBuffer(computeCommandBuffers[swapChain->GetCurrentFrameIndex()], 0);
+
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		if (vkBeginCommandBuffer(computeCommandBuffers[swapChain->GetCurrentFrameIndex()], &beginInfo) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to begin recording compute command buffer!");
+		}
+
+		return computeCommandBuffers[swapChain->GetCurrentFrameIndex()];
+	}
+
+	void Renderer::EndCompute()
+	{
+		if (vkEndCommandBuffer(computeCommandBuffers[swapChain->GetCurrentFrameIndex()]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to record compute command buffer!");
+		}
+
+		swapChain->SubmitComputeCommandBuffer(&computeCommandBuffers[swapChain->GetCurrentFrameIndex()]);
 	}
 
 	VkCommandBuffer Renderer::BeginFrame()
@@ -34,7 +62,6 @@ namespace VulkanCore {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 		
-		// TODO: ??? -> poate fi stearsa - ImGui Integration
 		vkResetCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], 0);
 
 		VkCommandBufferBeginInfo beginInfo = {};
@@ -123,6 +150,22 @@ namespace VulkanCore {
 		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocateInfo, commandBuffers.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
+		}
+	}
+
+	void Renderer::CreateComputeCommandBuffers()
+	{
+		computeCommandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = device.GetCommandPool();
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = static_cast<uint32_t>(computeCommandBuffers.size());
+
+		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocInfo, computeCommandBuffers.data()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to allocate compute command buffers!");
 		}
 	}
 

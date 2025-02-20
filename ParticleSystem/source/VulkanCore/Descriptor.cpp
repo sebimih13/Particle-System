@@ -66,6 +66,7 @@ namespace VulkanCore {
 	DescriptorPool::Builder::Builder(GPUDevice& device)
 		: device(device)
 		, maxSets(0)
+		, descriptorPoolCreateFlags(0)
 	{
 
 	}

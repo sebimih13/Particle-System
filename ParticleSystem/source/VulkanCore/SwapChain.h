@@ -28,7 +28,11 @@ namespace VulkanCore {
         SwapChain& operator = (SwapChain&&) = delete;
 
         VkResult AcquireNextImage(uint32_t* imageIndex);
+        void AcquireNextCompute();
+
+        void SubmitComputeCommandBuffer(const VkCommandBuffer* buffer);
         VkResult SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex);
+
         void AdvanceFrameIndex();
 
         // Getters
@@ -51,10 +55,14 @@ namespace VulkanCore {
 
         VkRenderPass renderPass;
 
+        // Sync Objects
         uint32_t currentFrameIndex;
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
+        std::vector<VkSemaphore> computeFinishedSemaphores;
+
         std::vector<VkFence> inFlightFences;
+        std::vector<VkFence> computeInFlightFences;
 
         // depth image and view
         VkImage depthImage;
