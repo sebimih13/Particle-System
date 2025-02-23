@@ -10,6 +10,12 @@
 
 namespace VulkanCore {
 
+#ifdef DEBUG
+    const bool GPUDevice::bEnableValidationLayers = true;
+#else
+    const bool GPUDevice::bEnableValidationLayers = false;
+#endif
+
     const std::vector<const char*> GPUDevice::validationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };

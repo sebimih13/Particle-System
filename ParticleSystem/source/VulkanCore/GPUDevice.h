@@ -79,12 +79,7 @@ namespace VulkanCore {
 
         VkCommandPool commandPool;
 
-#ifdef DEBUG
-        const bool bEnableValidationLayers = true;
-#else
-        const bool bEnableValidationLayers = false;
-#endif
-
+        static const bool bEnableValidationLayers;
         static const std::vector<const char*> validationLayers;
         static const std::vector<const char*> deviceExtensions;
 
