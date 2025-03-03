@@ -183,7 +183,7 @@ namespace VulkanCore {
 
 		vkDeviceWaitIdle(device.GetVKDevice());
 
-		swapChain.reset(nullptr);
+		swapChain.reset(nullptr); // TODO: delete this line
 		swapChain = std::make_unique<SwapChain>(device, window);
 	}
 

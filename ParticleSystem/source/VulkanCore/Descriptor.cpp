@@ -66,7 +66,7 @@ namespace VulkanCore {
 	DescriptorPool::Builder::Builder(GPUDevice& device)
 		: device(device)
 		, maxSets(0)
-		, descriptorPoolCreateFlags(0)
+		, descriptorPoolCreateFlags(0) // TODO: inlocuieste cu VK_NULL
 	{
 
 	}

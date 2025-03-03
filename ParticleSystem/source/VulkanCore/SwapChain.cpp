@@ -15,7 +15,7 @@ namespace VulkanCore {
         CreateSwapChain();
         CreateImageViews();
         CreateRenderPass();
-        CreateDepthResources();
+        // CreateDepthResources(); // TODO [PARTICLE-SYSTEM] : test
         CreateFramebuffers();
         CreateSyncObjects();
 	}
@@ -39,10 +39,11 @@ namespace VulkanCore {
             vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
         }
 
+        // TODO [PARTICLE-SYSTEM] : test
         // cleanup depth resources
-        vkDestroyImageView(device.GetVKDevice(), depthImageView, nullptr);
-        vkDestroyImage(device.GetVKDevice(), depthImage, nullptr);
-        vkFreeMemory(device.GetVKDevice(), depthImageMemory, nullptr);
+        //vkDestroyImageView(device.GetVKDevice(), depthImageView, nullptr);
+        //vkDestroyImage(device.GetVKDevice(), depthImage, nullptr);
+        //vkFreeMemory(device.GetVKDevice(), depthImageMemory, nullptr);
 
         // cleanup render pass
         vkDestroyRenderPass(device.GetVKDevice(), renderPass, nullptr);
@@ -88,14 +89,12 @@ namespace VulkanCore {
 
     VkResult SwapChain::SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex)
     {
+        VkSemaphore waitSemaphores[] = { computeFinishedSemaphores[currentFrameIndex], imageAvailableSemaphores[currentFrameIndex] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        // TODO: compute parameter
-
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrameIndex] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.waitSemaphoreCount = 2;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
@@ -196,11 +195,11 @@ namespace VulkanCore {
         createInfo.image = image;
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         createInfo.format = format;
-        createInfo.subresourceRange.aspectMask = aspectFlags;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask = aspectFlags;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
@@ -240,39 +239,45 @@ namespace VulkanCore {
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentDescription depthAttachment = {};
-        depthAttachment.format = FindDepthFormat();
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // TODO [PARTICLE-SYSTEM]: test
+        //VkAttachmentDescription depthAttachment = {};
+        //depthAttachment.format = FindDepthFormat();
+        //depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        //depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        //depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        //depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        //depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        //depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        //depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference depthAttachmentRef = {};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        //VkAttachmentReference depthAttachmentRef = {};
+        //depthAttachmentRef.attachment = 1;
+        //depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        // subpass.pDepthStencilAttachment = &depthAttachmentRef; // TODO [PARTICLE-SYSTEM]: test
 
         VkSubpassDependency dependency = {};
         dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        // dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; // TODO [PARTICLE-SYSTEM]: test
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // TODO [PARTICLE-SYSTEM]: test
         dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; // TODO [PARTICLE-SYSTEM]: test
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // TODO [PARTICLE-SYSTEM]: test
+        // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // TODO [PARTICLE-SYSTEM]: test
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // TODO [PARTICLE-SYSTEM]: test
 
-        std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+        // TODO [PARTICLE-SYSTEM]: test
+        // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
+        // renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size()); // TODO [PARTICLE-SYSTEM]: test
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
         renderPassInfo.dependencyCount = 1;
@@ -290,16 +295,22 @@ namespace VulkanCore {
 
         for (size_t i = 0; i < swapChainImageViews.size(); ++i)
         {
-            std::array<VkImageView, 2> attachments = {
-                swapChainImageViews[i],
-                depthImageView
+            // TODO [PARTICLE-SYSTEM] : test
+            //std::array<VkImageView, 2> attachments = {
+            //    swapChainImageViews[i],
+            //    depthImageView
+            //};
+
+            VkImageView attachments[] = {
+                swapChainImageViews[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
+            // framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size()); // TODO [PARTICLE-SYSTEM] : test
+            framebufferInfo.attachmentCount = 1; // TODO [PARTICLE-SYSTEM] : test
+            framebufferInfo.pAttachments = attachments;
             framebufferInfo.width = swapChainExtent.width;
             framebufferInfo.height = swapChainExtent.height;
             framebufferInfo.layers = 1;
@@ -355,6 +366,7 @@ namespace VulkanCore {
     {
         for (const VkSurfaceFormatKHR& availableFormat : availableFormats)
         {
+            // TODO: VK_FORMAT_B8G8R8A8_SRGB <-> VK_FORMAT_B8G8R8A8_UNORM 
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
                 return availableFormat;

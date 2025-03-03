@@ -108,7 +108,7 @@ namespace VulkanCore {
 		// Input Assembly
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
 		inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 		inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
 		// Viewport + Scissors as Dynamic States
@@ -149,13 +149,13 @@ namespace VulkanCore {
 		// Color blending
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo = {};
 		colorBlendAttachmentInfo.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachmentInfo.blendEnable = VK_FALSE;						// TODO: enable blending
-		colorBlendAttachmentInfo.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;		// optional
-		colorBlendAttachmentInfo.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;	// optional
-		colorBlendAttachmentInfo.colorBlendOp = VK_BLEND_OP_ADD;				// optional
-		colorBlendAttachmentInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;		// Optional
-		colorBlendAttachmentInfo.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;	// optional
-		colorBlendAttachmentInfo.alphaBlendOp = VK_BLEND_OP_ADD;				// optional
+		colorBlendAttachmentInfo.blendEnable = VK_TRUE;
+		colorBlendAttachmentInfo.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachmentInfo.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachmentInfo.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachmentInfo.alphaBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachmentInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachmentInfo.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 
 		VkPipelineColorBlendStateCreateInfo colorBlendStateInfo = {};
 		colorBlendStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -169,17 +169,17 @@ namespace VulkanCore {
 		colorBlendStateInfo.blendConstants[3] = 0.0f;		// optional
 
 		// Depth and Stencil State
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
-		depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencilStateInfo.depthTestEnable = VK_TRUE;
-		depthStencilStateInfo.depthWriteEnable = VK_TRUE;
-		depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
-		depthStencilStateInfo.depthBoundsTestEnable = VK_FALSE;
-		depthStencilStateInfo.minDepthBounds = 0.0f; // optional
-		depthStencilStateInfo.maxDepthBounds = 1.0f; // optional
-		depthStencilStateInfo.stencilTestEnable = VK_FALSE;
-		depthStencilStateInfo.front = {}; // optional
-		depthStencilStateInfo.back = {};  // optional
+		//VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
+		//depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		//depthStencilStateInfo.depthTestEnable = VK_TRUE;
+		//depthStencilStateInfo.depthWriteEnable = VK_TRUE;
+		//depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+		//depthStencilStateInfo.depthBoundsTestEnable = VK_FALSE;
+		//depthStencilStateInfo.minDepthBounds = 0.0f; // optional
+		//depthStencilStateInfo.maxDepthBounds = 1.0f; // optional
+		//depthStencilStateInfo.stencilTestEnable = VK_FALSE;
+		//depthStencilStateInfo.front = {}; // optional
+		//depthStencilStateInfo.back = {};  // optional
 
 		// Pipeline Layout
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
@@ -212,7 +212,7 @@ namespace VulkanCore {
 		pipelineInfo.pViewportState = &viewportInfo;
 		pipelineInfo.pRasterizationState = &rasterizationInfo;
 		pipelineInfo.pMultisampleState = &multisamplingInfo;
-		pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
+		//pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
 		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
 		pipelineInfo.pDynamicState = &dynamicStateInfo;
 		pipelineInfo.layout = pipelineLayout;

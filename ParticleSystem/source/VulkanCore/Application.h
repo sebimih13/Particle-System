@@ -62,11 +62,15 @@ namespace VulkanCore {
 
         bool bIsRunning; // TODO: de facut o functie Close()
 
+        // TODO [PARTICLE-SYSTEM] : test
         // Global Descriptors
-        std::unique_ptr<DescriptorSetLayout> globalSetLayout;
-        std::unique_ptr<DescriptorPool> globalPool;
-        std::vector<VkDescriptorSet> globalDescriptorSets;
-        std::unique_ptr<Pipeline> pipeline;
+        //std::unique_ptr<DescriptorSetLayout> globalSetLayout;
+        //std::unique_ptr<DescriptorPool> globalPool;
+        //std::vector<VkDescriptorSet> globalDescriptorSets;
+        //std::unique_ptr<Pipeline> pipeline;
+
+        double lastTime;
+        float lastFrameTime;
 
         // Particle System Descriptors
         std::unique_ptr<DescriptorSetLayout> particleSystemSetLayout;

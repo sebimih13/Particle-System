@@ -56,7 +56,7 @@ namespace VulkanCore {
         }
     }
 
-    GPUDevice::GPUDevice(Window& window)
+    GPUDevice::GPUDevice(Window& window) // TODO: [TRY] const Window& window
     {
         CreateInstance();
         SetupDebugMessenger();
@@ -346,6 +346,7 @@ namespace VulkanCore {
 
     void GPUDevice::CreateSurface(Window& window)
     {
+        // TODO: pune functia asta aici, nu e nevoie de o metoda in clasa window
         window.CreateWindowSurface(instance, &surface);
     }
 
@@ -511,7 +512,7 @@ namespace VulkanCore {
         return requiredExtensions.empty();
     }
 
-    bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device)
+    bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device) // TODO: [TRY] const VkPhysicalDevice& device
     {
         QueueFamilyIndices indices = FindQueueFamilies(device);
 
@@ -539,7 +540,7 @@ namespace VulkanCore {
 
     QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device) const
     {
-        QueueFamilyIndices indices = {};
+        QueueFamilyIndices indices = {}; // TODO: salveaza asta undeva, de ce sa fac find de de 4 ori?
 
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -575,7 +576,7 @@ namespace VulkanCore {
         return indices;
     }
 
-    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const
+    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const // TODO: [TRY] const VkPhysicalDevice& device + return const SwapChainSupportDetails?
     {
         SwapChainSupportDetails details;
 
@@ -583,7 +584,6 @@ namespace VulkanCore {
 
         uint32_t formatCount;
         vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-
         if (formatCount != 0)
         {
             details.formats.resize(formatCount);
@@ -592,7 +592,6 @@ namespace VulkanCore {
 
         uint32_t presentModeCount;
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-
         if (presentModeCount != 0)
         {
             details.presentModes.resize(presentModeCount);

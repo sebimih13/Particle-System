@@ -34,8 +34,12 @@ namespace VulkanCore {
 		, device(window)
 		, renderer(window, device)
 		, bIsRunning(true)
+		, lastTime(0.0)
+		, lastFrameTime(0.0f)
 		, statueTexture(device, "resources/textures/statue.jpg")	// TODO: MOVE
 	{
+		lastTime = glfwGetTime();
+
 		// Buffers Setup
 		// TODO: REFACTOR - use Buffer class
 		CreateUniformBuffers();
@@ -50,15 +54,15 @@ namespace VulkanCore {
 		CreatePipeline();
 
 		// ImGui Setup
-		SetupImGui();
+		// SetupImGui();
 	}
 
 	Application::~Application()
 	{
 		// ImGui cleanup
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+		//ImGui_ImplVulkan_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
+		//ImGui::DestroyContext();
 
 		// TODO: REFACTOR - use Buffer class
 		CleanupShaderStorageBuffers();
@@ -95,26 +99,23 @@ namespace VulkanCore {
 			window.Update();
 
 			// Compute submission
-			//if (VkCommandBuffer commandBuffer = renderer.BeginCompute())
-			//{
-			//	// Update UBO
-			//	UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
+			if (VkCommandBuffer commandBuffer = renderer.BeginCompute())
+			{
+				// Update UBO
+				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
 
-			//	// Particle System
-			//	particleSystemPipeline->BindCompute(commandBuffer);
-			//	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
-			//	vkCmdDispatch(commandBuffer, PARTICLE_COUNT / 256, 1, 1);
-			//}
-			//renderer.EndCompute();
+				// Particle System
+				particleSystemPipeline->BindComputePipeline(commandBuffer);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
+				vkCmdDispatch(commandBuffer, PARTICLE_COUNT / 256, 1, 1);
+			}
+			renderer.EndCompute();
 
 			// Graphics submission
 			if (VkCommandBuffer commandBuffer = renderer.BeginFrame())
 			{
 				// Start frame
 				renderer.BeginSwapChainRenderPass(commandBuffer);
-
-				// Update ubo
-				// UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
 
 				// Triangle
 				//pipeline->BindGraphicsPipeline(commandBuffer);
@@ -131,24 +132,29 @@ namespace VulkanCore {
 				vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
 
 				// Start the Dear ImGui frame
-				ImGui_ImplVulkan_NewFrame();
-				ImGui_ImplGlfw_NewFrame();
-				ImGui::NewFrame();
+				//ImGui_ImplVulkan_NewFrame();
+				//ImGui_ImplGlfw_NewFrame();
+				//ImGui::NewFrame();
 
-				RenderUI();
+				//RenderUI();
 
-				ImGui::Render();
-				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+				//ImGui::Render();
+				//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
-				// Update and Render additional Platform Windows
-				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-				{
-					ImGui::UpdatePlatformWindows();
-					ImGui::RenderPlatformWindowsDefault();
-				}
+				//// Update and Render additional Platform Windows
+				//if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				//{
+				//	ImGui::UpdatePlatformWindows();
+				//	ImGui::RenderPlatformWindowsDefault();
+				//}
 
 				// End frame
 				renderer.EndSwapChainRenderPass(commandBuffer);
+
+				// We want to animate the particle system using the last frames time to get smooth, frame-rate independent animation
+				double currentTime = glfwGetTime();
+				lastFrameTime = (currentTime - lastTime) * 1000.0;
+				lastTime = currentTime;
 			}
 			renderer.EndFrame();
 		}
@@ -168,11 +174,6 @@ namespace VulkanCore {
 		//ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().width) / static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().height), 0.1f, 10.0f);
 		//ubo.proj[1][1] *= -1;
 
-		static double lastTime = 0.0f;
-		double currentTime = glfwGetTime();
-		float lastFrameTime = static_cast<float>(currentTime - lastTime) * 1000.0f;
-		lastTime = currentTime;
-
 		UniformBufferObject ubo = {};
 		ubo.deltaTime = lastFrameTime * 2.0f;
 
@@ -181,10 +182,11 @@ namespace VulkanCore {
 
 	void Application::CreateDescriptorSetLayout()
 	{
-		globalSetLayout = DescriptorSetLayout::Builder(device)
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
-			.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
-			.Build();
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalSetLayout = DescriptorSetLayout::Builder(device)
+		//	.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
+		//	.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
+		//	.Build();
 
 		particleSystemSetLayout = DescriptorSetLayout::Builder(device)
 			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
@@ -195,12 +197,13 @@ namespace VulkanCore {
 
 	void Application::CreateDescriptorPool()
 	{
-		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
-			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
-			.Build();
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalPool = DescriptorPool::Builder(device)
+		//	.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
+		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
+		//	.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
+		//	.Build();
 			
 		particleSystemDescriptorPool = DescriptorPool::Builder(device)
 			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -211,26 +214,27 @@ namespace VulkanCore {
 
 	void Application::CreateDescriptorSets()
 	{
-		globalDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			// TODO: REFACTOR: de pus intr-o clasa Buffer->GetDescriptorInfo()
-			VkDescriptorBufferInfo uboBufferInfo = {};
-			uboBufferInfo.buffer = uniformBuffers[i];
-			uboBufferInfo.offset = 0;
-			uboBufferInfo.range = sizeof(UniformBufferObject);
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		//for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+		//{
+		//	// TODO: REFACTOR: de pus intr-o clasa Buffer->GetDescriptorInfo()
+		//	VkDescriptorBufferInfo uboBufferInfo = {};
+		//	uboBufferInfo.buffer = uniformBuffers[i];
+		//	uboBufferInfo.offset = 0;
+		//	uboBufferInfo.range = sizeof(UniformBufferObject);
 
-			// TODO: REFACTOR
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = statueTexture.GetTextureImageView();
-			imageInfo.sampler = statueTexture.GetTextureSampler();
+		//	// TODO: REFACTOR
+		//	VkDescriptorImageInfo imageInfo = {};
+		//	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		//	imageInfo.imageView = statueTexture.GetTextureImageView();
+		//	imageInfo.sampler = statueTexture.GetTextureSampler();
 
-			DescriptorWriter(*globalSetLayout, *globalPool)
-				.WriteBuffer(0, uboBufferInfo)
-				.WriteImage(1, imageInfo)
-				.Build(globalDescriptorSets[i]);
-		}
+		//	DescriptorWriter(*globalSetLayout, *globalPool)
+		//		.WriteBuffer(0, uboBufferInfo)
+		//		.WriteImage(1, imageInfo)
+		//		.Build(globalDescriptorSets[i]);
+		//}
 
 		particleSystemDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
@@ -273,7 +277,7 @@ namespace VulkanCore {
 		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
 #endif
 
-		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
+		// pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
 		particleSystemPipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), particleSystemSetLayout->GetDescriptorSetLayout(), Particle::GetBindingDescription(), Particle::GetAttributeDescription(), particleVertShaderFilePath, particleFragShaderFilePath, particleComputeShaderFilePath);
 	}
 
@@ -297,20 +301,20 @@ namespace VulkanCore {
 		}
 
 		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
-		ImGui_ImplVulkan_InitInfo initInfoImGui = {};
-		initInfoImGui.Instance = device.GetInstance();
-		initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
-		initInfoImGui.Device = device.GetVKDevice();
-		initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsAndComputeFamily.value();
-		initInfoImGui.Queue = device.GetGraphicsQueue();
-		initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
-		initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
-		initInfoImGui.Subpass = 0;
-		initInfoImGui.MinImageCount = 2;
-		initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
-		initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		ImGui_ImplVulkan_Init(&initInfoImGui);
+		//ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
+		//ImGui_ImplVulkan_InitInfo initInfoImGui = {};
+		//initInfoImGui.Instance = device.GetInstance();
+		//initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
+		//initInfoImGui.Device = device.GetVKDevice();
+		//initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsAndComputeFamily.value();
+		//initInfoImGui.Queue = device.GetGraphicsQueue();
+		//initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
+		//initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
+		//initInfoImGui.Subpass = 0;
+		//initInfoImGui.MinImageCount = 2;
+		//initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
+		//initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		//ImGui_ImplVulkan_Init(&initInfoImGui);
 	}
 
 	void Application::RenderUI()
