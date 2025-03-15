@@ -70,7 +70,7 @@ namespace VulkanCore {
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkSurfaceKHR surface;
-        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // TODO: de pus in Constructor
         VkDevice device;
 
         VkQueue graphicsQueue;
@@ -101,7 +101,8 @@ namespace VulkanCore {
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
 
         // DEBUG
-        void ListAvailableExtensions() const;
+        void ListAvailableInstanceExtensions() const;
+        void ListAvailableDeviceExtensions() const;
         void ListRequiredGLFWExtensions() const;
         void ListAvailableValidationLayers() const;
         void ListAvailablePhysicalDevices() const;

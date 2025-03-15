@@ -21,7 +21,8 @@ namespace VulkanCore {
     };
 
     const std::vector<const char*> GPUDevice::deviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME
     };
 
     // TODO: de declarat static in .h
@@ -281,7 +282,7 @@ namespace VulkanCore {
         }
 
 #ifdef DEBUG
-        ListAvailableExtensions();
+        ListAvailableInstanceExtensions();
         ListRequiredGLFWExtensions();
         ListAvailableValidationLayers();
 #endif // DEBUG
@@ -380,6 +381,10 @@ namespace VulkanCore {
         {
             throw std::runtime_error("Failed to find a suitable GPU!");
         }
+
+#ifdef DEBUG
+        ListAvailableDeviceExtensions();
+#endif
     }
 
     void GPUDevice::CreateLogicalDevice()
@@ -535,7 +540,8 @@ namespace VulkanCore {
         // TODO: include mai multe criterii
         return indices.IsComplete() 
             && bExtensionsSupported && bSwapChainAdequate 
-            && deviceFeatures.samplerAnisotropy;
+            && deviceFeatures.samplerAnisotropy
+            && deviceFeatures.largePoints;
     }
 
     QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device) const
@@ -601,7 +607,7 @@ namespace VulkanCore {
         return details;
     }
 
-    void GPUDevice::ListAvailableExtensions() const
+    void GPUDevice::ListAvailableInstanceExtensions() const
     {
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -609,8 +615,24 @@ namespace VulkanCore {
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
-        std::cout << "Available extensions:\n";
+        std::cout << "Available Instance Extensions:\n";
         for (const auto& extension : availableExtensions) {
+            std::cout << '\t' << extension.extensionName << '\n';
+        }
+        std::cout << '\n';
+    }
+
+    void GPUDevice::ListAvailableDeviceExtensions() const
+    {
+        uint32_t extensionCount = 0;
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+
+        std::cout << "Available Device Extensions:\n";
+        for (const auto& extension : availableExtensions)
+        {
             std::cout << '\t' << extension.extensionName << '\n';
         }
         std::cout << '\n';
