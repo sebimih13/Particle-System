@@ -26,6 +26,14 @@ namespace VulkanCore {
 		CreateComputePipeline(descriptorSetLayout, computeShaderFilePath);
 	}
 
+	Pipeline::Pipeline(GPUDevice& device, const VkRenderPass& renderPass, const VkDescriptorSetLayout& graphicsDescriptorSetLayout, const VkDescriptorSetLayout& computeDescriptorSetLayou, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& computeShaderFilePath)
+		: device(device)
+		, hasComputePipeline(true)
+	{
+		CreateGraphicsPipeline(renderPass, graphicsDescriptorSetLayout, std::nullopt, std::nullopt, vertexShaderFilePath, fragmentShaderFilePath);
+		CreateComputePipeline(computeDescriptorSetLayou, computeShaderFilePath);
+	}
+
 	Pipeline::~Pipeline()
 	{
 		if (hasComputePipeline)
@@ -67,7 +75,7 @@ namespace VulkanCore {
 		return buffer;
 	}
 
-	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::optional<VkDescriptorSetLayout>& descriptorSetLayout, const VkVertexInputBindingDescription& bindingDescription, const std::vector<VkVertexInputAttributeDescription>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
+	void Pipeline::CreateGraphicsPipeline(const VkRenderPass& renderPass, const std::optional<VkDescriptorSetLayout>& descriptorSetLayout, const std::optional<VkVertexInputBindingDescription>& bindingDescription, const std::optional<std::vector<VkVertexInputAttributeDescription>>& attributeDescription, const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath)
 	{
 		// Shader Code
 		std::vector<char> vertShaderCode = ReadFile(vertexShaderFilePath);
@@ -100,10 +108,13 @@ namespace VulkanCore {
 		// Vertex Input
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
+		if (bindingDescription.has_value() && attributeDescription.has_value())
+		{
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.pVertexBindingDescriptions = &bindingDescription.value();
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.value().size());
+			vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.value().data();
+		}
 
 		// Input Assembly
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
@@ -246,11 +257,19 @@ namespace VulkanCore {
 		computeShaderStageInfo.module = computeShaderModule;
 		computeShaderStageInfo.pName = "main";
 
+		// Push Constants
+		VkPushConstantRange pushConstantRangeInfo = {};
+		pushConstantRangeInfo.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+		pushConstantRangeInfo.offset = 0;
+		pushConstantRangeInfo.size = sizeof(PushConstants);
+
 		// Pipeline Layout
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRangeInfo;
 
 		if (vkCreatePipelineLayout(device.GetVKDevice(), &pipelineLayoutInfo, nullptr, &computePipelineLayout) != VK_SUCCESS)
 		{

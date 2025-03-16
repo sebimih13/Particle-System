@@ -27,7 +27,7 @@ namespace VulkanCore {
 
 	}
 
-	const uint32_t Application::PARTICLE_COUNT = 8192;
+	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
@@ -46,8 +46,8 @@ namespace VulkanCore {
 		CreateShaderStorageBuffers();
 
 		// Descriptors Setup
-		CreateDescriptorSetLayout();
 		CreateDescriptorPool();
+		CreateDescriptorSetLayout();
 		CreateDescriptorSets();
 
 		// Pipelines
@@ -71,29 +71,6 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
-		// TODO: test Model
-		const std::vector<Model::Vertex> vertices = {
-			Model::Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-			Model::Vertex(glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-
-			Model::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-			Model::Vertex(glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f))
-		};
-
-		const std::vector<uint32_t> indices = {
-			0, 1, 2,
-			2, 3, 0,
-
-			4, 5, 6, 
-			6, 7, 4
-		};
-
-		Model triangle(device, Model::Data(vertices, indices));
-
 		while (!window.ShouldClose() && bIsRunning)
 		{
 			window.Update();
@@ -101,12 +78,19 @@ namespace VulkanCore {
 			// Compute submission
 			if (VkCommandBuffer commandBuffer = renderer.BeginCompute())
 			{
-				// Update UBO
-				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
-
 				// Particle System
 				particleSystemPipeline->BindComputePipeline(commandBuffer);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemComputeDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
+
+				// Update Push Constants
+				PushConstants pushConstantsData = {};
+				pushConstantsData.enabled = 0; // TODO: update
+				pushConstantsData.attractor = glm::vec2(0.0f, 0.0f);
+				pushConstantsData.timestep = lastFrameTime; // TODO: update
+
+				vkCmdPushConstants(commandBuffer, particleSystemPipeline->GetComputePipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &pushConstantsData);
+
+				// Dispatch
 				vkCmdDispatch(commandBuffer, PARTICLE_COUNT / 256, 1, 1);
 			}
 			renderer.EndCompute();
@@ -117,17 +101,15 @@ namespace VulkanCore {
 				// Start frame
 				renderer.BeginSwapChainRenderPass(commandBuffer);
 
-				// Triangle
-				//pipeline->BindGraphicsPipeline(commandBuffer);
-				//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetGraphicsPipelineLayout(), 0, 1, &globalDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
-				//triangle.Bind(commandBuffer);
-				//triangle.Draw(commandBuffer);
+				// Update UBO
+				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
 
 				// Particle System
 				particleSystemPipeline->BindGraphicsPipeline(commandBuffer);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, particleSystemPipeline->GetGraphicsPipelineLayout(), 0, 1, &particleSystemGraphicsDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
 
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &shaderStorageBuffers[renderer.GetSwapChain()->GetCurrentFrameIndex()], offsets);
+				//VkDeviceSize offsets[] = { 0 };
+				//vkCmdBindVertexBuffers(commandBuffer, 0, 1, &shaderStorageBuffers[renderer.GetSwapChain()->GetCurrentFrameIndex()], offsets);
 
 				vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
 
@@ -153,7 +135,7 @@ namespace VulkanCore {
 
 				// We want to animate the particle system using the last frames time to get smooth, frame-rate independent animation
 				double currentTime = glfwGetTime();
-				lastFrameTime = (currentTime - lastTime) * 1000.0;
+				lastFrameTime = static_cast<float>(currentTime - lastTime) * 1000.0f;
 				lastTime = currentTime;
 			}
 			renderer.EndFrame();
@@ -164,35 +146,23 @@ namespace VulkanCore {
 
 	void Application::UpdateUniformBuffer(uint32_t currentFrame)
 	{
-		//static auto startTime = std::chrono::high_resolution_clock::now();
-		//auto currentTime = std::chrono::high_resolution_clock::now();
-		//float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+		// TODO: update doar la window resize
 
-		//UniformBufferObject ubo = {};
-		//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().width) / static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().height), 0.1f, 10.0f);
-		//ubo.proj[1][1] *= -1;
+		static constexpr float WORLD_SIZE = 2.0f;
+		float aspect = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
+		float worldWidth = aspect * WORLD_SIZE;
 
 		UniformBufferObject ubo = {};
-		ubo.deltaTime = lastFrameTime * 2.0f;
+		ubo.projection = glm::ortho(
+			-worldWidth / 2.0f,
+			worldWidth / 2.0f,
+			WORLD_SIZE / 2.0f,
+			-WORLD_SIZE / 2.0f,
+			0.0f,
+			-1.0f
+		);
 
 		std::memcpy(uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
-	}
-
-	void Application::CreateDescriptorSetLayout()
-	{
-		// TODO [PARTICLE-SYSTEM] : test
-		//globalSetLayout = DescriptorSetLayout::Builder(device)
-		//	.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
-		//	.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
-		//	.Build();
-
-		particleSystemSetLayout = DescriptorSetLayout::Builder(device)
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
-			.AddBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
-			.AddBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
-			.Build();
 	}
 
 	void Application::CreateDescriptorPool()
@@ -206,9 +176,27 @@ namespace VulkanCore {
 		//	.Build();
 			
 		particleSystemDescriptorPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// x2 storage buffers
+			.SetMaxSets(20 * SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 * SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 20 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// x2 storage buffers
+			.Build();
+	}
+
+	void Application::CreateDescriptorSetLayout()
+	{
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalSetLayout = DescriptorSetLayout::Builder(device)
+		//	.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
+		//	.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
+		//	.Build();
+
+		particleSystemComputeDescriptorSetLayout = DescriptorSetLayout::Builder(device)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
+			.Build();
+
+		particleSystemGraphicsDescriptorSetLayout = DescriptorSetLayout::Builder(device)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)
+			.AddBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)
 			.Build();
 	}
 
@@ -236,7 +224,20 @@ namespace VulkanCore {
 		//		.Build(globalDescriptorSets[i]);
 		//}
 
-		particleSystemDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		particleSystemComputeDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkDescriptorBufferInfo storageBufferInfo = {};
+			storageBufferInfo.buffer = shaderStorageBuffers[i];
+			storageBufferInfo.offset = 0;
+			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
+
+			DescriptorWriter(*particleSystemComputeDescriptorSetLayout, *particleSystemDescriptorPool)
+				.WriteBuffer(0, storageBufferInfo)
+				.Build(particleSystemComputeDescriptorSets[i]);
+		}
+
+		particleSystemGraphicsDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDescriptorBufferInfo uniformBufferInfo = {};
@@ -244,21 +245,15 @@ namespace VulkanCore {
 			uniformBufferInfo.offset = 0;
 			uniformBufferInfo.range = sizeof(UniformBufferObject);
 
-			VkDescriptorBufferInfo storageBufferInfoLastFrame = {};
-			storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT];
-			storageBufferInfoLastFrame.offset = 0;
-			storageBufferInfoLastFrame.range = sizeof(Particle) * PARTICLE_COUNT;
+			VkDescriptorBufferInfo storageBufferInfo = {};
+			storageBufferInfo.buffer = shaderStorageBuffers[i];
+			storageBufferInfo.offset = 0;
+			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
 
-			VkDescriptorBufferInfo storageBufferInfoCurrentFrame = {};
-			storageBufferInfoCurrentFrame.buffer = shaderStorageBuffers[i];
-			storageBufferInfoCurrentFrame.offset = 0;
-			storageBufferInfoCurrentFrame.range = sizeof(Particle) * PARTICLE_COUNT;
-
-			DescriptorWriter(*particleSystemSetLayout, *particleSystemDescriptorPool)
+			DescriptorWriter(*particleSystemGraphicsDescriptorSetLayout, *particleSystemDescriptorPool)
 				.WriteBuffer(0, uniformBufferInfo)
-				.WriteBuffer(1, storageBufferInfoLastFrame)
-				.WriteBuffer(2, storageBufferInfoCurrentFrame)
-				.Build(particleSystemDescriptorSets[i]);
+				.WriteBuffer(1, storageBufferInfo)
+				.Build(particleSystemGraphicsDescriptorSets[i]);
 		}
 	}
 
@@ -269,16 +264,16 @@ namespace VulkanCore {
 		static const std::string triangleVertShaderFilePath = "shaders/triangle.vert.spv";
 		static const std::string triangleFragShaderFilePath = "shaders/triangle.frag.spv";
 
+		static const std::string particleComputeShaderFilePath = "shaders/particle.comp.spv";
 		static const std::string particleVertShaderFilePath = "shaders/particle.vert.spv";
 		static const std::string particleFragShaderFilePath = "shaders/particle.frag.spv";
-		static const std::string particleComputeShaderFilePath = "shaders/particle.comp.spv";
 #elif defined(PLATFORM_LINUX) && defined(DEBUG)
 		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
 #endif
 
 		// pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
-		particleSystemPipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), particleSystemSetLayout->GetDescriptorSetLayout(), Particle::GetBindingDescription(), Particle::GetAttributeDescription(), particleVertShaderFilePath, particleFragShaderFilePath, particleComputeShaderFilePath);
+		particleSystemPipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), particleSystemGraphicsDescriptorSetLayout->GetDescriptorSetLayout(), particleSystemComputeDescriptorSetLayout->GetDescriptorSetLayout(), particleVertShaderFilePath, particleFragShaderFilePath, particleComputeShaderFilePath);
 	}
 
 	void Application::SetupImGui()
@@ -361,20 +356,19 @@ namespace VulkanCore {
 	void Application::CreateShaderStorageBuffers()
 	{
 		// Initialize particles positions on a circle
-		std::default_random_engine rndEngine(static_cast<unsigned>(std::time(nullptr)));
-		std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
+		std::default_random_engine randomEngine(static_cast<unsigned>(std::time(nullptr)));
+		std::uniform_real_distribution<float> randomDistribution(0.2f, 1.0f);
+		constexpr float step = 2.0f * glm::pi<float>() / static_cast<float>(PARTICLE_COUNT);
 
 		std::vector<Particle> particles(PARTICLE_COUNT);
-		for (auto& particle : particles)
+		for (size_t i = 0; i < particles.size(); ++i)
 		{
-			const float r = 0.25f * sqrt(rndDist(rndEngine));
-			const float theta = rndDist(rndEngine) * 2.0f * 3.14159265358979323846f;
-			const float x = r * cos(theta) * window.GetHeight() / window.GetHeight();
-			const float y = r * sin(theta);
+			const float radius = randomDistribution(randomEngine);
+			const float angle = static_cast<float>(i) * step;
 
-			particle.position = glm::vec2(x, y);
-			particle.velocity = glm::normalize(glm::vec2(x, y)) * 0.00025f;
-			particle.color = glm::vec4(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine), 1.0f);
+			particles[i].position = glm::vec2(radius * glm::cos(angle), radius * glm::sin(angle));
+			particles[i].velocity = glm::vec2(0.0f, 0.0f);
+			particles[i].color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 		}
 
 		VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
@@ -393,7 +387,7 @@ namespace VulkanCore {
 		// Filling staging buffer
 		void* data;
 		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-			std::memcpy(data, particles.data(), (size_t)bufferSize);
+			std::memcpy(data, particles.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
 
 		// Create shader storage buffer
@@ -403,9 +397,11 @@ namespace VulkanCore {
 		// Copy initial particle data to all storage buffers
 		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
 		{
+			// TODO: sterge din usages
 			device.CreateBuffer(
-				bufferSize, 
-				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+				bufferSize,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 				shaderStorageBuffers[i], 
 				shaderStorageBuffersMemory[i]
 			);

@@ -32,7 +32,7 @@ namespace VulkanCore {
 
 		if (!pixels)
 		{
-			throw std::runtime_error("Failed to load texture image!");
+			throw std::runtime_error("Failed to load texture image! - " + filePath);
 		}
 
 		// Create staging buffer

@@ -25,11 +25,7 @@ namespace VulkanCore {
     // TODO: move FrameInfo.h
     struct UniformBufferObject
     {
-        //glm::mat4 model;
-        //glm::mat4 view;
-        //glm::mat4 proj;
-
-        float deltaTime = 1.0f;
+        glm::mat4 projection;
     };
 
     // TODO: de facut clasa virtuala
@@ -73,17 +69,22 @@ namespace VulkanCore {
         float lastFrameTime;
 
         // Particle System Descriptors
-        std::unique_ptr<DescriptorSetLayout> particleSystemSetLayout;
         std::unique_ptr<DescriptorPool> particleSystemDescriptorPool;
-        std::vector<VkDescriptorSet> particleSystemDescriptorSets;
+
+        std::unique_ptr<DescriptorSetLayout> particleSystemGraphicsDescriptorSetLayout;
+        std::vector<VkDescriptorSet> particleSystemGraphicsDescriptorSets;
+
+        std::unique_ptr<DescriptorSetLayout> particleSystemComputeDescriptorSetLayout;
+        std::vector<VkDescriptorSet> particleSystemComputeDescriptorSets;
+
         std::unique_ptr<Pipeline> particleSystemPipeline;
 
         Texture statueTexture;
 
         void UpdateUniformBuffer(uint32_t currentFrame);
 
-        void CreateDescriptorSetLayout();
         void CreateDescriptorPool();
+        void CreateDescriptorSetLayout();
         void CreateDescriptorSets();
         void CreatePipeline();
         void SetupImGui();
