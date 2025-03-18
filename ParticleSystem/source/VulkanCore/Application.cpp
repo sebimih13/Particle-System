@@ -27,7 +27,7 @@ namespace VulkanCore {
 
 	}
 
-	const uint32_t Application::PARTICLE_COUNT = 8192 * 64; // TODO: 131072 * 64 // 8192 * 64
+	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64 // 8192 * 64
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
@@ -101,10 +101,18 @@ namespace VulkanCore {
 		// Tick the application state based on the wall-clock time since the last tick
 		// deltaTime seconds since last frame
 
+		// TODO: doar test
+		double xPosMouse, yPosMouse;
+		glfwGetCursorPos(window.GetGLFWWindow(), &xPosMouse, &yPosMouse);
+		const float world_width = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
+
 		// Update Push-Constants
 		PushConstants pushConstantsData = {};
-		pushConstantsData.enabled = 1;							// TODO: DOODLE update
-		pushConstantsData.attractor = glm::vec2(0.0f, 0.0f);
+		pushConstantsData.enabled = glfwGetMouseButton(window.GetGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
+		pushConstantsData.attractor = glm::vec2(
+			glm::mix(-world_width, world_width, xPosMouse / window.GetWidth()),
+			glm::mix(1.0f, -1.0f, yPosMouse / window.GetHeight())
+		);
 		pushConstantsData.timestep = static_cast<float>(deltaTime);				// TODO: DOODLE update
 
 		// Compute submission

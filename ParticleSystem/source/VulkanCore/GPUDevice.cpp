@@ -28,7 +28,8 @@ namespace VulkanCore {
     // TODO: de declarat static in .h
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
-        std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
+        // TODO: DOODLE -> REZOLVA
+        // std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
 
         return VK_FALSE;
     }
