@@ -65,10 +65,15 @@ namespace VulkanCore {
         PickPhysicalDevice();
         CreateLogicalDevice();
         CreateCommandPool();
+        CreateSyncObjects();
     }
 
     GPUDevice::~GPUDevice()
     {
+        // TODO: DOODLE
+        vkDestroyFence(device, computeFence, nullptr);
+        vkDestroyFence(device, imageFence, nullptr);
+
         vkDestroyCommandPool(device, commandPool, nullptr);
 
         vkDestroyDevice(device, nullptr);
@@ -80,6 +85,7 @@ namespace VulkanCore {
 
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
+
     }
 
     uint32_t GPUDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -149,23 +155,22 @@ namespace VulkanCore {
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
-    void GPUDevice::CreateImage(const uint32_t& width, const uint32_t& height, const VkFormat& format, const VkImageTiling& tiling, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void GPUDevice::CreateImage(const VkFormat& format, const uint32_t& width, const uint32_t& height, const VkImageTiling& tiling, const VkSampleCountFlagBits& samples, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory)
     {
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.format = format;
         imageInfo.extent.width = width;
         imageInfo.extent.height = height;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = format;
+        imageInfo.samples = samples;
         imageInfo.tiling = tiling;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.usage = usage;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.flags = 0; // optional
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
         if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS)
         {
@@ -208,7 +213,7 @@ namespace VulkanCore {
         return commandBuffer;
     }
 
-    void GPUDevice::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
+    void GPUDevice::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
     {
         vkEndCommandBuffer(commandBuffer);
 
@@ -217,13 +222,30 @@ namespace VulkanCore {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(graphicsQueue);
+        // TODO: DOODLE
+        if (queue == VK_NULL_HANDLE)
+        {
+            throw std::runtime_error("Failed to submit to queue");
+        }
+
+        // Wait for other work on GPU to finish
+        vkWaitForFences(device, 1, &computeFence, VK_TRUE, UINT64_MAX);
+
+        // Only reset the fence if we are submitting work
+        vkResetFences(device, 1, &computeFence);
+
+        // Submit work
+        if (vkQueueSubmit(queue, 1, &submitInfo, computeFence) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to submit compute command buffer!");
+        }
+        
+        vkQueueWaitIdle(queue );
 
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
-    void GPUDevice::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void GPUDevice::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue queue)
     {
         VkCommandBuffer commandBuffer = BeginSingleTimeCommandBuffer();
 
@@ -233,7 +255,7 @@ namespace VulkanCore {
         region.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &region);
 
-        EndSingleTimeCommandBuffer(commandBuffer);
+        EndSingleTimeCommandBuffer(commandBuffer, queue);
     }
 
     void GPUDevice::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
@@ -271,7 +293,9 @@ namespace VulkanCore {
             &region
         );
 
-        EndSingleTimeCommandBuffer(commandBuffer);
+        throw std::runtime_error("DO NOT USE");
+
+        EndSingleTimeCommandBuffer(commandBuffer, graphicsQueue);
     }
 
     void GPUDevice::CreateInstance()
@@ -294,9 +318,9 @@ namespace VulkanCore {
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Vulkan";                    // TODO: change
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: schimba la fiecare milestone
+        appInfo.pApplicationName = "Vulkan Particle System";    // TODO: change
         appInfo.pEngineName = "No Engine";                      // TODO: change?
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: schimba la fiecare milestone
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // TODO: schimba la fiecare milestone
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -454,6 +478,23 @@ namespace VulkanCore {
         if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create command pool!");
+        }
+    }
+
+    void GPUDevice::CreateSyncObjects()
+    {
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        if (vkCreateFence(device, &fenceInfo, nullptr, &computeFence) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create compute synchronization objects!");
+        }
+
+        if (vkCreateFence(device, &fenceInfo, nullptr, &imageFence) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create compute synchronization objects!");
         }
     }
 

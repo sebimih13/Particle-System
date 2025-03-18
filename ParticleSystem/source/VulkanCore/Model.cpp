@@ -209,7 +209,7 @@ namespace VulkanCore {
 			vertexBufferMemory
 		);
 
-		device.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+		device.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize, device.GetGraphicsQueue());
 
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
@@ -247,7 +247,7 @@ namespace VulkanCore {
 			indexBufferMemory
 		);
 
-		device.CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+		device.CopyBuffer(stagingBuffer, indexBuffer, bufferSize, device.GetGraphicsQueue());
 
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);

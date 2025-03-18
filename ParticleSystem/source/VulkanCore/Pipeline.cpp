@@ -122,16 +122,37 @@ namespace VulkanCore {
 		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 		inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-		// Viewport + Scissors as Dynamic States
-		VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
-		dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-		dynamicStateInfo.pDynamicStates = dynamicStates.data();
+		// TODO: TEST -> DYNAMIC STATE
+		// Viewport 
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = 1200;
+		viewport.height = 800;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
 
-		VkPipelineViewportStateCreateInfo viewportInfo = {};
-		viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportInfo.viewportCount = 1;
-		viewportInfo.scissorCount = 1;
+		// TODO: TEST -> DYNAMIC STATE
+		// Scissor
+		VkRect2D scissor = {};
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = 0x7FFFFFFF;
+		scissor.extent.height = 0x7FFFFFFF;
+
+		VkPipelineViewportStateCreateInfo viewportStateInfo = {};
+		viewportStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportStateInfo.viewportCount = 1;
+		viewportStateInfo.pViewports = &viewport;
+		viewportStateInfo.scissorCount = 1;
+		viewportStateInfo.pScissors = &scissor;
+
+		// TODO: DOODLE : REINTEGRATE DYNAMIC STATES
+		// Viewport + Scissors as Dynamic States
+		//VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
+		//dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		//dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+		//dynamicStateInfo.pDynamicStates = dynamicStates.data();
 
 		// Rasterizer
 		VkPipelineRasterizationStateCreateInfo rasterizationInfo = {};
@@ -139,58 +160,58 @@ namespace VulkanCore {
 		rasterizationInfo.depthClampEnable = VK_FALSE;
 		rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizationInfo.lineWidth = 1.0f;
-		rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // TODO: inapoi la valoare default: VK_FRONT_FACE_CLOCKWISE
+		rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
+		rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizationInfo.depthBiasEnable = VK_FALSE;
-		rasterizationInfo.depthBiasConstantFactor = 0.0f;	// optional
-		rasterizationInfo.depthBiasClamp = 0.0f;			// optional
-		rasterizationInfo.depthBiasSlopeFactor = 0.0f;		// optional
+		rasterizationInfo.depthBiasConstantFactor = 0.0f;
+		rasterizationInfo.depthBiasClamp = 0.0f;
+		rasterizationInfo.depthBiasSlopeFactor = 0.0f;
+		rasterizationInfo.lineWidth = 1.0f;
 
 		// Multisampling
 		VkPipelineMultisampleStateCreateInfo multisamplingInfo = {};
 		multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_8_BIT;
 		multisamplingInfo.sampleShadingEnable = VK_FALSE;
-		multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		multisamplingInfo.minSampleShading = 1.0f;				// optional
+		multisamplingInfo.minSampleShading = 0.0f;
 		multisamplingInfo.pSampleMask = nullptr;				// optional
 		multisamplingInfo.alphaToCoverageEnable = VK_FALSE;		// optional
 		multisamplingInfo.alphaToOneEnable = VK_FALSE;			// optional
 
-		// Color blending
+		// Depth
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
+		depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencilStateInfo.depthTestEnable = VK_FALSE;
+		depthStencilStateInfo.depthWriteEnable = VK_FALSE;
+		depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+		depthStencilStateInfo.depthBoundsTestEnable = VK_FALSE;
+		depthStencilStateInfo.stencilTestEnable = VK_FALSE;
+		depthStencilStateInfo.front = {};
+		depthStencilStateInfo.back = {};
+		depthStencilStateInfo.minDepthBounds = 0.0f;
+		depthStencilStateInfo.maxDepthBounds = 0.0f;
+
+		// Color Blend
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo = {};
-		colorBlendAttachmentInfo.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		colorBlendAttachmentInfo.blendEnable = VK_TRUE;
-		colorBlendAttachmentInfo.colorBlendOp = VK_BLEND_OP_ADD;
 		colorBlendAttachmentInfo.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 		colorBlendAttachmentInfo.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachmentInfo.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachmentInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachmentInfo.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 		colorBlendAttachmentInfo.alphaBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachmentInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		colorBlendAttachmentInfo.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlendAttachmentInfo.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
 		VkPipelineColorBlendStateCreateInfo colorBlendStateInfo = {};
 		colorBlendStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlendStateInfo.logicOpEnable = VK_FALSE;
-		colorBlendStateInfo.logicOp = VK_LOGIC_OP_COPY;		// optional
+		colorBlendStateInfo.logicOp = VK_LOGIC_OP_NO_OP;
 		colorBlendStateInfo.attachmentCount = 1;
 		colorBlendStateInfo.pAttachments = &colorBlendAttachmentInfo;
 		colorBlendStateInfo.blendConstants[0] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[1] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[2] = 0.0f;		// optional
 		colorBlendStateInfo.blendConstants[3] = 0.0f;		// optional
-
-		// Depth and Stencil State
-		//VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
-		//depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		//depthStencilStateInfo.depthTestEnable = VK_TRUE;
-		//depthStencilStateInfo.depthWriteEnable = VK_TRUE;
-		//depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
-		//depthStencilStateInfo.depthBoundsTestEnable = VK_FALSE;
-		//depthStencilStateInfo.minDepthBounds = 0.0f; // optional
-		//depthStencilStateInfo.maxDepthBounds = 1.0f; // optional
-		//depthStencilStateInfo.stencilTestEnable = VK_FALSE;
-		//depthStencilStateInfo.front = {}; // optional
-		//depthStencilStateInfo.back = {};  // optional
 
 		// Pipeline Layout
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
@@ -220,12 +241,12 @@ namespace VulkanCore {
 		pipelineInfo.pStages = shaderStages;
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
-		pipelineInfo.pViewportState = &viewportInfo;
+		pipelineInfo.pViewportState = &viewportStateInfo;
 		pipelineInfo.pRasterizationState = &rasterizationInfo;
 		pipelineInfo.pMultisampleState = &multisamplingInfo;
-		//pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
+		pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
 		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
-		pipelineInfo.pDynamicState = &dynamicStateInfo;
+		pipelineInfo.pDynamicState = nullptr; // TODO: DOODLE - REINTEGRATE
 		pipelineInfo.layout = pipelineLayout;
 		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;

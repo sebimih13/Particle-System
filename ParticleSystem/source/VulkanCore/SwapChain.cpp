@@ -13,9 +13,10 @@ namespace VulkanCore {
         , currentFrameIndex(0)
 	{
         CreateSwapChain();
-        CreateImageViews();
         CreateRenderPass();
+        CreateImageViews();
         // CreateDepthResources(); // TODO [PARTICLE-SYSTEM] : test
+        CreateIntermediaryImageViews(); // TODO: DOODLE
         CreateFramebuffers();
         CreateSyncObjects();
 	}
@@ -25,12 +26,11 @@ namespace VulkanCore {
         // cleanup synchronization objects
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
         {
-            vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphores[i], nullptr);
-            vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(device.GetVKDevice(), computeFinishedSemaphores[i], nullptr);
+            //vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphores[i], nullptr);
+            //vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(device.GetVKDevice(), imageSemaphore, nullptr);
 
-            vkDestroyFence(device.GetVKDevice(), inFlightFences[i], nullptr);
-            vkDestroyFence(device.GetVKDevice(), computeInFlightFences[i], nullptr);
+            //vkDestroyFence(device.GetVKDevice(), inFlightFences[i], nullptr);
         }
 
         // cleanup framebuffers
@@ -48,6 +48,14 @@ namespace VulkanCore {
         // cleanup render pass
         vkDestroyRenderPass(device.GetVKDevice(), renderPass, nullptr);
 
+        // cleanup intermediary images
+        for (size_t i = 0; i < swapChainImages.size(); ++i)
+        {
+            vkDestroyImageView(device.GetVKDevice(), intermediaryImageViews[i], nullptr);
+            vkDestroyImage(device.GetVKDevice(), intermediaryImages[i], nullptr);
+            vkFreeMemory(device.GetVKDevice(), intermediaryImageMemories[i], nullptr);
+        }
+
         // cleanup image views
         for (VkImageView imageView : swapChainImageViews)
         {
@@ -60,14 +68,14 @@ namespace VulkanCore {
 
     VkResult SwapChain::AcquireNextImage(uint32_t* imageIndex)
     {
-        vkWaitForFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
-        return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrameIndex], VK_NULL_HANDLE, imageIndex);
+        // vkWaitForFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
+        return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageSemaphore, VK_NULL_HANDLE, imageIndex);
     }
 
-    void SwapChain::AcquireNextCompute()
-    {
-        vkWaitForFences(device.GetVKDevice(), 1, &computeInFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
-    }
+    //void SwapChain::AcquireNextCompute()
+    //{
+    //    vkWaitForFences(device.GetVKDevice(), 1, &computeFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+    //}
 
     void SwapChain::SubmitComputeCommandBuffer(const VkCommandBuffer* buffer)
     {
@@ -75,47 +83,54 @@ namespace VulkanCore {
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = buffer;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &computeFinishedSemaphores[currentFrameIndex];
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+
+        // Wait for other work on GPU to finish
+        vkWaitForFences(device.GetVKDevice(), 1, &device.GetComputeFence(), VK_TRUE, UINT64_MAX);
 
         // Only reset the fence if we are submitting work
-        vkResetFences(device.GetVKDevice(), 1, &computeInFlightFences[currentFrameIndex]);
+        vkResetFences(device.GetVKDevice(), 1, &device.GetComputeFence());
 
-        if (vkQueueSubmit(device.GetComputeQueue(), 1, &submitInfo, computeInFlightFences[currentFrameIndex]) != VK_SUCCESS)
+        // Submit work
+        if (vkQueueSubmit(device.GetComputeQueue(), 1, &submitInfo, device.GetComputeFence()) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to submit compute command buffer!");
+            throw std::runtime_error("Failed to submit compute command buffer!");
         }
     }
 
     VkResult SwapChain::SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex)
     {
-        VkSemaphore waitSemaphores[] = { computeFinishedSemaphores[currentFrameIndex], imageAvailableSemaphores[currentFrameIndex] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        // VkSemaphore waitSemaphores[] = { computeFinishedSemaphores[currentFrameIndex], imageAvailableSemaphores[currentFrameIndex] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_ALL_COMMANDS_BIT };
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 2;
-        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &imageSemaphore;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = buffer;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &renderFinishedSemaphores[currentFrameIndex];
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+
+        // Wait for other work on GPU to finish
+        vkWaitForFences(device.GetVKDevice(), 1, &device.GetComputeFence(), VK_TRUE, UINT64_MAX);
 
         // Only reset the fence if we are submitting work
-        vkResetFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex]);
+        vkResetFences(device.GetVKDevice(), 1, &device.GetImageFence());
 
-        if (vkQueueSubmit(device.GetGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrameIndex]) != VK_SUCCESS)
+        if (vkQueueSubmit(device.GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to submit draw command buffer!");
         }
 
+        VkSwapchainKHR swapChains[] = { swapChain };
+
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &renderFinishedSemaphores[currentFrameIndex];
-
-        VkSwapchainKHR swapChains[] = { swapChain };
+        presentInfo.waitSemaphoreCount = 0;
+        presentInfo.pWaitSemaphores = nullptr;
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
         presentInfo.pImageIndices = imageIndex;
@@ -124,9 +139,28 @@ namespace VulkanCore {
         return vkQueuePresentKHR(device.GetPresentQueue(), &presentInfo);
     }
 
+    void SwapChain::SubmitSyncNewFrameCommandBuffer(const VkCommandBuffer* buffer)
+    {
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = buffer;
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+
+        // Submit work
+        if (vkQueueSubmit(device.GetComputeQueue(), 1, &submitInfo, device.GetImageFence()) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to submit compute command buffer!");
+        }
+
+        // Wait for other work on GPU to finish
+        vkWaitForFences(device.GetVKDevice(), 1, &device.GetImageFence(), VK_TRUE, UINT64_MAX);
+    }
+
     void SwapChain::AdvanceFrameIndex()
     {
-        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;        
     }
 
     void SwapChain::CreateSwapChain()
@@ -172,7 +206,7 @@ namespace VulkanCore {
         createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE;
+        createInfo.clipped = VK_FALSE; // TODO: DOODLE
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
         if (vkCreateSwapchainKHR(device.GetVKDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS)
@@ -188,7 +222,7 @@ namespace VulkanCore {
         swapChainExtent = extent;
     }
 
-    VkImageView SwapChain::CreateImageView(const VkImage& image, const VkFormat& format, const VkImageAspectFlags& aspectFlags) const
+    VkImageView SwapChain::CreateImageView(const VkImage& image, const VkFormat& format, const VkImageAspectFlags& aspectMask) const
     {
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -199,7 +233,7 @@ namespace VulkanCore {
         createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = aspectFlags;
+        createInfo.subresourceRange.aspectMask = aspectMask;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
@@ -223,65 +257,82 @@ namespace VulkanCore {
         }
     }
 
+    void SwapChain::CreateIntermediaryImageViews()
+    {
+        intermediaryImageMemories.resize(swapChainImages.size());
+        intermediaryImages.resize(swapChainImages.size());
+        for (size_t i = 0; i < swapChainImages.size(); ++i)
+        {
+            // TODO: DOODLE
+            // STORE images
+            device.CreateImage(
+                swapChainImageFormat,
+                swapChainExtent.width,
+                swapChainExtent.height,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_SAMPLE_COUNT_8_BIT, // TODO: renderPass.subpass[0] -> first attachment = intermediaryAttachment
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                intermediaryImages[i],
+                intermediaryImageMemories[i]
+            );
+        }
+
+        intermediaryImageViews.resize(swapChainImages.size());
+        for (size_t i = 0; i < swapChainImages.size(); ++i)
+        {
+            intermediaryImageViews[i] = CreateImageView(intermediaryImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        }
+    }
+
     void SwapChain::CreateRenderPass()
     {
+        // TODO: DOODLE
+        VkAttachmentDescription intermediaryAttachment = {};
+        intermediaryAttachment.format = swapChainImageFormat;
+        intermediaryAttachment.samples = VK_SAMPLE_COUNT_8_BIT;     // TODO: DOODLE => pickSampleCount()
+        intermediaryAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        intermediaryAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        intermediaryAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        intermediaryAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        intermediaryAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        intermediaryAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        // TODO: DOODLE
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = swapChainImageFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
+        // Color Attachment Ref for Subpass = intermediaryAttachment
         VkAttachmentReference colorAttachmentRef = {};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        // TODO [PARTICLE-SYSTEM]: test
-        //VkAttachmentDescription depthAttachment = {};
-        //depthAttachment.format = FindDepthFormat();
-        //depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        //depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        //depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        //depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        //depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        //depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        //depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        //VkAttachmentReference depthAttachmentRef = {};
-        //depthAttachmentRef.attachment = 1;
-        //depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // Resolve Attachment Ref for Subpass = colorAttachment
+        VkAttachmentReference resolveAttachmentRef = {};
+        resolveAttachmentRef.attachment = 1;
+        resolveAttachmentRef.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
-        // subpass.pDepthStencilAttachment = &depthAttachmentRef; // TODO [PARTICLE-SYSTEM]: test
+        subpass.pResolveAttachments = &resolveAttachmentRef;
 
-        VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        // dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; // TODO [PARTICLE-SYSTEM]: test
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // TODO [PARTICLE-SYSTEM]: test
-        dependency.srcAccessMask = 0;
-        // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; // TODO [PARTICLE-SYSTEM]: test
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // TODO [PARTICLE-SYSTEM]: test
-        // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // TODO [PARTICLE-SYSTEM]: test
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // TODO [PARTICLE-SYSTEM]: test
-
-        // TODO [PARTICLE-SYSTEM]: test
-        // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+        // TODO: DOODLE
+        std::array<VkAttachmentDescription, 2> attachments = { intermediaryAttachment, colorAttachment };
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        // renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size()); // TODO [PARTICLE-SYSTEM]: test
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(device.GetVKDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
@@ -301,16 +352,17 @@ namespace VulkanCore {
             //    depthImageView
             //};
 
-            VkImageView attachments[] = {
+            // TODO: DOODLE
+            std::array<VkImageView, 2> attachments = {
+                intermediaryImageViews[i],
                 swapChainImageViews[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
-            // framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size()); // TODO [PARTICLE-SYSTEM] : test
-            framebufferInfo.attachmentCount = 1; // TODO [PARTICLE-SYSTEM] : test
-            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = swapChainExtent.width;
             framebufferInfo.height = swapChainExtent.height;
             framebufferInfo.layers = 1;
@@ -324,41 +376,51 @@ namespace VulkanCore {
 
     void SwapChain::CreateSyncObjects()
     {
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        computeFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        //imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        //renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        //computeFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-        computeInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        //inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        VkFenceCreateInfo fenceInfo = {};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &imageSemaphore) != VK_SUCCESS)
         {
-            if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS
-                || vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS
-                || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-            {
-                throw std::runtime_error("Failed to create synchronization objects for a frame!");
-            }
-
-            if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &computeFinishedSemaphores[i]) != VK_SUCCESS
-                || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &computeInFlightFences[i]) != VK_SUCCESS)
-            {
-                throw std::runtime_error("Failed to create compute synchronization objects for a frame!");
-            }
+            throw std::runtime_error("Failed to create compute synchronization objects for a frame!");
         }
+
+        //for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        //{
+        //    if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS
+        //        || vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS
+        //        || vkCreateFence(device.GetVKDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+        //    {
+        //        throw std::runtime_error("Failed to create synchronization objects for a frame!");
+        //    }
+
+        //    if (vkCreateSemaphore(device.GetVKDevice(), &semaphoreInfo, nullptr, &computeFinishedSemaphores[i]) != VK_SUCCESS)
+        //    {
+        //        throw std::runtime_error("Failed to create compute synchronization objects for a frame!");
+        //    }
+        //}
     }
 
     void SwapChain::CreateDepthResources()
     {
         VkFormat depthFormat = FindDepthFormat();
-        device.CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        device.CreateImage(
+            depthFormat,
+            swapChainExtent.width,
+            swapChainExtent.height,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_SAMPLE_COUNT_1_BIT,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            depthImage,
+            depthImageMemory
+        );
+
         depthImageView = CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 

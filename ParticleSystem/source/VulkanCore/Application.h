@@ -65,23 +65,24 @@ namespace VulkanCore {
         //std::vector<VkDescriptorSet> globalDescriptorSets;
         //std::unique_ptr<Pipeline> pipeline;
 
-        double lastTime;
-        float lastFrameTime;
+        double lastUpdate;
 
         // Particle System Descriptors
         std::unique_ptr<DescriptorPool> particleSystemDescriptorPool;
 
         std::unique_ptr<DescriptorSetLayout> particleSystemGraphicsDescriptorSetLayout;
-        std::vector<VkDescriptorSet> particleSystemGraphicsDescriptorSets;
+        VkDescriptorSet particleSystemGraphicsDescriptorSet;
 
         std::unique_ptr<DescriptorSetLayout> particleSystemComputeDescriptorSetLayout;
-        std::vector<VkDescriptorSet> particleSystemComputeDescriptorSets;
+        VkDescriptorSet particleSystemComputeDescriptorSet;
 
         std::unique_ptr<Pipeline> particleSystemPipeline;
 
-        Texture statueTexture;
+        // Texture statueTexture;
 
-        void UpdateUniformBuffer(uint32_t currentFrame);
+        void Update();
+        void Tick(const double& deltaTime);
+        void Draw();
 
         void CreateDescriptorPool();
         void CreateDescriptorSetLayout();
@@ -92,16 +93,15 @@ namespace VulkanCore {
         void RenderUI();
 
         // TODO: REFACTOR - use Buffer class
-        std::vector<VkBuffer> uniformBuffers;
-        std::vector<VkDeviceMemory> uniformBuffersMemory;
-        std::vector<void*> uniformBuffersMapped;
+        VkBuffer uniformBuffer;
+        VkDeviceMemory uniformBufferMemory;
 
         void CreateUniformBuffers();
         void CleanupUniformBuffers();
 
         // TODO: REFACTOR - use Buffer class
-        std::vector<VkBuffer> shaderStorageBuffers;
-        std::vector<VkDeviceMemory> shaderStorageBuffersMemory;
+        VkBuffer shaderStorageBuffers;
+        VkDeviceMemory shaderStorageBuffersMemory;
 
         void CreateShaderStorageBuffers();
         void CleanupShaderStorageBuffers();

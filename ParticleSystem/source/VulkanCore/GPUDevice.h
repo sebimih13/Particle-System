@@ -44,14 +44,14 @@ namespace VulkanCore {
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-        void CreateImage(const uint32_t& width, const uint32_t& height, const VkFormat& format, const VkImageTiling& tiling, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory);
+        void CreateImage(const VkFormat& format, const uint32_t& width, const uint32_t& height, const VkImageTiling& tiling, const VkSampleCountFlagBits& samples, const VkImageUsageFlags& usage, const VkMemoryPropertyFlags& properties, VkImage& image, VkDeviceMemory& imageMemory);
 
         // Single time command buffer
         VkCommandBuffer BeginSingleTimeCommandBuffer();
-        void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
+        void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue);
 
         // Copy Buffer
-        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue queue);
         void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
         // Getters
@@ -66,6 +66,9 @@ namespace VulkanCore {
         inline VkQueue GetComputeQueue() const { return computeQueue; }       // TODO: return const &
         inline VkQueue GetPresentQueue() const { return presentQueue; }         // TODO: return const &
 
+        inline const VkFence& GetComputeFence() const { return computeFence; }
+        inline const VkFence& GetImageFence() const { return imageFence; }
+
     private:
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
@@ -79,6 +82,9 @@ namespace VulkanCore {
 
         VkCommandPool commandPool;
 
+        VkFence imageFence;
+        VkFence computeFence;
+
         static const bool bEnableValidationLayers;
         static const std::vector<const char*> validationLayers;
         static const std::vector<const char*> deviceExtensions;
@@ -89,6 +95,7 @@ namespace VulkanCore {
         void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateCommandPool();
+        void CreateSyncObjects();
 
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 

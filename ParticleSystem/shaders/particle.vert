@@ -26,10 +26,10 @@ layout (set = 0, binding = 1) readonly buffer Data
 
 void main()
 {
-    gl_PointSize = 10.0;
     Particle vertex = data.vertices[gl_VertexIndex];
     float scale = length(vertex.velocity) / MAX_VEL;
     float inv = 1.0 - scale;
     vertColor = vec4(inv / 4.0, inv / 3.0, scale, 0.1);
     gl_Position = ubo.projection * vec4(vertex.position, 0.0, 1.0);
+    gl_PointSize = 1.0;
 }

@@ -13,6 +13,7 @@ namespace VulkanCore {
 		RecreateSwapChain();
 		CreateCommandBuffers();
 		CreateComputeCommandBuffers();
+		CreateSyncNewFrameCommandBuffer();
 	}
 
 	Renderer::~Renderer()
@@ -24,7 +25,7 @@ namespace VulkanCore {
 
 	VkCommandBuffer Renderer::BeginCompute()
 	{
-		swapChain->AcquireNextCompute();
+		// swapChain->AcquireNextCompute();
 
 		vkResetCommandBuffer(computeCommandBuffers[swapChain->GetCurrentFrameIndex()], 0);
 
@@ -47,6 +48,26 @@ namespace VulkanCore {
 		}
 
 		swapChain->SubmitComputeCommandBuffer(&computeCommandBuffers[swapChain->GetCurrentFrameIndex()]);
+	}
+
+	void Renderer::SyncNewFrame()
+	{
+		vkResetCommandBuffer(syncNewFrameCommandBuffer, 0);
+
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		if (vkBeginCommandBuffer(syncNewFrameCommandBuffer, &beginInfo) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to begin recording compute command buffer!");
+		}
+
+		if (vkEndCommandBuffer(syncNewFrameCommandBuffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to record compute command buffer!");
+		}
+
+		swapChain->SubmitSyncNewFrameCommandBuffer(&syncNewFrameCommandBuffer);
 	}
 
 	VkCommandBuffer Renderer::BeginFrame()
@@ -100,36 +121,40 @@ namespace VulkanCore {
 
 	void Renderer::BeginSwapChainRenderPass(VkCommandBuffer commandBuffer)
 	{
-		// TODO: check
+		std::array<VkClearValue, 2> clearValues = {};
+		clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
+		clearValues[0].depthStencil.depth = 0.0f;
+		clearValues[0].depthStencil.stencil = 0;
+
+		clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
+		clearValues[1].depthStencil.depth = 0.0f;
+		clearValues[1].depthStencil.stencil = 0;
+
 		VkRenderPassBeginInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = swapChain->GetRenderPass();
 		renderPassInfo.framebuffer = swapChain->GetSwapChainFramebuffer(currentImageIndex);
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapChain->GetSwapChainExtent();
-
-		std::array<VkClearValue, 2> clearValues = {};
-		clearValues[0].color = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
-		clearValues[1].depthStencil.depth = 1.0f;
-		clearValues[1].depthStencil.stencil = 0;
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(swapChain->GetSwapChainExtent().width);
-		viewport.height = static_cast<float>(swapChain->GetSwapChainExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		// TODO: DOODLE : REINTEGRATE DYNAMIC STATE
+		//VkViewport viewport = {};
+		//viewport.x = 0.0f;
+		//viewport.y = 0.0f;
+		//viewport.width = static_cast<float>(swapChain->GetSwapChainExtent().width);
+		//viewport.height = static_cast<float>(swapChain->GetSwapChainExtent().height);
+		//viewport.minDepth = 0.0f;
+		//viewport.maxDepth = 1.0f;
+		//vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		VkRect2D scissor{};
-		scissor.offset = { 0, 0 };
-		scissor.extent = swapChain->GetSwapChainExtent();
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		//VkRect2D scissor{};
+		//scissor.offset = { 0, 0 };
+		//scissor.extent = swapChain->GetSwapChainExtent();
+		//vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
 	void Renderer::EndSwapChainRenderPass(VkCommandBuffer commandBuffer)
@@ -166,6 +191,20 @@ namespace VulkanCore {
 		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocInfo, computeCommandBuffers.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to allocate compute command buffers!");
+		}
+	}
+
+	void Renderer::CreateSyncNewFrameCommandBuffer()
+	{
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = device.GetCommandPool();
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if (vkAllocateCommandBuffers(device.GetVKDevice(), &allocInfo, &syncNewFrameCommandBuffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to allocate syncNewFrameCommandBuffer!");
 		}
 	}
 
