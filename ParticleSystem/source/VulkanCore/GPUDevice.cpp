@@ -27,14 +27,18 @@ namespace VulkanCore {
 
     const std::vector<const char*> GPUDevice::deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME
+        VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME,
+        VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+        VK_KHR_SHADER_ATOMIC_INT64_EXTENSION_NAME,
+        VK_KHR_8BIT_STORAGE_EXTENSION_NAME,
+        VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME
     };
 
     // TODO: de declarat static in .h
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
         // TODO: DOODLE -> REZOLVA
-        // std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
+        std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
 
         return VK_FALSE;
     }
@@ -489,9 +493,9 @@ namespace VulkanCore {
         physicalDeviceFeatures2.features.robustBufferAccess = VK_TRUE;
         physicalDeviceFeatures2.features.largePoints = VK_TRUE;
 
-        VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.robustBufferAccess = VK_TRUE;
-        deviceFeatures.largePoints = VK_TRUE;
+        //VkPhysicalDeviceFeatures deviceFeatures = {};
+        //deviceFeatures.robustBufferAccess = VK_TRUE;
+        //deviceFeatures.largePoints = VK_TRUE;
         // deviceFeatures.samplerAnisotropy = VK_TRUE; // TODO: adauga pentru texturi
 
         // Create Device
@@ -500,7 +504,7 @@ namespace VulkanCore {
         createInfo.pNext = &physicalDeviceFeatures2;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
-        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.pEnabledFeatures = nullptr;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
         
