@@ -16,7 +16,12 @@ namespace VulkanCore {
     const bool GPUDevice::bEnableValidationLayers = false;
 #endif
 
-    const std::vector<const char*> GPUDevice::validationLayers = {
+    const std::vector<const char*> GPUDevice::instanceExtensions = {
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+        VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME
+    };
+
+    const std::vector<const char*> GPUDevice::instanceLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
 
@@ -308,8 +313,10 @@ namespace VulkanCore {
 
 #ifdef DEBUG
         ListAvailableInstanceExtensions();
-        ListRequiredGLFWExtensions();
-        ListAvailableValidationLayers();
+        ListRequiredGLFWInstanceExtensions();
+        ListRequiredAppInstanceExtensions();
+        ListAvailableInstanceLayers();
+        ListRequiredInstanceLayers();
 #endif // DEBUG
 
         if (bEnableValidationLayers && !CheckValidationLayerSupport())
@@ -319,10 +326,10 @@ namespace VulkanCore {
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Vulkan Particle System";    // TODO: change
-        appInfo.pEngineName = "No Engine";                      // TODO: change?
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: schimba la fiecare milestone
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // TODO: schimba la fiecare milestone
+        appInfo.pApplicationName = "Vulkan Particle System";
+        appInfo.pEngineName = "No Engine";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
         const std::vector<const char*>& requiredExtensionNames = GetRequiredExtensionNames();
@@ -336,8 +343,8 @@ namespace VulkanCore {
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
         if (bEnableValidationLayers)
         {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
+            createInfo.enabledLayerCount = static_cast<uint32_t>(instanceLayers.size());
+            createInfo.ppEnabledLayerNames = instanceLayers.data();
 
             PopulateDebugMessengerCreateInfo(debugCreateInfo);
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
@@ -435,12 +442,62 @@ namespace VulkanCore {
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        // TODO: adauga features
-        VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        // Additional features
+        VkPhysicalDeviceShaderFloat16Int8Features physicalDeviceShaderFloat16Int8Features = {};
+        physicalDeviceShaderFloat16Int8Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+        physicalDeviceShaderFloat16Int8Features.pNext = nullptr;
+        physicalDeviceShaderFloat16Int8Features.shaderFloat16 = 0;
+        physicalDeviceShaderFloat16Int8Features.shaderInt8 = 0;
 
+        VkPhysicalDevice16BitStorageFeatures physicalDevice16BitStorageFeatures = {};
+        physicalDevice16BitStorageFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
+        physicalDevice16BitStorageFeatures.pNext = &physicalDeviceShaderFloat16Int8Features;
+        physicalDevice16BitStorageFeatures.storageBuffer16BitAccess = 0;
+        physicalDevice16BitStorageFeatures.uniformAndStorageBuffer16BitAccess = 0;
+        physicalDevice16BitStorageFeatures.storagePushConstant16 = 0;
+        physicalDevice16BitStorageFeatures.storageInputOutput16 = 0;
+
+        VkPhysicalDevice8BitStorageFeatures physicalDevice8BitStorageFeatures = {};
+        physicalDevice8BitStorageFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
+        physicalDevice8BitStorageFeatures.pNext = &physicalDevice16BitStorageFeatures;
+        physicalDevice8BitStorageFeatures.storageBuffer8BitAccess = 0;
+        physicalDevice8BitStorageFeatures.uniformAndStorageBuffer8BitAccess = 0;
+        physicalDevice8BitStorageFeatures.storagePushConstant8 = 0;
+
+        VkPhysicalDeviceShaderAtomicInt64Features physicalDeviceShaderAtomicInt64Features = {};
+        physicalDeviceShaderAtomicInt64Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES;
+        physicalDeviceShaderAtomicInt64Features.pNext = &physicalDevice8BitStorageFeatures;
+        physicalDeviceShaderAtomicInt64Features.shaderBufferInt64Atomics = 0;
+        physicalDeviceShaderAtomicInt64Features.shaderSharedInt64Atomics = 0;
+
+        VkPhysicalDeviceVariablePointersFeatures physicalDeviceVariablePointersFeatures = {};
+        physicalDeviceVariablePointersFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
+        physicalDeviceVariablePointersFeatures.pNext = &physicalDeviceShaderAtomicInt64Features;
+        physicalDeviceVariablePointersFeatures.variablePointersStorageBuffer = 0;
+        physicalDeviceVariablePointersFeatures.variablePointers = 0;
+
+        VkPhysicalDeviceBufferDeviceAddressFeaturesEXT physicalDeviceBufferDeviceAddressFeaturesEXT = {};
+        physicalDeviceBufferDeviceAddressFeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
+        physicalDeviceBufferDeviceAddressFeaturesEXT.pNext = &physicalDeviceVariablePointersFeatures;
+        physicalDeviceBufferDeviceAddressFeaturesEXT.bufferDeviceAddress = 0;
+        physicalDeviceBufferDeviceAddressFeaturesEXT.bufferDeviceAddressCaptureReplay = 0;
+        physicalDeviceBufferDeviceAddressFeaturesEXT.bufferDeviceAddressMultiDevice = 0;
+
+        VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
+        physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        physicalDeviceFeatures2.pNext = &physicalDeviceBufferDeviceAddressFeaturesEXT;
+        physicalDeviceFeatures2.features.robustBufferAccess = VK_TRUE;
+        physicalDeviceFeatures2.features.largePoints = VK_TRUE;
+
+        VkPhysicalDeviceFeatures deviceFeatures = {};
+        deviceFeatures.robustBufferAccess = VK_TRUE;
+        deviceFeatures.largePoints = VK_TRUE;
+        // deviceFeatures.samplerAnisotropy = VK_TRUE; // TODO: adauga pentru texturi
+
+        // Create Device
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pNext = &physicalDeviceFeatures2;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.pEnabledFeatures = &deviceFeatures;
@@ -449,8 +506,8 @@ namespace VulkanCore {
         
         if (bEnableValidationLayers)
         {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
+            createInfo.enabledLayerCount = static_cast<uint32_t>(instanceLayers.size());
+            createInfo.ppEnabledLayerNames = instanceLayers.data();
         }
         else
         {
@@ -511,18 +568,23 @@ namespace VulkanCore {
 
     std::vector<const char*> GPUDevice::GetRequiredExtensionNames()
     {
+        // Required GLFW Instance Extensions
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensionNames;
         glfwExtensionNames = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        std::vector<const char*> extensionNames(glfwExtensionNames, glfwExtensionNames + glfwExtensionCount);
+        std::vector<const char*> requiredExtensionNames(glfwExtensionNames, glfwExtensionNames + glfwExtensionCount);
 
+        // Required Instance Extensions for enabled features
+        requiredExtensionNames.insert(requiredExtensionNames.end(), instanceExtensions.begin(), instanceExtensions.end());
+
+        // Required Instance Extension for debugging
         if (bEnableValidationLayers)
         {
-            extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            requiredExtensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
 
-        return extensionNames;
+        return requiredExtensionNames;
     }
 
     bool GPUDevice::CheckValidationLayerSupport()
@@ -533,7 +595,7 @@ namespace VulkanCore {
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        std::set<std::string> requiredLayers(validationLayers.begin(), validationLayers.end());
+        std::set<std::string> requiredLayers(instanceLayers.begin(), instanceLayers.end());
         for (const VkLayerProperties& layer : availableLayers)
         {
             requiredLayers.erase(layer.layerName);
@@ -649,6 +711,7 @@ namespace VulkanCore {
         return details;
     }
 
+#if DEBUG
     void GPUDevice::ListAvailableInstanceExtensions() const
     {
         uint32_t extensionCount = 0;
@@ -658,8 +721,59 @@ namespace VulkanCore {
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
         std::cout << "Available Instance Extensions:\n";
-        for (const auto& extension : availableExtensions) {
+        for (const VkExtensionProperties& extension : availableExtensions) {
             std::cout << '\t' << extension.extensionName << '\n';
+        }
+        std::cout << '\n';
+    }
+
+    void GPUDevice::ListRequiredGLFWInstanceExtensions() const
+    {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensionsNames;
+        glfwExtensionsNames = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::cout << "Required GLFW Instance Extensions:\n";
+        for (size_t i = 0; i < glfwExtensionCount; ++i) {
+            std::cout << '\t' << glfwExtensionsNames[i] << '\n';
+        }
+        std::cout << '\n';
+    }
+
+    void GPUDevice::ListRequiredAppInstanceExtensions() const
+    {
+        std::cout << "Required App Instance Extensions:\n";
+        for (size_t i = 0; i < instanceExtensions.size(); ++i)
+        {
+            std::cout << '\t' << instanceExtensions[i] << '\n';
+        }
+        std::cout << '\n';
+    }
+
+    void GPUDevice::ListAvailableInstanceLayers() const
+    {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+        std::cout << "Available Instance Layers:\n";
+        for (const VkLayerProperties& Layer : availableLayers) {
+            std::cout << '\t' << Layer.layerName << '\n';
+        }
+        std::cout << '\n';
+    }
+
+    void GPUDevice::ListRequiredInstanceLayers() const
+    {
+        std::cout << "Required App Instance Layers:\n";
+        if (bEnableValidationLayers)
+        {
+            for (size_t i = 0; i < instanceLayers.size(); ++i)
+            {
+                std::cout << '\t' << instanceLayers[i] << '\n';
+            }
         }
         std::cout << '\n';
     }
@@ -676,34 +790,6 @@ namespace VulkanCore {
         for (const auto& extension : availableExtensions)
         {
             std::cout << '\t' << extension.extensionName << '\n';
-        }
-        std::cout << '\n';
-    }
-
-    void GPUDevice::ListRequiredGLFWExtensions() const
-    {
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensionsNames;
-        glfwExtensionsNames = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        std::cout << "Required GLFW extensions:\n";
-        for (uint32_t i = 0; i < glfwExtensionCount; ++i) {
-            std::cout << '\t' << glfwExtensionsNames[i] << '\n';
-        }
-        std::cout << '\n';
-    }
-
-    void GPUDevice::ListAvailableValidationLayers() const
-    {
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-        std::cout << "Available validation layers:\n";
-        for (const auto& Layer : availableLayers) {
-            std::cout << '\t' << Layer.layerName << '\n';
         }
         std::cout << '\n';
     }
@@ -743,5 +829,6 @@ namespace VulkanCore {
 
         std::cout << '\n';
     }
+#endif // DEBUG
 
 } // namespace VulkanCore

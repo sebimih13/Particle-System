@@ -47,8 +47,8 @@ vec2 clamp_velocity(vec2 vel)
 
 void main()
 {
-    uint idx = gl_GlobalInvocationID.x;
-    Particle vertex = data.vertices[idx];
+    uint index = gl_GlobalInvocationID.x;
+    Particle vertex = data.vertices[index];
 
     if (pc.enabled)
     {
@@ -63,5 +63,5 @@ void main()
     vertex.position += vertex.velocity * pc.timestep;
     vertex.position = clamp_to_bounds(vertex.position);
 
-    data.vertices[idx] = vertex;
+    data.vertices[index] = vertex;
 }

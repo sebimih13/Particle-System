@@ -86,7 +86,8 @@ namespace VulkanCore {
         VkFence computeFence;
 
         static const bool bEnableValidationLayers;
-        static const std::vector<const char*> validationLayers;
+        static const std::vector<const char*> instanceExtensions;
+        static const std::vector<const char*> instanceLayers;
         static const std::vector<const char*> deviceExtensions;
 
         void CreateInstance();
@@ -107,12 +108,18 @@ namespace VulkanCore {
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
 
-        // DEBUG
+#ifdef DEBUG
+        // Instance
         void ListAvailableInstanceExtensions() const;
+        void ListRequiredGLFWInstanceExtensions() const;
+        void ListRequiredAppInstanceExtensions() const;
+        void ListAvailableInstanceLayers() const;
+        void ListRequiredInstanceLayers() const;
+
+        // Device
         void ListAvailableDeviceExtensions() const;
-        void ListRequiredGLFWExtensions() const;
-        void ListAvailableValidationLayers() const;
         void ListAvailablePhysicalDevices() const;
+#endif // DEBUG
     };
 
 } // namespace VulkanCore

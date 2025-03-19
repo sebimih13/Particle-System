@@ -28,10 +28,12 @@ namespace VulkanCore {
         {
             //vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphores[i], nullptr);
             //vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(device.GetVKDevice(), imageSemaphore, nullptr);
 
             //vkDestroyFence(device.GetVKDevice(), inFlightFences[i], nullptr);
         }
+
+        // TODO: DOODLE
+        vkDestroySemaphore(device.GetVKDevice(), imageSemaphore, nullptr);
 
         // cleanup framebuffers
         for (VkFramebuffer framebuffer : swapChainFramebuffers)

@@ -1,7 +1,6 @@
 #version 450
 
 #extension GL_ARB_separate_shader_objects : enable // TODO: delete?
-// #extension GL_KHR_vulkan_glsl : enable // TODO: delete? optional
 
 #define MAX_VEL 5.0
 
@@ -31,5 +30,5 @@ void main()
     float inv = 1.0 - scale;
     vertColor = vec4(inv / 4.0, inv / 3.0, scale, 0.1);
     gl_Position = ubo.projection * vec4(vertex.position, 0.0, 1.0);
-    gl_PointSize = 1.0;
+    gl_PointSize = 1.0; // TODO: delete?
 }
