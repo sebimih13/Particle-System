@@ -295,6 +295,10 @@ namespace VulkanCore {
 #elif defined(PLATFORM_LINUX) && defined(DEBUG)
 		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
+
+		static const std::string particleComputeShaderFilePath = "ParticleSystem/shaders/particle.comp.spv";
+		static const std::string particleVertShaderFilePath = "ParticleSystem/shaders/particle.vert.spv";
+		static const std::string particleFragShaderFilePath = "ParticleSystem/shaders/particle.frag.spv";
 #endif
 
 		// pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
