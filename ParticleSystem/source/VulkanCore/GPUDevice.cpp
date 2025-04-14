@@ -67,7 +67,7 @@ namespace VulkanCore {
         }
     }
 
-    GPUDevice::GPUDevice(Window& window) // TODO: [TRY] const Window& window
+    GPUDevice::GPUDevice(Window& window)
     {
         CreateInstance();
         SetupDebugMessenger();
@@ -608,7 +608,7 @@ namespace VulkanCore {
         return requiredLayers.empty();
     }
 
-    bool GPUDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device)
+    bool GPUDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
     {
         uint32_t extensionCount;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -625,7 +625,7 @@ namespace VulkanCore {
         return requiredExtensions.empty();
     }
 
-    bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device) // TODO: [TRY] const VkPhysicalDevice& device
+    bool GPUDevice::IsDeviceSuitable(VkPhysicalDevice device) const
     {
         QueueFamilyIndices indices = FindQueueFamilies(device);
 
@@ -690,7 +690,7 @@ namespace VulkanCore {
         return indices;
     }
 
-    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const // TODO: [TRY] const VkPhysicalDevice& device + return const SwapChainSupportDetails?
+    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const // TODO: [TRY] return const SwapChainSupportDetails?
     {
         SwapChainSupportDetails details;
 

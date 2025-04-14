@@ -27,7 +27,7 @@ namespace VulkanCore {
 
 	}
 
-	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64 // 8192 * 64
+	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64 = 8_388_608
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
@@ -35,7 +35,7 @@ namespace VulkanCore {
 		, renderer(window, device)
 		, bIsRunning(true)
 		, lastUpdate(0.0)
-		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: MOVE
+		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
 	{
 		lastUpdate = glfwGetTime();
 

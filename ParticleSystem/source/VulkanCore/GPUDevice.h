@@ -55,16 +55,16 @@ namespace VulkanCore {
         void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
         // Getters
-        inline VkInstance GetInstance() const { return instance; }      // TODO: return const &
-        inline VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }    // TODO: return const &
-        inline VkSurfaceKHR GetSurface() const { return surface; }      // TODO: return const &
-        inline VkDevice GetVKDevice() const { return device; }          // TODO: return const &
+        inline VkInstance GetInstance() const { return instance; }
+        inline VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
+        inline VkSurfaceKHR GetSurface() const { return surface; }
+        inline VkDevice GetVKDevice() const { return device; }
         inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
         inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
-        inline VkCommandPool GetCommandPool() const { return commandPool; }     // TODO: return const &
-        inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }       // TODO: return const &
-        inline VkQueue GetComputeQueue() const { return computeQueue; }       // TODO: return const &
-        inline VkQueue GetPresentQueue() const { return presentQueue; }         // TODO: return const &
+        inline VkCommandPool GetCommandPool() const { return commandPool; }
+        inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }
+        inline VkQueue GetComputeQueue() const { return computeQueue; }
+        inline VkQueue GetPresentQueue() const { return presentQueue; }
 
         inline const VkFence& GetComputeFence() const { return computeFence; }
         inline const VkFence& GetImageFence() const { return imageFence; }
@@ -102,8 +102,8 @@ namespace VulkanCore {
 
         std::vector<const char*> GetRequiredExtensionNames();
         bool CheckValidationLayerSupport();
-        bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
-        bool IsDeviceSuitable(VkPhysicalDevice device);
+        bool CheckDeviceExtensionSupport(VkPhysicalDevice device) const;
+        bool IsDeviceSuitable(VkPhysicalDevice device) const;
 
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
