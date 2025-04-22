@@ -1,0 +1,67 @@
+#version 450
+
+#define eps 0.1
+#define damping (0.98)
+#define MAX_VEL 5.0
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+    vec2 position;
+    vec2 velocity;
+    vec4 color;
+};
+
+layout (push_constant) uniform PushConstants
+{
+    bool enabled;
+    float timestep;
+    vec2 attractor;
+} pc;
+
+layout (set = 0, binding = 0) buffer Data
+{
+    Particle vertices[];
+} data;
+
+vec2 clamp_to_bounds(vec2 pos)
+{
+    return vec2(
+        clamp(pos.x, -2.0, 2.0),
+        clamp(pos.y, -1.0, 1.0)
+    );
+}
+
+vec2 clamp_velocity(vec2 vel)
+{
+    if (dot(vel, vel) > MAX_VEL * MAX_VEL)
+    {
+        return normalize(vel) * MAX_VEL;
+    }
+    else
+    {
+        return vel;
+    }
+}
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+    Particle vertex = data.vertices[index];
+
+    if (pc.enabled)
+    {
+        vec2 diff = pc.attractor - vertex.position;
+        vec2 dir = normalize(diff);
+        vec2 acceleration = dir / (dot(diff, diff) + eps);
+        vertex.velocity += acceleration * pc.timestep;
+    }
+
+    vertex.velocity = clamp_velocity(vertex.velocity);
+    vertex.velocity *= damping;
+    vertex.position += vertex.velocity * pc.timestep;
+    vertex.position = clamp_to_bounds(vertex.position);
+
+    data.vertices[index] = vertex;
+}

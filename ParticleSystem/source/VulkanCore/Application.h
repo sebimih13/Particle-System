@@ -25,9 +25,7 @@ namespace VulkanCore {
     // TODO: move FrameInfo.h
     struct UniformBufferObject
     {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 proj;
+        glm::mat4 projection;
     };
 
     // TODO: de facut clasa virtuala
@@ -52,23 +50,36 @@ namespace VulkanCore {
         void Run();
 
     private:
+        static const uint32_t PARTICLE_COUNT;
+
         Window window;
         GPUDevice device;
         Renderer renderer;
 
         bool bIsRunning; // TODO: de facut o functie Close()
 
-        std::unique_ptr<DescriptorSetLayout> globalSetLayout;
-        std::unique_ptr<DescriptorPool> globalPool;
-        std::vector<VkDescriptorSet> globalDescriptorSets;
-        std::unique_ptr<Pipeline> pipeline;
+        double lastUpdate;
 
-        Texture statueTexture;
+        // Particle System Descriptors
+        std::unique_ptr<DescriptorPool> particleSystemDescriptorPool;
 
-        void UpdateUniformBuffer(uint32_t currentFrame);
+        std::unique_ptr<DescriptorSetLayout> particleSystemGraphicsDescriptorSetLayout;
+        VkDescriptorSet particleSystemGraphicsDescriptorSet;
 
-        void CreateDescriptorSetLayout();
+        std::unique_ptr<DescriptorSetLayout> particleSystemComputeDescriptorSetLayout;
+        VkDescriptorSet particleSystemComputeDescriptorSet;
+
+        std::unique_ptr<Pipeline> particleSystemPipeline;
+
+        // TODO: delete
+        // Texture statueTexture;
+
+        void Update();
+        void Tick(const double& deltaTime);
+        void Draw();
+
         void CreateDescriptorPool();
+        void CreateDescriptorSetLayout();
         void CreateDescriptorSets();
         void CreatePipeline();
         void SetupImGui();
@@ -76,13 +87,18 @@ namespace VulkanCore {
         void RenderUI();
 
         // TODO: REFACTOR - use Buffer class
+        VkBuffer uniformBuffer;
+        VkDeviceMemory uniformBufferMemory;
+
         void CreateUniformBuffers();
         void CleanupUniformBuffers();
 
-        // TODO: delete
-        std::vector<VkBuffer> uniformBuffers;
-        std::vector<VkDeviceMemory> uniformBuffersMemory;
-        std::vector<void*> uniformBuffersMapped;
+        // TODO: REFACTOR - use Buffer class
+        VkBuffer shaderStorageBuffers;
+        VkDeviceMemory shaderStorageBuffersMemory;
+
+        void CreateShaderStorageBuffers();
+        void CleanupShaderStorageBuffers();
     };
 
 } // namespace VulkanCore

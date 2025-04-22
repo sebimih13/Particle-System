@@ -11,9 +11,13 @@
 #include <chrono>
 #include <cstring>
 #include <stdexcept>
+#include <random>
+#include <ctime>
+#include <iostream>
 
 // TODO: test
 #include "Model.h"
+#include "Particle.h"
 
 namespace VulkanCore {
 
@@ -23,160 +27,258 @@ namespace VulkanCore {
 
 	}
 
+	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64 = 8_388_608
+
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
 		, device(window)
 		, renderer(window, device)
 		, bIsRunning(true)
-		, statueTexture(device, "resources/textures/statue.jpg")	// TODO: MOVE
+		, lastUpdate(0.0)
+		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
 	{
-		// TODO: move
+		lastUpdate = glfwGetTime();
+
+		// Buffers Setup
+		// TODO: REFACTOR - use Buffer class
+		CreateShaderStorageBuffers();
 		CreateUniformBuffers();
 
-		CreateDescriptorSetLayout();
+		// Descriptors Setup
 		CreateDescriptorPool();
+		CreateDescriptorSetLayout();
 		CreateDescriptorSets();
+
+		// Pipelines
 		CreatePipeline();
 
-		SetupImGui();
+		// ImGui Setup
+		// SetupImGui();
 	}
 
 	Application::~Application()
 	{
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+		// ImGui cleanup
+		//ImGui_ImplVulkan_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
+		//ImGui::DestroyContext();
 
-		// TODO: move
+		// TODO: REFACTOR - use Buffer class
+		CleanupShaderStorageBuffers();
 		CleanupUniformBuffers();
 	}
 
 	void Application::Run()
 	{
-		// TODO: test Model
-		const std::vector<Model::Vertex> vertices = {
-			Model::Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-			Model::Vertex(glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-
-			Model::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)),
-			Model::Vertex(glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-			Model::Vertex(glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f))
-		};
-
-		const std::vector<uint32_t> indices = {
-			0, 1, 2,
-			2, 3, 0,
-
-			4, 5, 6, 
-			6, 7, 4
-		};
-
-		Model triangle(device, Model::Data(vertices, indices));
-
 		while (!window.ShouldClose() && bIsRunning)
 		{
 			window.Update();
 
-			// draw
-			if (VkCommandBuffer commandBuffer = renderer.BeginFrame())
-			{
-				// Start frame
-				renderer.BeginSwapChainRenderPass(commandBuffer);
+			// Empty submission
+			renderer.SyncNewFrame();
 
-				// Update ubo
-				UpdateUniformBuffer(renderer.GetSwapChain()->GetCurrentFrameIndex());
-
-				// Triangle
-				pipeline->Bind(commandBuffer);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipelineLayout(), 0, 1, &globalDescriptorSets[renderer.GetSwapChain()->GetCurrentFrameIndex()], 0, nullptr);
-				triangle.Bind(commandBuffer);
-				triangle.Draw(commandBuffer);
-
-				// Start the Dear ImGui frame
-				ImGui_ImplVulkan_NewFrame();
-				ImGui_ImplGlfw_NewFrame();
-				ImGui::NewFrame();
-
-				RenderUI();
-
-				ImGui::Render();
-				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-
-				// Update and Render additional Platform Windows
-				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-				{
-					ImGui::UpdatePlatformWindows();
-					ImGui::RenderPlatformWindowsDefault();
-				}
-
-				// End frame
-				renderer.EndSwapChainRenderPass(commandBuffer);
-				renderer.EndFrame();
-			}
-
-			// TODO
+			Update();
+			Draw();
 		}
 
 		vkDeviceWaitIdle(device.GetVKDevice());
 	}
 
-	void Application::UpdateUniformBuffer(uint32_t currentFrame)
+	void Application::Update()
 	{
-		static auto startTime = std::chrono::high_resolution_clock::now();
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-		UniformBufferObject ubo = {};
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().width) / static_cast<float>(renderer.GetSwapChain()->GetSwapChainExtent().height), 0.1f, 10.0f);
-		ubo.proj[1][1] *= -1;
-
-		std::memcpy(uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
+		// Update the application, only tick once every 15 milliseconds
+		static const uint32_t TICK_MILLIS = 15;
+		const double duration = glfwGetTime() - lastUpdate;
+		if (duration * 1000.0 >= TICK_MILLIS)
+		{
+			Tick(duration);
+			lastUpdate = glfwGetTime();
+		}
 	}
 
-	void Application::CreateDescriptorSetLayout()
+	void Application::Tick(const double& deltaTime)
 	{
-		globalSetLayout = DescriptorSetLayout::Builder(device)
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
-			.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
-			.Build();
+		// Tick the application state based on the wall-clock time since the last tick
+		// deltaTime seconds since last frame
+
+		// TODO: doar test
+		double xPosMouse, yPosMouse;
+		glfwGetCursorPos(window.GetGLFWWindow(), &xPosMouse, &yPosMouse);
+		const float world_width = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
+
+		// Update Push-Constants
+		PushConstants pushConstantsData = {};
+		pushConstantsData.enabled = glfwGetMouseButton(window.GetGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
+		pushConstantsData.attractor = glm::vec2(
+			glm::mix(-world_width, world_width, xPosMouse / window.GetWidth()),
+			glm::mix(1.0f, -1.0f, yPosMouse / window.GetHeight())
+		);
+		pushConstantsData.timestep = static_cast<float>(deltaTime);				// TODO: DOODLE update
+
+		// Compute submission
+		if (VkCommandBuffer commandBuffer = renderer.BeginCompute())
+		{
+			particleSystemPipeline->BindComputePipeline(commandBuffer);
+			vkCmdPushConstants(commandBuffer, particleSystemPipeline->GetComputePipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &pushConstantsData);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemComputeDescriptorSet, 0, nullptr);
+			vkCmdDispatch(commandBuffer, PARTICLE_COUNT / 64, 1, 1);
+		}
+		renderer.EndCompute();
+	}
+
+	void Application::Draw()
+	{
+		// Graphics submission
+		if (VkCommandBuffer commandBuffer = renderer.BeginFrame()) // TODO: DOODLE: aici trebuie sa schimb logica putin
+		{
+			// Pipeline Barrier
+			{
+				VkImageSubresourceRange imageSubresourceRangeInfo = {};
+				imageSubresourceRangeInfo.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageSubresourceRangeInfo.baseMipLevel = 0;
+				imageSubresourceRangeInfo.levelCount = 1;
+				imageSubresourceRangeInfo.baseArrayLayer = 0;
+				imageSubresourceRangeInfo.layerCount = 1;
+
+				std::array<VkImageMemoryBarrier, 2> imageMemoryBarriers = {};
+				imageMemoryBarriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				imageMemoryBarriers[0].srcAccessMask = VK_ACCESS_NONE;
+				imageMemoryBarriers[0].dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				imageMemoryBarriers[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				imageMemoryBarriers[0].newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				imageMemoryBarriers[0].srcQueueFamilyIndex = -1;
+				imageMemoryBarriers[0].dstQueueFamilyIndex = -1;
+				imageMemoryBarriers[0].image = renderer.GetCurrentIntermediaryImage();
+				imageMemoryBarriers[0].subresourceRange = imageSubresourceRangeInfo;
+
+				imageMemoryBarriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				imageMemoryBarriers[1].srcAccessMask = VK_ACCESS_NONE;
+				imageMemoryBarriers[1].dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				imageMemoryBarriers[1].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				imageMemoryBarriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				imageMemoryBarriers[1].srcQueueFamilyIndex = -1;
+				imageMemoryBarriers[1].dstQueueFamilyIndex = -1;
+				imageMemoryBarriers[1].image = renderer.GetCurrentSwapchainImage();
+				imageMemoryBarriers[1].subresourceRange = imageSubresourceRangeInfo;
+
+				vkCmdPipelineBarrier(
+					commandBuffer,
+					VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+					VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+					VK_DEPENDENCY_BY_REGION_BIT,
+					0, nullptr,
+					0, nullptr,
+					2, imageMemoryBarriers.data()
+				);
+			}
+
+			renderer.BeginSwapChainRenderPass(commandBuffer);
+			{
+				particleSystemPipeline->BindGraphicsPipeline(commandBuffer);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, particleSystemPipeline->GetGraphicsPipelineLayout(), 0, 1, &particleSystemGraphicsDescriptorSet, 0, nullptr);
+				vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
+			}
+			renderer.EndSwapChainRenderPass(commandBuffer);
+
+			// Pipeline Barrier
+			{
+				VkImageSubresourceRange imageSubresourceRangeInfo = {};
+				imageSubresourceRangeInfo.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageSubresourceRangeInfo.baseMipLevel = 0;
+				imageSubresourceRangeInfo.levelCount = 1;
+				imageSubresourceRangeInfo.baseArrayLayer = 0;
+				imageSubresourceRangeInfo.layerCount = 1;
+
+				std::array<VkImageMemoryBarrier, 1> imageMemoryBarriers = {};
+				imageMemoryBarriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				imageMemoryBarriers[0].srcAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				imageMemoryBarriers[0].dstAccessMask = VK_ACCESS_NONE;
+				imageMemoryBarriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				imageMemoryBarriers[0].newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				imageMemoryBarriers[0].srcQueueFamilyIndex = -1;
+				imageMemoryBarriers[0].dstQueueFamilyIndex = -1;
+				imageMemoryBarriers[0].image = renderer.GetCurrentSwapchainImage();
+				imageMemoryBarriers[0].subresourceRange = imageSubresourceRangeInfo;
+
+				vkCmdPipelineBarrier(
+					commandBuffer,
+					VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+					VK_DEPENDENCY_BY_REGION_BIT,
+					0, nullptr,
+					0, nullptr,
+					1, imageMemoryBarriers.data()
+				);
+			}
+		}
+		renderer.EndFrame(); // TODO: DOODLE SCHIMBA LOGICA
 	}
 
 	void Application::CreateDescriptorPool()
 	{
-		globalPool = DescriptorPool::Builder(device)
-			.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
-			.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalPool = DescriptorPool::Builder(device)
+		//	.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
+		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
+		//	.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
+		//	.Build();
+			
+		particleSystemDescriptorPool = DescriptorPool::Builder(device)
+			.SetMaxSets(20 * SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 * SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 20 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// x2 storage buffers
+			.Build();
+	}
+
+	void Application::CreateDescriptorSetLayout()
+	{
+		// TODO [PARTICLE-SYSTEM] : test
+		//globalSetLayout = DescriptorSetLayout::Builder(device)
+		//	.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
+		//	.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
+		//	.Build();
+
+		particleSystemComputeDescriptorSetLayout = DescriptorSetLayout::Builder(device)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
+			.Build();
+
+		particleSystemGraphicsDescriptorSetLayout = DescriptorSetLayout::Builder(device)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)
+			.AddBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)
 			.Build();
 	}
 
 	void Application::CreateDescriptorSets()
 	{
-		globalDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+		// Descriptor Set for Compute Pipeline
 		{
-			// TODO: REFACTOR: de pus intr-o clasa Buffer->GetDescriptorInfo()
-			VkDescriptorBufferInfo uboBufferInfo = {};
-			uboBufferInfo.buffer = uniformBuffers[i];
-			uboBufferInfo.offset = 0;
-			uboBufferInfo.range = sizeof(UniformBufferObject);
+			VkDescriptorBufferInfo storageBufferInfo = {};
+			storageBufferInfo.buffer = shaderStorageBuffers;
+			storageBufferInfo.offset = 0;
+			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
 
-			// TODO: REFACTOR
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = statueTexture.GetTextureImageView();
-			imageInfo.sampler = statueTexture.GetTextureSampler();
+			DescriptorWriter(*particleSystemComputeDescriptorSetLayout, *particleSystemDescriptorPool)
+				.WriteBuffer(0, storageBufferInfo)
+				.Build(particleSystemComputeDescriptorSet);
+		}
 
-			DescriptorWriter(*globalSetLayout, *globalPool)
-				.WriteBuffer(0, uboBufferInfo)
-				.WriteImage(1, imageInfo)
-				.Build(globalDescriptorSets[i]);
+		// Descriptor Set for Graphics Pipeline
+		{
+			VkDescriptorBufferInfo uniformBufferInfo = {};
+			uniformBufferInfo.buffer = uniformBuffer;
+			uniformBufferInfo.offset = 0;
+			uniformBufferInfo.range = sizeof(UniformBufferObject);
+
+			VkDescriptorBufferInfo storageBufferInfo = {};
+			storageBufferInfo.buffer = shaderStorageBuffers;
+			storageBufferInfo.offset = 0;
+			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
+
+			DescriptorWriter(*particleSystemGraphicsDescriptorSetLayout, *particleSystemDescriptorPool)
+				.WriteBuffer(0, uniformBufferInfo)
+				.WriteBuffer(1, storageBufferInfo)
+				.Build(particleSystemGraphicsDescriptorSet);
 		}
 	}
 
@@ -184,14 +286,23 @@ namespace VulkanCore {
 	{
 		// TODO: test
 #if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
-		static const std::string vertShaderFilePath = "shaders/triangle.vert.spv";
-		static const std::string fragShaderFilePath = "shaders/triangle.frag.spv";
+		static const std::string triangleVertShaderFilePath = "shaders/triangle.vert.spv";
+		static const std::string triangleFragShaderFilePath = "shaders/triangle.frag.spv";
+
+		static const std::string particleComputeShaderFilePath = "shaders/particle.comp.spv";
+		static const std::string particleVertShaderFilePath = "shaders/particle.vert.spv";
+		static const std::string particleFragShaderFilePath = "shaders/particle.frag.spv";
 #elif defined(PLATFORM_LINUX) && defined(DEBUG)
 		static const std::string vertShaderFilePath = "ParticleSystem/shaders/triangle.vert.spv";
 		static const std::string fragShaderFilePath = "ParticleSystem/shaders/triangle.frag.spv";
+
+		static const std::string particleComputeShaderFilePath = "ParticleSystem/shaders/particle.comp.spv";
+		static const std::string particleVertShaderFilePath = "ParticleSystem/shaders/particle.vert.spv";
+		static const std::string particleFragShaderFilePath = "ParticleSystem/shaders/particle.frag.spv";
 #endif
 
-		pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), vertShaderFilePath, fragShaderFilePath);
+		// pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
+		particleSystemPipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), particleSystemGraphicsDescriptorSetLayout->GetDescriptorSetLayout(), particleSystemComputeDescriptorSetLayout->GetDescriptorSetLayout(), particleVertShaderFilePath, particleFragShaderFilePath, particleComputeShaderFilePath);
 	}
 
 	void Application::SetupImGui()
@@ -214,20 +325,20 @@ namespace VulkanCore {
 		}
 
 		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
-		ImGui_ImplVulkan_InitInfo initInfoImGui = {};
-		initInfoImGui.Instance = device.GetInstance();
-		initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
-		initInfoImGui.Device = device.GetVKDevice();
-		initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsFamily.value();
-		initInfoImGui.Queue = device.GetGraphicsQueue();
-		initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
-		initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
-		initInfoImGui.Subpass = 0;
-		initInfoImGui.MinImageCount = 2;
-		initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
-		initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		ImGui_ImplVulkan_Init(&initInfoImGui);
+		//ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
+		//ImGui_ImplVulkan_InitInfo initInfoImGui = {};
+		//initInfoImGui.Instance = device.GetInstance();
+		//initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
+		//initInfoImGui.Device = device.GetVKDevice();
+		//initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsAndComputeFamily.value();
+		//initInfoImGui.Queue = device.GetGraphicsQueue();
+		//initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
+		//initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
+		//initInfoImGui.Subpass = 0;
+		//initInfoImGui.MinImageCount = 2;
+		//initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
+		//initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		//ImGui_ImplVulkan_Init(&initInfoImGui);
 	}
 
 	void Application::RenderUI()
@@ -237,37 +348,127 @@ namespace VulkanCore {
 		// TODO
 	}
 
-	// TODO: delete
+	// TODO: REFACTOR - use Buffer class
 	void Application::CreateUniformBuffers()
 	{
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-		uniformBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-		uniformBuffersMemory.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-		uniformBuffersMapped.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		// Create a staging buffer used to upload data to the GPU
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory
+		);
 
-		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			device.CreateBuffer(
-				bufferSize,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				uniformBuffers[i],
-				uniformBuffersMemory[i]
-			);
+		// Buffer Data
+		static constexpr float WORLD_SIZE = 2.0f;
+		float aspect = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
+		float worldWidth = aspect * WORLD_SIZE;
 
-			vkMapMemory(device.GetVKDevice(), uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
-		}
+		UniformBufferObject ubo = {};
+		ubo.projection = glm::ortho(
+			-worldWidth / 2.0f,
+			worldWidth / 2.0f,
+			WORLD_SIZE / 2.0f,
+			-WORLD_SIZE / 2.0f,
+			0.0f,
+			-1.0f
+		);
+
+		// Filling staging buffer
+		void* data;
+		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+			std::memcpy(data, &ubo, sizeof(ubo));
+		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
+
+		// Create Uniform Buffer
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			uniformBuffer,
+			uniformBufferMemory
+		);
+
+		// Copy data to Uniform Buffer
+		device.CopyBuffer(stagingBuffer, uniformBuffer, bufferSize, device.GetGraphicsQueue());
+
+		// Cleanup
+		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
 	}
 
-	// TODO: delete
+	// TODO: REFACTOR - use Buffer class
 	void Application::CleanupUniformBuffers()
 	{
-		for (size_t i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+		vkDestroyBuffer(device.GetVKDevice(), uniformBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), uniformBufferMemory, nullptr);
+	}
+
+	// TODO: REFACTOR - use Buffer class
+	void Application::CreateShaderStorageBuffers()
+	{
+		// Initialize particles positions on a circle
+		std::default_random_engine randomEngine(static_cast<unsigned>(std::time(nullptr)));
+		std::uniform_real_distribution<float> randomDistribution(0.2f, 1.0f);
+		constexpr float step = 2.0f * glm::pi<float>() / static_cast<float>(PARTICLE_COUNT);
+
+		std::vector<Particle> particles(PARTICLE_COUNT);
+		for (size_t i = 0; i < particles.size(); ++i)
 		{
-			vkDestroyBuffer(device.GetVKDevice(), uniformBuffers[i], nullptr);
-			vkFreeMemory(device.GetVKDevice(), uniformBuffersMemory[i], nullptr);
+			const float radius = randomDistribution(randomEngine);
+			const float angle = static_cast<float>(i) * step;
+
+			particles[i].position = glm::vec2(radius * glm::cos(angle), radius * glm::sin(angle));
+			particles[i].velocity = glm::vec2(0.0f, 0.0f);
+			particles[i].color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 		}
+
+		VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
+
+		// Create a staging buffer used to upload data to the GPU
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		device.CreateBuffer(
+			bufferSize, 
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+			stagingBuffer, 
+			stagingBufferMemory
+		);
+
+		// Filling staging buffer
+		void* data;
+		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+			std::memcpy(data, particles.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
+
+		// Create Shader Storage Buffer
+		device.CreateBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			shaderStorageBuffers, 
+			shaderStorageBuffersMemory
+		);
+			
+		// Copy initial particle data to storage buffer
+		device.CopyBuffer(stagingBuffer, shaderStorageBuffers, bufferSize, device.GetComputeQueue());
+
+		// Cleanup
+		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
+	}
+
+	// TODO: REFACTOR - use Buffer class
+	void Application::CleanupShaderStorageBuffers()
+	{
+		vkDestroyBuffer(device.GetVKDevice(), shaderStorageBuffers, nullptr);
+		vkFreeMemory(device.GetVKDevice(), shaderStorageBuffersMemory, nullptr);
 	}
 
 } // namespace VulkanCore

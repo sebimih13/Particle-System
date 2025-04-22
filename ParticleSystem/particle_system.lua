@@ -12,7 +12,8 @@ project "ParticleSystem"
         "**.cpp",
         "**.hpp",
         "**.vert", 
-        "**.frag"
+        "**.frag",
+        "**.comp"
     }
 
     includedirs
@@ -50,8 +51,8 @@ project "ParticleSystem"
     -- TODO: only the files existing at the time of executing this script will be considered
     --       any new addition will be ignored, so you have to run again generate_project script
 
-    -- prebuild command to automatically compile .vert and .frag files for Windows
-    filter { "files:**.vert or **.frag", "system:windows" }
+    -- prebuild command to automatically compile .vert/.frag/.comp files for Windows
+    filter { "files:**.vert or **.frag or **.comp", "system:windows" }
         -- A message to display while this build step is running (optional)
         buildmessage 'Compiling %{file.name}'
 
@@ -69,8 +70,8 @@ project "ParticleSystem"
             '%{file.directory}/%{file.name}.spv'
         }
 
-    -- prebuild command to automatically compile .vert and .frag files for Linux
-    filter { "files:**.vert or **.frag", "system:linux" }
+    -- prebuild command to automatically compile .vert/.frag/.comp files for Linux
+    filter { "files:**.vert or **.frag or **.comp", "system:linux" }
         -- A message to display while this build step is running (optional)
         buildmessage 'Compiling %{file.name}'
 

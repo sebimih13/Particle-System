@@ -2,6 +2,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include "glm/glm.hpp"
+
 #include <string>
 
 namespace VulkanCore {
@@ -51,6 +53,8 @@ namespace VulkanCore {
         GLFWwindow* window;
 
         bool framebufferResized;
+
+        glm::vec2 mousePosition;
 
         // Callbacks
         static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);

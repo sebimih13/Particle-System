@@ -31,7 +31,7 @@ namespace VulkanCore {
 			bool operator == (const Vertex& other) const { return position == other.position && color == other.color && texCoord == other.texCoord; }
 
 			static VkVertexInputBindingDescription GetBindingDescription();
-			static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescription();
+			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescription();
 		};
 
 		struct Data

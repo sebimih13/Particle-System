@@ -32,6 +32,11 @@ namespace VulkanCore {
 		VkCommandBuffer BeginFrame();
 		void EndFrame();
 
+		VkCommandBuffer BeginCompute();
+		void EndCompute();
+
+		void SyncNewFrame();
+
 		void BeginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 		void EndSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
@@ -40,15 +45,22 @@ namespace VulkanCore {
 		// TODO: inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 		inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 
+		inline VkImage GetCurrentSwapchainImage() const { return swapChain->GetSwapchainImage(static_cast<size_t>(currentImageIndex)); }
+		inline VkImage GetCurrentIntermediaryImage() const { return swapChain->GetIntermediaryImage(static_cast<size_t>(currentImageIndex)); }
+
 	private:
 		Window& window;
 		GPUDevice& device;
 		std::unique_ptr<SwapChain> swapChain;
 
 		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<VkCommandBuffer> computeCommandBuffers;
+		VkCommandBuffer syncNewFrameCommandBuffer;
 		uint32_t currentImageIndex;
 
 		void CreateCommandBuffers();
+		void CreateComputeCommandBuffers();
+		void CreateSyncNewFrameCommandBuffer();
 		void RecreateSwapChain();
 	};
 

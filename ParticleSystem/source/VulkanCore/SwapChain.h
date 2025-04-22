@@ -28,33 +28,53 @@ namespace VulkanCore {
         SwapChain& operator = (SwapChain&&) = delete;
 
         VkResult AcquireNextImage(uint32_t* imageIndex);
+        // void AcquireNextCompute();
+
+        void SubmitComputeCommandBuffer(const VkCommandBuffer* buffer);
         VkResult SubmitCommandBuffer(const VkCommandBuffer* buffer, uint32_t* imageIndex);
+        void SubmitSyncNewFrameCommandBuffer(const VkCommandBuffer* buffer);
+
         void AdvanceFrameIndex();
 
         // Getters
-        VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
-        VkRenderPass GetRenderPass() const { return renderPass; }
-        VkFramebuffer GetSwapChainFramebuffer(const size_t& index) const { return swapChainFramebuffers[index]; }
-        uint32_t GetCurrentFrameIndex() const { return currentFrameIndex; }
+        inline VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
+        inline VkRenderPass GetRenderPass() const { return renderPass; }
+        inline VkFramebuffer GetSwapChainFramebuffer(const size_t& index) const { return swapChainFramebuffers[index]; }
+        inline uint32_t GetCurrentFrameIndex() const { return currentFrameIndex; }
+        
+        inline VkImage GetIntermediaryImage(const size_t& index) const { return intermediaryImages[index]; }
+        inline VkImage GetSwapchainImage(const size_t& index) const { return swapChainImages[index]; }
 
 	private:
         GPUDevice& device; // TODO: const?
         const Window& window;
 
+        VkRenderPass renderPass;
+
         VkSwapchainKHR swapChain;
-        std::vector<VkImage> swapChainImages;
         VkFormat swapChainImageFormat;
         VkExtent2D swapChainExtent;
 
+        // Color Images
+        std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;
+
+        // Intermediary Images for multi-sampling
+        std::vector<VkDeviceMemory> intermediaryImageMemories;
+        std::vector<VkImage> intermediaryImages;
+        std::vector<VkImageView> intermediaryImageViews;
+
         std::vector<VkFramebuffer> swapChainFramebuffers;
 
-        VkRenderPass renderPass;
-
+        // Sync Objects
         uint32_t currentFrameIndex;
-        std::vector<VkSemaphore> imageAvailableSemaphores;
-        std::vector<VkSemaphore> renderFinishedSemaphores;
-        std::vector<VkFence> inFlightFences;
+        //std::vector<VkSemaphore> imageAvailableSemaphores;
+        //std::vector<VkSemaphore> renderFinishedSemaphores;
+        //std::vector<VkSemaphore> computeFinishedSemaphores;
+
+        //std::vector<VkFence> inFlightFences;
+
+        VkSemaphore imageSemaphore;
 
         // depth image and view
         VkImage depthImage;
@@ -62,8 +82,9 @@ namespace VulkanCore {
         VkImageView depthImageView;
 
         void CreateSwapChain();
-        VkImageView CreateImageView(const VkImage& image, const VkFormat& format, const VkImageAspectFlags& aspectFlags) const;
+        VkImageView CreateImageView(const VkImage& image, const VkFormat& format, const VkImageAspectFlags& aspectMask) const;
         void CreateImageViews();
+        void CreateIntermediaryImageViews();
         void CreateRenderPass();
         void CreateFramebuffers();
         void CreateSyncObjects();

@@ -49,9 +49,9 @@ namespace VulkanCore {
 		return bindingDescription;
 	}
 
-	std::array<VkVertexInputAttributeDescription, 3> Model::Vertex::GetAttributeDescription()
+	std::vector<VkVertexInputAttributeDescription> Model::Vertex::GetAttributeDescription()
 	{
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
 		
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
@@ -209,7 +209,7 @@ namespace VulkanCore {
 			vertexBufferMemory
 		);
 
-		device.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+		device.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize, device.GetGraphicsQueue());
 
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
@@ -247,7 +247,7 @@ namespace VulkanCore {
 			indexBufferMemory
 		);
 
-		device.CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+		device.CopyBuffer(stagingBuffer, indexBuffer, bufferSize, device.GetGraphicsQueue());
 
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
