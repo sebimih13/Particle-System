@@ -40,9 +40,8 @@ namespace VulkanCore {
 		lastUpdate = glfwGetTime();
 
 		// Buffers Setup
-		// TODO: REFACTOR - use Buffer class
-		CreateShaderStorageBuffers();
-		CreateUniformBuffers();
+		CreateShaderStorageBuffer();
+		CreateUniformBuffer();
 
 		// Descriptors Setup
 		CreateDescriptorPool();
@@ -63,9 +62,8 @@ namespace VulkanCore {
 		//ImGui_ImplGlfw_Shutdown();
 		//ImGui::DestroyContext();
 
-		// TODO: REFACTOR - use Buffer class
-		CleanupShaderStorageBuffers();
-		CleanupUniformBuffers();
+		CleanupShaderStorageBuffer();
+		CleanupUniformBuffer();
 	}
 
 	void Application::Run()
@@ -89,7 +87,7 @@ namespace VulkanCore {
 		// Update Uniform Buffer if window has been resized
 		if (window.GetWasWindowResized())
 		{
-			UpdateUniformBuffers();
+			UpdateUniformBuffer();
 		}
 
 		// Update the application, only tick once every 15 milliseconds
@@ -260,7 +258,7 @@ namespace VulkanCore {
 		// Descriptor Set for Compute Pipeline
 		{
 			VkDescriptorBufferInfo storageBufferInfo = {};
-			storageBufferInfo.buffer = shaderStorageBuffers;
+			storageBufferInfo.buffer = shaderStorageBuffer;
 			storageBufferInfo.offset = 0;
 			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
 
@@ -277,7 +275,7 @@ namespace VulkanCore {
 			uniformBufferInfo.range = sizeof(UniformBufferObject);
 
 			VkDescriptorBufferInfo storageBufferInfo = {};
-			storageBufferInfo.buffer = shaderStorageBuffers;
+			storageBufferInfo.buffer = shaderStorageBuffer;
 			storageBufferInfo.offset = 0;
 			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
 
@@ -354,8 +352,7 @@ namespace VulkanCore {
 		// TODO
 	}
 
-	// TODO: REFACTOR - use Buffer class
-	void Application::CreateUniformBuffers()
+	void Application::CreateUniformBuffer()
 	{
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -372,10 +369,10 @@ namespace VulkanCore {
 		vkMapMemory(device.GetVKDevice(), uniformBufferMemory, 0, bufferSize, 0, &uniformBufferMapped);
 
 		// Fill Buffer Data
-		UpdateUniformBuffers();
+		UpdateUniformBuffer();
 	}
 
-	void Application::UpdateUniformBuffers()
+	void Application::UpdateUniformBuffer()
 	{
 		static constexpr float WORLD_SIZE = 2.0f;
 		float aspect = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
@@ -394,15 +391,13 @@ namespace VulkanCore {
 		std::memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
 	}
 
-	// TODO: REFACTOR - use Buffer class
-	void Application::CleanupUniformBuffers()
+	void Application::CleanupUniformBuffer()
 	{
 		vkDestroyBuffer(device.GetVKDevice(), uniformBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), uniformBufferMemory, nullptr);
 	}
 
-	// TODO: REFACTOR - use Buffer class
-	void Application::CreateShaderStorageBuffers()
+	void Application::CreateShaderStorageBuffer()
 	{
 		// Initialize particles positions on a circle
 		std::default_random_engine randomEngine(static_cast<unsigned>(std::time(nullptr)));
@@ -444,23 +439,22 @@ namespace VulkanCore {
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			shaderStorageBuffers, 
-			shaderStorageBuffersMemory
+			shaderStorageBuffer, 
+			shaderStorageBufferMemory
 		);
 			
 		// Copy initial particle data to storage buffer
-		device.CopyBuffer(stagingBuffer, shaderStorageBuffers, bufferSize, device.GetComputeQueue());
+		device.CopyBuffer(stagingBuffer, shaderStorageBuffer, bufferSize, device.GetComputeQueue());
 
 		// Cleanup
 		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
 	}
 
-	// TODO: REFACTOR - use Buffer class
-	void Application::CleanupShaderStorageBuffers()
+	void Application::CleanupShaderStorageBuffer()
 	{
-		vkDestroyBuffer(device.GetVKDevice(), shaderStorageBuffers, nullptr);
-		vkFreeMemory(device.GetVKDevice(), shaderStorageBuffersMemory, nullptr);
+		vkDestroyBuffer(device.GetVKDevice(), shaderStorageBuffer, nullptr);
+		vkFreeMemory(device.GetVKDevice(), shaderStorageBufferMemory, nullptr);
 	}
 
 } // namespace VulkanCore

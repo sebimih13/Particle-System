@@ -71,6 +71,14 @@ namespace VulkanCore {
 
         std::unique_ptr<Pipeline> particleSystemPipeline;
 
+        // Buffers
+        VkBuffer uniformBuffer;
+        VkDeviceMemory uniformBufferMemory;
+        void* uniformBufferMapped;
+
+        VkBuffer shaderStorageBuffer;
+        VkDeviceMemory shaderStorageBufferMemory;
+
         // TODO: delete
         // Texture statueTexture;
 
@@ -86,22 +94,13 @@ namespace VulkanCore {
 
         void RenderUI();
 
-        // TODO: REFACTOR - use Buffer class
-        VkBuffer uniformBuffer;
-        VkDeviceMemory uniformBufferMemory;
-        void* uniformBufferMapped;
+        // Buffers
+        void CreateUniformBuffer();
+        void UpdateUniformBuffer();
+        void CleanupUniformBuffer();
 
-        // TODO: rename UniformBuffer
-        void CreateUniformBuffers();
-        void UpdateUniformBuffers();
-        void CleanupUniformBuffers();
-
-        // TODO: REFACTOR - use Buffer class
-        VkBuffer shaderStorageBuffers;
-        VkDeviceMemory shaderStorageBuffersMemory;
-
-        void CreateShaderStorageBuffers();
-        void CleanupShaderStorageBuffers();
+        void CreateShaderStorageBuffer();
+        void CleanupShaderStorageBuffer();
     };
 
 } // namespace VulkanCore
