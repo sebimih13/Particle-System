@@ -89,8 +89,11 @@ namespace VulkanCore {
         // TODO: REFACTOR - use Buffer class
         VkBuffer uniformBuffer;
         VkDeviceMemory uniformBufferMemory;
+        void* uniformBufferMapped;
 
+        // TODO: rename UniformBuffer
         void CreateUniformBuffers();
+        void UpdateUniformBuffers();
         void CleanupUniformBuffers();
 
         // TODO: REFACTOR - use Buffer class

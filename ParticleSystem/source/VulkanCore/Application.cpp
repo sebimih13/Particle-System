@@ -86,6 +86,12 @@ namespace VulkanCore {
 
 	void Application::Update()
 	{
+		// Update Uniform Buffer if window has been resized
+		if (window.GetWasWindowResized())
+		{
+			UpdateUniformBuffers();
+		}
+
 		// Update the application, only tick once every 15 milliseconds
 		static const uint32_t TICK_MILLIS = 15;
 		const double duration = glfwGetTime() - lastUpdate;
@@ -353,18 +359,24 @@ namespace VulkanCore {
 	{
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-		// Create a staging buffer used to upload data to the GPU
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
+		// Create Uniform Buffer
 		device.CreateBuffer(
 			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory
+			uniformBuffer,
+			uniformBufferMemory
 		);
 
-		// Buffer Data
+		// Map buffer
+		vkMapMemory(device.GetVKDevice(), uniformBufferMemory, 0, bufferSize, 0, &uniformBufferMapped);
+
+		// Fill Buffer Data
+		UpdateUniformBuffers();
+	}
+
+	void Application::UpdateUniformBuffers()
+	{
 		static constexpr float WORLD_SIZE = 2.0f;
 		float aspect = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
 		float worldWidth = aspect * WORLD_SIZE;
@@ -379,27 +391,7 @@ namespace VulkanCore {
 			-1.0f
 		);
 
-		// Filling staging buffer
-		void* data;
-		vkMapMemory(device.GetVKDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-			std::memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(device.GetVKDevice(), stagingBufferMemory);
-
-		// Create Uniform Buffer
-		device.CreateBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, // VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-			uniformBuffer,
-			uniformBufferMemory
-		);
-
-		// Copy data to Uniform Buffer
-		device.CopyBuffer(stagingBuffer, uniformBuffer, bufferSize, device.GetGraphicsQueue());
-
-		// Cleanup
-		vkDestroyBuffer(device.GetVKDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(device.GetVKDevice(), stagingBufferMemory, nullptr);
+		std::memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
 	}
 
 	// TODO: REFACTOR - use Buffer class

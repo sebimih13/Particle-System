@@ -122,37 +122,16 @@ namespace VulkanCore {
 		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 		inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-		// TODO: TEST -> DYNAMIC STATE
-		// Viewport 
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = 1200;
-		viewport.height = 800;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		// TODO: TEST -> DYNAMIC STATE
-		// Scissor
-		VkRect2D scissor = {};
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent.width = 0x7FFFFFFF;
-		scissor.extent.height = 0x7FFFFFFF;
-
 		VkPipelineViewportStateCreateInfo viewportStateInfo = {};
 		viewportStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		viewportStateInfo.viewportCount = 1;
-		viewportStateInfo.pViewports = &viewport;
 		viewportStateInfo.scissorCount = 1;
-		viewportStateInfo.pScissors = &scissor;
 
-		// TODO: DOODLE : REINTEGRATE DYNAMIC STATES
 		// Viewport + Scissors as Dynamic States
-		//VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
-		//dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		//dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-		//dynamicStateInfo.pDynamicStates = dynamicStates.data();
+		VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
+		dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+		dynamicStateInfo.pDynamicStates = dynamicStates.data();
 
 		// Rasterizer
 		VkPipelineRasterizationStateCreateInfo rasterizationInfo = {};
@@ -246,7 +225,7 @@ namespace VulkanCore {
 		pipelineInfo.pMultisampleState = &multisamplingInfo;
 		pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
 		pipelineInfo.pColorBlendState = &colorBlendStateInfo;
-		pipelineInfo.pDynamicState = nullptr; // TODO: DOODLE - REINTEGRATE
+		pipelineInfo.pDynamicState = &dynamicStateInfo;
 		pipelineInfo.layout = pipelineLayout;
 		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
