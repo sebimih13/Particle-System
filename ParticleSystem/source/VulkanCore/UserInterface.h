@@ -30,6 +30,8 @@ namespace VulkanCore {
 
 		void Draw(VkCommandBuffer commandBuffer);
 
+		bool GetIsUIFocused() const;
+
 	private:
 		Window& window;
 		GPUDevice& device;

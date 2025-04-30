@@ -99,10 +99,11 @@ namespace VulkanCore {
 		double xPosMouse, yPosMouse;
 		glfwGetCursorPos(window.GetGLFWWindow(), &xPosMouse, &yPosMouse);
 		const float world_width = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
+		const bool mouseButtonLeftPressed = glfwGetMouseButton(window.GetGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? true : false;
 
 		// Update Push-Constants
 		PushConstants pushConstantsData = {};
-		pushConstantsData.enabled = glfwGetMouseButton(window.GetGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0;
+		pushConstantsData.enabled = (!ui.GetIsUIFocused() && mouseButtonLeftPressed) ? 1 : 0;
 		pushConstantsData.attractor = glm::vec2(
 			glm::mix(-world_width, world_width, xPosMouse / window.GetWidth()),
 			glm::mix(1.0f, -1.0f, yPosMouse / window.GetHeight())

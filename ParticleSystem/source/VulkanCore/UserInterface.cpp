@@ -69,6 +69,11 @@ namespace VulkanCore {
 		EndRenderPass(commandBuffer);
 	}
 
+	bool UserInterface::GetIsUIFocused() const
+	{
+		return ImGui::GetIO().WantCaptureMouse;
+	}
+
 	void UserInterface::CreateDescriptorPool()
 	{
 		imGuiDescriptorPool = DescriptorPool::Builder(device)
