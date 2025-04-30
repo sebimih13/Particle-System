@@ -19,6 +19,10 @@ namespace VulkanCore {
         CreateIntermediaryImageViews(); // TODO: DOODLE
         CreateFramebuffers();
         CreateSyncObjects();
+
+        // ImGui
+        CreateImGuiRenderPass();
+        CreateImGuiFramebuffers();
 	}
 
 	SwapChain::~SwapChain()
@@ -36,6 +40,11 @@ namespace VulkanCore {
         vkDestroySemaphore(device.GetVKDevice(), imageSemaphore, nullptr);
 
         // cleanup framebuffers
+        for (VkFramebuffer framebuffer : imGuiFramebuffers)
+        {
+            vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
+        }
+        
         for (VkFramebuffer framebuffer : swapChainFramebuffers)
         {
             vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
@@ -48,6 +57,7 @@ namespace VulkanCore {
         //vkFreeMemory(device.GetVKDevice(), depthImageMemory, nullptr);
 
         // cleanup render pass
+        vkDestroyRenderPass(device.GetVKDevice(), imGuiRenderPass, nullptr);
         vkDestroyRenderPass(device.GetVKDevice(), renderPass, nullptr);
 
         // cleanup intermediary images
@@ -424,6 +434,78 @@ namespace VulkanCore {
         );
 
         depthImageView = CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
+
+    void SwapChain::CreateImGuiRenderPass()
+    {
+        VkAttachmentDescription colorAttachment = {};
+        colorAttachment.format = VK_FORMAT_B8G8R8A8_SRGB; // TODO: change to VK_COLORSPACE_SRGB_NONLINEAR_KHR
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentRef = {};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        std::array<VkAttachmentDescription, 1> attachments = {
+            colorAttachment
+        };
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
+        if (vkCreateRenderPass(device.GetVKDevice(), &renderPassInfo, nullptr, &imGuiRenderPass) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create ImGui render pass!");
+        }
+    }
+
+    void SwapChain::CreateImGuiFramebuffers()
+    {
+        imGuiFramebuffers.resize(swapChainImages.size());
+
+        for (size_t i = 0; i < imGuiFramebuffers.size(); ++i)
+        {
+            std::array<VkImageView, 1> attachments = {
+                swapChainImageViews[i]
+            };
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = imGuiRenderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device.GetVKDevice(), &framebufferInfo, nullptr, &imGuiFramebuffers[i]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("Failed to create ImGui framebuffer!");
+            }
+        }
     }
 
     VkSurfaceFormatKHR SwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)

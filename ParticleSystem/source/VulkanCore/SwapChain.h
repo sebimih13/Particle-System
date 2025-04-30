@@ -39,11 +39,14 @@ namespace VulkanCore {
         // Getters
         inline VkExtent2D GetSwapChainExtent() const { return swapChainExtent; }
         inline VkRenderPass GetRenderPass() const { return renderPass; }
+        inline VkRenderPass GetImGuiRenderPass() const { return imGuiRenderPass; }
         inline VkFramebuffer GetSwapChainFramebuffer(const size_t& index) const { return swapChainFramebuffers[index]; }
+        inline VkFramebuffer GetImGuiFramebuffer(const size_t& index) const { return imGuiFramebuffers[index]; }
         inline uint32_t GetCurrentFrameIndex() const { return currentFrameIndex; }
         
         inline VkImage GetIntermediaryImage(const size_t& index) const { return intermediaryImages[index]; }
         inline VkImage GetSwapchainImage(const size_t& index) const { return swapChainImages[index]; }
+        inline VkImageView GetSwapChainImageView(const size_t& index) const { return swapChainImageViews[index]; }
 
 	private:
         GPUDevice& device; // TODO: const?
@@ -76,6 +79,10 @@ namespace VulkanCore {
 
         VkSemaphore imageSemaphore;
 
+        // ImGui
+        VkRenderPass imGuiRenderPass;
+        std::vector<VkFramebuffer> imGuiFramebuffers;
+
         // depth image and view
         VkImage depthImage;
         VkDeviceMemory depthImageMemory;
@@ -89,6 +96,10 @@ namespace VulkanCore {
         void CreateFramebuffers();
         void CreateSyncObjects();
         void CreateDepthResources();
+
+        // ImGui
+        void CreateImGuiRenderPass();
+        void CreateImGuiFramebuffers();
 
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);

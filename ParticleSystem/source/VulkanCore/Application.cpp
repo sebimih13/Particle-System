@@ -3,9 +3,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_vulkan.h>
-
 // TODO: test
 #include <vector>
 #include <chrono>
@@ -33,6 +30,7 @@ namespace VulkanCore {
 		: window(config.windowConfig)
 		, device(window)
 		, renderer(window, device)
+		, ui(window, device, renderer)
 		, bIsRunning(true)
 		, lastUpdate(0.0)
 		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
@@ -50,18 +48,10 @@ namespace VulkanCore {
 
 		// Pipelines
 		CreatePipeline();
-
-		// ImGui Setup
-		// SetupImGui();
 	}
 
 	Application::~Application()
 	{
-		// ImGui cleanup
-		//ImGui_ImplVulkan_Shutdown();
-		//ImGui_ImplGlfw_Shutdown();
-		//ImGui::DestroyContext();
-
 		CleanupShaderStorageBuffer();
 		CleanupUniformBuffer();
 	}
@@ -132,6 +122,8 @@ namespace VulkanCore {
 
 	void Application::Draw()
 	{
+		// TODO: eroare pentru primul frame pentru ca are semaforul on
+
 		// Graphics submission
 		if (VkCommandBuffer commandBuffer = renderer.BeginFrame()) // TODO: DOODLE: aici trebuie sa schimb logica putin
 		{
@@ -176,6 +168,7 @@ namespace VulkanCore {
 				);
 			}
 
+			// Draw Particle System
 			renderer.BeginSwapChainRenderPass(commandBuffer);
 			{
 				particleSystemPipeline->BindGraphicsPipeline(commandBuffer);
@@ -214,6 +207,9 @@ namespace VulkanCore {
 					1, imageMemoryBarriers.data()
 				);
 			}
+
+			// Draw UI
+			ui.Draw(commandBuffer);
 		}
 		renderer.EndFrame(); // TODO: DOODLE SCHIMBA LOGICA
 	}
@@ -307,49 +303,6 @@ namespace VulkanCore {
 
 		// pipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), globalSetLayout->GetDescriptorSetLayout(), Model::Vertex::GetBindingDescription(), Model::Vertex::GetAttributeDescription(), triangleVertShaderFilePath, triangleFragShaderFilePath);
 		particleSystemPipeline = std::make_unique<Pipeline>(device, renderer.GetSwapChain()->GetRenderPass(), particleSystemGraphicsDescriptorSetLayout->GetDescriptorSetLayout(), particleSystemComputeDescriptorSetLayout->GetDescriptorSetLayout(), particleVertShaderFilePath, particleFragShaderFilePath, particleComputeShaderFilePath);
-	}
-
-	void Application::SetupImGui()
-	{
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;		// Enable Keyboard Controls
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;			// Enable Docking
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;			// Enable Multi-Viewport / Platform Windows
-
-		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
-
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		// Setup Platform/Renderer backends
-		//ImGui_ImplGlfw_InitForVulkan(window.GetGLFWWindow(), true);
-		//ImGui_ImplVulkan_InitInfo initInfoImGui = {};
-		//initInfoImGui.Instance = device.GetInstance();
-		//initInfoImGui.PhysicalDevice = device.GetPhysicalDevice();
-		//initInfoImGui.Device = device.GetVKDevice();
-		//initInfoImGui.QueueFamily = device.GetPhysicalQueueFamilies().graphicsAndComputeFamily.value();
-		//initInfoImGui.Queue = device.GetGraphicsQueue();
-		//initInfoImGui.DescriptorPool = globalPool->GetDescriptorPool();
-		//initInfoImGui.RenderPass = renderer.GetSwapChain()->GetRenderPass();
-		//initInfoImGui.Subpass = 0;
-		//initInfoImGui.MinImageCount = 2;
-		//initInfoImGui.ImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
-		//initInfoImGui.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		//ImGui_ImplVulkan_Init(&initInfoImGui);
-	}
-
-	void Application::RenderUI()
-	{
-		ImGui::ShowDemoWindow();
-
-		// TODO
 	}
 
 	void Application::CreateUniformBuffer()

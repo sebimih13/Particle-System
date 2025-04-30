@@ -45,8 +45,11 @@ namespace VulkanCore {
 		// TODO: inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 		inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 
+		inline uint32_t GetCurrentImageIndex() const { return currentImageIndex; }
 		inline VkImage GetCurrentSwapchainImage() const { return swapChain->GetSwapchainImage(static_cast<size_t>(currentImageIndex)); }
 		inline VkImage GetCurrentIntermediaryImage() const { return swapChain->GetIntermediaryImage(static_cast<size_t>(currentImageIndex)); }
+
+		inline VkFramebuffer GetCurrentImGuiFramebuffer() const { return swapChain->GetImGuiFramebuffer(currentImageIndex); }
 
 	private:
 		Window& window;

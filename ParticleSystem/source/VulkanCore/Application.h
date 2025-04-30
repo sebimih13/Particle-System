@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Descriptor.h"
 #include "Texture.h"
+#include "UserInterface.h"
 
 namespace VulkanCore {
 
@@ -55,6 +56,7 @@ namespace VulkanCore {
         Window window;
         GPUDevice device;
         Renderer renderer;
+        UserInterface ui;
 
         bool bIsRunning; // TODO: de facut o functie Close()
 
@@ -90,9 +92,6 @@ namespace VulkanCore {
         void CreateDescriptorSetLayout();
         void CreateDescriptorSets();
         void CreatePipeline();
-        void SetupImGui();
-
-        void RenderUI();
 
         // Buffers
         void CreateUniformBuffer();
