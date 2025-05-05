@@ -24,7 +24,7 @@ namespace VulkanCore {
 
 	}
 
-	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131072 * 64 = 8_388_608
+	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131_072 * 64 = 8_388_608
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
@@ -79,6 +79,9 @@ namespace VulkanCore {
 		{
 			UpdateUniformBuffer();
 		}
+		
+		// Update UI
+		ui.Update();
 
 		// Update the application, only tick once every 15 milliseconds
 		static const uint32_t TICK_MILLIS = 15;

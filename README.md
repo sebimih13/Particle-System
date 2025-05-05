@@ -1,5 +1,5 @@
 # Particle-System
-A performant Particle System using ECS Architecture implemented with Vulkan
+A performant C++ Particle System implemented with Vulkan
 
 
 ## Setup
