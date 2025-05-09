@@ -357,6 +357,7 @@ namespace VulkanCore {
 			return;
 		}
 
+		ImGui::Text("GPU used: %s", device.GetName().data());
 		// TODO
 		
 		// Main body of GPU Metrics Window ends here

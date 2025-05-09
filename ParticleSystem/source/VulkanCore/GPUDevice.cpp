@@ -68,6 +68,7 @@ namespace VulkanCore {
     }
 
     GPUDevice::GPUDevice(Window& window)
+        : name("NULL")
     {
         CreateInstance();
         SetupDebugMessenger();
@@ -417,6 +418,13 @@ namespace VulkanCore {
         {
             throw std::runtime_error("Failed to find a suitable GPU!");
         }
+
+        // Get Physical Device name
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+        name = deviceProperties.deviceName;
+
+        std::cout << "Selected GPU: " << name << '\n';
 
 #ifdef DEBUG
         ListAvailableDeviceExtensions();

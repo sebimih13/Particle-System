@@ -69,6 +69,8 @@ namespace VulkanCore {
         inline const VkFence& GetComputeFence() const { return computeFence; }
         inline const VkFence& GetImageFence() const { return imageFence; }
 
+        inline const std::string& GetName() const { return name; }
+
     private:
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
@@ -84,6 +86,8 @@ namespace VulkanCore {
 
         VkFence imageFence;
         VkFence computeFence;
+
+        std::string name;
 
         static const bool bEnableValidationLayers;
         static const std::vector<const char*> instanceExtensions;
