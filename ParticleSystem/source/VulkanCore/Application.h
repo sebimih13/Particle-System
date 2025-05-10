@@ -11,6 +11,7 @@
 #include "Descriptor.h"
 #include "Texture.h"
 #include "UserInterface.h"
+#include "Time.h"
 
 namespace VulkanCore {
 
@@ -61,6 +62,7 @@ namespace VulkanCore {
         bool bIsRunning; // TODO: de facut o functie Close()
 
         double lastUpdate;
+        TimeData time;
 
         // Particle System Descriptors
         std::unique_ptr<DescriptorPool> particleSystemDescriptorPool;

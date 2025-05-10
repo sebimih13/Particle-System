@@ -15,6 +15,8 @@
 // TODO: test
 #include "Model.h"
 #include "Particle.h"
+#include "FrameTimeHistory.h"
+#include "FPSCounter.h"
 
 namespace VulkanCore {
 
@@ -58,6 +60,10 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
+		const Time now = Now();
+		time.Start(now);
+		FPSCounter::GetInstance().Start(time);
+
 		while (!window.ShouldClose() && bIsRunning)
 		{
 			window.Update();
@@ -83,12 +89,20 @@ namespace VulkanCore {
 		// Update UI
 		ui.Update();
 
+		// TODO: de ce doar 15?
 		// Update the application, only tick once every 15 milliseconds
 		static const uint32_t TICK_MILLIS = 15;
-		const double duration = glfwGetTime() - lastUpdate;
-		if (duration * 1000.0 >= TICK_MILLIS)
+		const double deltaTime = glfwGetTime() - lastUpdate;
+
+		// TODO: aici sau in if() ???
+		const Time now = Now();
+		time.NewFrameFromNow(now);
+		FPSCounter::GetInstance().NewFrame(time);
+		FrameTimeHistory::GetInstance().Post(static_cast<float>(deltaTime));
+
+		if (deltaTime * 1000.0 >= TICK_MILLIS)
 		{
-			Tick(duration);
+			Tick(deltaTime);
 			lastUpdate = glfwGetTime();
 		}
 	}

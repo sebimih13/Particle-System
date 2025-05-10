@@ -2,16 +2,33 @@
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <imgui_internal.h>
 
 #include <stdexcept>
 #include <array>
+#include <cmath>
 #include <iostream>
+#include <limits>
+
+// TODO: delete
+#include <queue>
 
 #include "SwapChain.h"
+#include "FrameTimeHistory.h"
+#include "FPSCounter.h"
 
 namespace VulkanCore {
 
+	ImChunkStream<UserInterface::ImGuiWindowUserData> UserInterface::UserDataWindows;
+
 	const uint32_t UserInterface::MAX_PARTICLE_MULTIPLIER = 131072; // TODO: change max value
+
+	std::unordered_map<std::string, bool> UserInterface::UserDataWindow = {
+		{ "Settings", false },
+		{ "GPU Metrics", false },
+		{ "CPU Metrics", false },
+		{ "RAM Metrics", false }
+	};
 
 	void UserInterface::HelpMarker(const std::string desc)
 	{
@@ -45,10 +62,6 @@ namespace VulkanCore {
 		, device(device)
 		, renderer(renderer)
 		, bShowMainMenuBar(true)
-		, bShowSettingsWindow(false)
-		, bShowGPUWindow(false)
-		, bShowCPUWindow(false)
-		, bShowRAMWindow(false)
 		, bShowProgressBar(false)
 		, particleCount(131072 * 64)
 		, baseColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
@@ -78,25 +91,25 @@ namespace VulkanCore {
 		// Toggle Settings Window - Shortcut
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_E))
 		{
-			bShowSettingsWindow = !bShowSettingsWindow;
+			UserDataWindow["Settings"] = !UserDataWindow["Settings"];
 		}
 
 		// Toggle GPU Metrics Window - Shortcut
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C))
 		{
-			bShowGPUWindow = !bShowGPUWindow;
+			UserDataWindow["GPU Metrics"] = !UserDataWindow["GPU Metrics"];
 		}
 
 		// Toggle CPU Metrics Window - Shortcut
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_F))
 		{
-			bShowCPUWindow = !bShowCPUWindow;
+			UserDataWindow["CPU Metrics"] = !UserDataWindow["CPU Metrics"];
 		}
 
 		// Toggle RAM Metrics Window - Shortcut
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_R))
 		{
-			bShowRAMWindow = !bShowRAMWindow;
+			UserDataWindow["RAM Metrics"] = !UserDataWindow["RAM Metrics"];
 		}
 	}
 
@@ -144,6 +157,19 @@ namespace VulkanCore {
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
+
+		// Add .ini handle for UserData type
+		{
+			ImGuiSettingsHandler ini_handler;
+			ini_handler.TypeName = "UserData";
+			ini_handler.TypeHash = ImHashStr("UserData");
+			ini_handler.ReadOpenFn = UserData_ReadOpen;
+			ini_handler.ReadLineFn = UserData_ReadLine;
+			ini_handler.WriteAllFn = UserData_WriteAll;
+			ImGui::AddSettingsHandler(&ini_handler);
+		}
+
+		// ImGui Flags
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;		// Enable Keyboard Controls
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;			// Enable Docking
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;			// Enable Multi-Viewport / Platform Windows
@@ -221,12 +247,12 @@ namespace VulkanCore {
 		if (bShowMainMenuBar) { ShowMainMenuBar(); }
 
 		// UIs accessible from the "Settings" menu
-		if (bShowSettingsWindow) { ShowSettingsWindow(); }
+		if (UserDataWindow["Settings"]) { ShowSettingsWindow(); }
 
 		// UIs accessible from the "Tools" menu
-		if (bShowGPUWindow) { ShowGPUWindow(); }
-		if (bShowCPUWindow) { ShowCPUWindow(); }
-		if (bShowRAMWindow) { ShowRAMWindow(); }
+		if (UserDataWindow["GPU Metrics"]) { ShowGPUWindow(); }
+		if (UserDataWindow["CPU Metrics"]) { ShowCPUWindow(); }
+		if (UserDataWindow["RAM Metrics"]) { ShowRAMWindow(); }
 	}
 
 	void UserInterface::ShowMainMenuBar()
@@ -235,15 +261,15 @@ namespace VulkanCore {
 		{
 			if (ImGui::BeginMenu("Settings"))
 			{
-				ImGui::MenuItem("Open", "Ctrl+E", &bShowSettingsWindow);
+				ImGui::MenuItem("Open", "Ctrl+E", &UserDataWindow["Settings"]);
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Tools"))
 			{
-				ImGui::MenuItem("GPU Metrics", "Ctrl+C", &bShowGPUWindow);
-				ImGui::MenuItem("CPU Metrics", "Ctrl+F", &bShowCPUWindow);
-				ImGui::MenuItem("RAM Metrics", "Ctrl+R", &bShowRAMWindow);
+				ImGui::MenuItem("GPU Metrics", "Ctrl+C", &UserDataWindow["GPU Metrics"]);
+				ImGui::MenuItem("CPU Metrics", "Ctrl+F", &UserDataWindow["CPU Metrics"]);
+				ImGui::MenuItem("RAM Metrics", "Ctrl+R", &UserDataWindow["RAM Metrics"]);
 				ImGui::EndMenu();
 			}
 
@@ -258,7 +284,7 @@ namespace VulkanCore {
 		ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 10, main_viewport->WorkPos.y + 10), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSize(ImVec2(630, 200), ImGuiCond_FirstUseEver);
 
-		if (!ImGui::Begin("Settings", &bShowSettingsWindow))
+		if (!ImGui::Begin("Settings", &UserDataWindow["Settings"]))
 		{
 			// Early out if the window is collapsed, as an optimization.
 			ImGui::End();
@@ -350,7 +376,7 @@ namespace VulkanCore {
 		ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 10, main_viewport->WorkPos.y + main_viewport->WorkSize.y - 210), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x - 20, 200), ImGuiCond_FirstUseEver);
 
-		if (!ImGui::Begin("GPU Metrics", &bShowGPUWindow))
+		if (!ImGui::Begin("GPU Metrics", &UserDataWindow["GPU Metrics"]))
 		{
 			// Early out if the window is collapsed, as an optimization.
 			ImGui::End();
@@ -358,7 +384,84 @@ namespace VulkanCore {
 		}
 
 		ImGui::Text("GPU used: %s", device.GetName().data());
+		ImGui::Text("Total VRAM used: %s", "TODO"); // TODO: de schimbat in intreg
+		ImGui::Text("GPU Load: %s", "TODO"); // TODO: de schimbat in intreg
+		ImGui::Text("GPU MHz: %s Mhz", "TODO"); // TODO: de schimbat in intreg
+
+		// FPS Graph
+		static std::vector<float> fpsHistory;
+		const uint32_t maxFpsHistory = 240; // TODO
+
+		fpsHistory.push_back(FPSCounter::GetInstance().GetFPS());
+		if (fpsHistory.size() > maxFpsHistory)
+		{
+			fpsHistory.erase(fpsHistory.begin());
+		}
+
+		ImGui::PlotLines("###FPS", fpsHistory.data(), fpsHistory.size(), 0, nullptr, 0.0f, static_cast<float>(maxFpsHistory), ImVec2(0, 80));
+		ImGui::SameLine();
+		ImGui::Text("FPS: %.2f", FPSCounter::GetInstance().GetFPS());
+
+		// Frame Time Graph
+		const float width = ImGui::GetWindowWidth();
+		const size_t frameCount = FrameTimeHistory::GetInstance().GetCount();
+		if (width > 0.f && frameCount > 0)
+		{
+			ImDrawList* drawList = ImGui::GetWindowDrawList();
+			ImVec2 basePos = ImGui::GetCursorScreenPos();
+
+			constexpr float minHeight = 2.0f;
+			constexpr float maxHeight = 64.0f;
+
+			constexpr float minDT = 1.0f / 120.0f;	// TODO: modifica MAX_FPS
+			constexpr float maxDT = 1.0f / 15.0f;
+			
+			const float log2MinDT = log2(minDT);
+			const float log2MaxDT = log2(maxDT);
+			
+			float endX = width;
+			drawList->AddRectFilled(basePos, ImVec2(basePos.x + width, basePos.y + maxHeight), 0xFF404040);
+			
+			for (size_t frameIndex = 0; frameIndex < frameCount && endX > 0.0f; ++frameIndex)
+			{
+				const FrameTimeHistory::Entry dt = FrameTimeHistory::GetInstance().GetEntry(frameIndex);
+				const float frameWidth = dt.deltaTime / minDT;
+				const float frameHeightFactor = (dt.log2DeltaTime - log2MinDT) / (log2MaxDT - log2MinDT);
+				const float frameHeightFactor_Nrm = std::min(std::max(0.0f, frameHeightFactor), 1.0f);
+				const float frameHeight = glm::mix(minHeight, maxHeight, frameHeightFactor_Nrm);
+				const float begX = endX - frameWidth;
+				const uint32_t color = glm::packUnorm4x8(DeltaTimeToColor(dt.deltaTime));
+
+				drawList->AddRectFilled(
+					ImVec2(basePos.x + std::max(0.0f, std::floor(begX)), basePos.y + maxHeight - frameHeight),
+					ImVec2(basePos.x + std::ceil(endX), basePos.y + maxHeight),
+					color
+				);
+
+				endX = begX;
+			}
+
+			ImGui::Dummy(ImVec2(width, maxHeight));
+		}
+
 		// TODO
+		static float minFPS = std::numeric_limits<float>::max();
+		static float maxFPS = std::numeric_limits<float>::min();
+		if (FPSCounter::GetInstance().GetFPS() != 0.0f)
+		{
+			minFPS = std::min(minFPS, FPSCounter::GetInstance().GetFPS());
+			maxFPS = std::max(maxFPS, FPSCounter::GetInstance().GetFPS());
+
+		}
+		static const float avg = 13.04f;
+		static const float low1 = 13.04f;
+		static const float low01 = 13.04f;
+
+		ImGui::Text("Avg: %.2f ms", avg);
+		ImGui::Text("Min: %.2f ms", minFPS);
+		ImGui::Text("Max: %.2f ms", maxFPS);
+		ImGui::Text("1%% Low: %.2f ms", low1);
+		ImGui::Text("0.1%% Low: %.2f ms", low01);
 		
 		// Main body of GPU Metrics Window ends here
 		ImGui::End();
@@ -369,7 +472,7 @@ namespace VulkanCore {
 		// We specify a default position/size in case there's no data in the .ini file
 		// TODO: default Window position
 
-		if (!ImGui::Begin("CPU Metrics", &bShowCPUWindow))
+		if (!ImGui::Begin("CPU Metrics", &UserDataWindow["CPU Metrics"]))
 		{
 			// Early out if the window is collapsed, as an optimization.
 			ImGui::End();
@@ -387,7 +490,7 @@ namespace VulkanCore {
 		// We specify a default position/size in case there's no data in the .ini file
 		// TODO: default Window position
 
-		if (!ImGui::Begin("RAM Metrics", &bShowRAMWindow))
+		if (!ImGui::Begin("RAM Metrics", &UserDataWindow["RAM Metrics"]))
 		{
 			// Early out if the window is collapsed, as an optimization.
 			ImGui::End();
@@ -398,6 +501,82 @@ namespace VulkanCore {
 		
 		// Main body of RAM Metrics Window ends here
 		ImGui::End();
+	}
+
+	glm::vec4 UserInterface::DeltaTimeToColor(float deltaTime)
+	{
+		constexpr glm::vec3 colors[] = {
+			{0.0f, 0.0f, 1.0f}, // blue
+			{0.0f, 1.0f, 0.0f}, // green
+			{1.0f, 1.0f, 0.0f}, // yellow
+			{1.0f, 0.0f, 0.0f}, // red
+		};
+
+		constexpr float dts[] = {
+			1.0f / 120.0f, // TODO: MAX_FRAME
+			1.0f / 60.0f,
+			1.0f / 30.0f,
+			1.0f / 15.0f,
+		};
+
+		size_t countOfDTS = sizeof(dts) / sizeof(dts[0]);
+
+		if (deltaTime < dts[0])
+		{
+			return glm::vec4(colors[0], 1.f);
+		}
+
+		for (size_t i = 1; i < countOfDTS; ++i)
+		{
+			if (deltaTime < dts[i])
+			{
+				const float t = (deltaTime - dts[i - 1]) / (dts[i] - dts[i - 1]);
+				return glm::vec4(glm::mix(colors[i - 1], colors[i], t), 1.f);
+			}
+		}
+
+		return glm::vec4(colors[countOfDTS - 1], 1.f);
+	}
+
+	UserInterface::ImGuiWindowUserData* UserInterface::CreateNewWindowUserData(const char* name)
+	{
+		// Allocate chunk
+		const size_t nameLen = strlen(name);
+		const size_t chunkSize = sizeof(ImGuiWindowUserData) + nameLen + 1;
+		ImGuiWindowUserData* userData = UserDataWindows.alloc_chunk(chunkSize);
+		IM_PLACEMENT_NEW(userData) ImGuiWindowUserData();
+		memcpy(userData->GetName(), name, nameLen + 1); // Store with zero terminator
+
+		return userData;
+	}
+
+	void* UserInterface::UserData_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name)
+	{
+		return (void*)CreateNewWindowUserData(name);
+	}
+
+	void UserInterface::UserData_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
+	{
+		ImGuiWindowUserData* userData = static_cast<ImGuiWindowUserData*>(entry);
+
+		char showWindow[6] = {};
+		if (sscanf(line, "Show=%5s", showWindow) == 1)
+		{
+			UserDataWindow[userData->GetName()] = (strncmp(showWindow, "true", 5) == 0);
+		}
+	}
+
+	void UserInterface::UserData_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
+	{
+		for (ImGuiWindow* window : ctx->Windows)
+		{
+			if (UserDataWindow.contains(window->Name))
+			{
+				buf->appendf("[%s][%s]\n", handler->TypeName, window->Name);
+				buf->appendf("Show=%s\n", UserDataWindow[window->Name] ? "true" : "false");
+				buf->append("\n");
+			}
+		}
 	}
 
 } // namespace VulkanCore
