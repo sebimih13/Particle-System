@@ -12,9 +12,6 @@
 #include <algorithm>
 #include <numeric>
 
-// TODO: delete
-#include <queue>
-
 #include "SwapChain.h"
 #include "FrameTimeHistory.h"
 #include "FPSCounter.h"
@@ -64,9 +61,10 @@ namespace VulkanCore {
 		, device(device)
 		, renderer(renderer)
 		, bShowMainMenuBar(true)
-		, bShowProgressBar(false)
+		, bShouldReset(false)
 		, particleCount(131072 * 64)
-		, baseColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
+		, staticColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
+		, dynamicColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
 	{
 		CreateDescriptorPool();
 		SetupImGui();
@@ -139,6 +137,11 @@ namespace VulkanCore {
 			}
 		}
 		EndRenderPass(commandBuffer);
+	}
+
+	void UserInterface::ToggleShouldReset()
+	{
+		bShouldReset = !bShouldReset;
 	}
 
 	bool UserInterface::GetIsUIFocused() const
@@ -339,9 +342,19 @@ namespace VulkanCore {
 		particleCount = particleMultiplier * 64u;
 		ImGui::Text("Particle Count: %d", particleCount);
 
-		// Base color
-		ImGui::ColorEdit4("Base color", &baseColor[0], ImGuiColorEditFlags_Float);
+		// Colors
+		ImGui::ColorEdit4("Static color", &staticColor[0], ImGuiColorEditFlags_Float);
 		ImGui::SameLine(); HelpMarker(
+			"This color represents the particle at rest, with minimal or no velocity.\n"
+			"Click on the color square to open a color picker.\n"
+			"Click and hold to use drag and drop.\n"
+			"Right-click on the color square to show options.\n"
+			"CTRL+click on individual component to input value.\n"
+		);
+
+		ImGui::ColorEdit4("Dynamic color", &dynamicColor[0], ImGuiColorEditFlags_Float);
+		ImGui::SameLine(); HelpMarker(
+			"This color represents the particle in motion, with higher velocity and increased energy.\n"
 			"Click on the color square to open a color picker.\n"
 			"Click and hold to use drag and drop.\n"
 			"Right-click on the color square to show options.\n"
@@ -351,21 +364,21 @@ namespace VulkanCore {
 		// Apply Button
 		if (ImGui::Button("Apply"))
 		{
-			std::cout << "TODO: APPLY" << std::endl;
-			bShowProgressBar = !bShowProgressBar; // TODO: change
+			ToggleShouldReset();
 		}
 		ImGui::SameLine(); HelpMarker(
 			"Left-click to apply the new changes and reload the simulation with the updated data.\n"
 			"The simulation will refresh to reflect the new settings.\n"
 		);
 
-		// Load new data
-		if (bShowProgressBar && ImGui::BeginTooltip())
-		{
-			// TODO: change
-			ImGui::ProgressBar(sinf((float)ImGui::GetTime()) * 0.5f + 0.5f, ImVec2(ImGui::GetFontSize() * 25, 0.0f));
-			ImGui::EndTooltip();
-		}
+		// TODO: DELETE
+		// Load new data progress bar
+		//if (bShowProgressBar && ImGui::BeginTooltip())
+		//{
+		//	// TODO: change
+		//	ImGui::ProgressBar(sinf((float)ImGui::GetTime()) * 0.5f + 0.5f, ImVec2(ImGui::GetFontSize() * 25, 0.0f));
+		//	ImGui::EndTooltip();
+		//}
 
 		// Main body of Settings Window ends here
 		ImGui::End();

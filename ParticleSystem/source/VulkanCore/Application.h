@@ -28,6 +28,8 @@ namespace VulkanCore {
     struct UniformBufferObject
     {
         glm::mat4 projection;
+        glm::vec4 staticColor;
+        glm::vec4 dynamicColor;
     };
 
     // TODO: de facut clasa virtuala
@@ -50,16 +52,16 @@ namespace VulkanCore {
 
         // TODO: move
         void Run();
+        void Reset();
 
     private:
-        static const uint32_t PARTICLE_COUNT;
-
         Window window;
         GPUDevice device;
         Renderer renderer;
         UserInterface ui;
 
         bool bIsRunning; // TODO: de facut o functie Close()
+        uint32_t particleCount;
 
         double lastUpdate;
         TimeData time;

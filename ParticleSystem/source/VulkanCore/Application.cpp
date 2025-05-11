@@ -26,14 +26,13 @@ namespace VulkanCore {
 
 	}
 
-	const uint32_t Application::PARTICLE_COUNT = 131072 * 64; // TODO: 131_072 * 64 = 8_388_608
-
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
 		, device(window)
 		, renderer(window, device)
 		, ui(window, device, renderer)
 		, bIsRunning(true)
+		, particleCount(131072 * 64)
 		, lastUpdate(0.0)
 		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
 	{
@@ -54,8 +53,8 @@ namespace VulkanCore {
 
 	Application::~Application()
 	{
-		CleanupShaderStorageBuffer();
 		CleanupUniformBuffer();
+		CleanupShaderStorageBuffer();
 	}
 
 	void Application::Run()
@@ -78,8 +77,29 @@ namespace VulkanCore {
 		vkDeviceWaitIdle(device.GetVKDevice());
 	}
 
+	void Application::Reset()
+	{
+		particleCount = ui.GetParticleCount();
+		ui.ToggleShouldReset();
+
+		vkDeviceWaitIdle(device.GetVKDevice());
+
+		CleanupShaderStorageBuffer();
+		CreateShaderStorageBuffer();
+
+		UpdateUniformBuffer();
+
+		CreateDescriptorSets();
+	}
+
 	void Application::Update()
 	{
+		// Check if we need to reset
+		if (ui.GetShouldReset())
+		{
+			Reset();
+		}
+
 		// Update Uniform Buffer if window has been resized
 		if (window.GetWasWindowResized())
 		{
@@ -133,7 +153,7 @@ namespace VulkanCore {
 			particleSystemPipeline->BindComputePipeline(commandBuffer);
 			vkCmdPushConstants(commandBuffer, particleSystemPipeline->GetComputePipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &pushConstantsData);
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, particleSystemPipeline->GetComputePipelineLayout(), 0, 1, &particleSystemComputeDescriptorSet, 0, nullptr);
-			vkCmdDispatch(commandBuffer, PARTICLE_COUNT / 64, 1, 1);
+			vkCmdDispatch(commandBuffer, particleCount / 64u, 1, 1);
 		}
 		renderer.EndCompute();
 	}
@@ -191,7 +211,7 @@ namespace VulkanCore {
 			{
 				particleSystemPipeline->BindGraphicsPipeline(commandBuffer);
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, particleSystemPipeline->GetGraphicsPipelineLayout(), 0, 1, &particleSystemGraphicsDescriptorSet, 0, nullptr);
-				vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
+				vkCmdDraw(commandBuffer, particleCount, 1, 0, 0);
 			}
 			renderer.EndSwapChainRenderPass(commandBuffer);
 
@@ -274,7 +294,7 @@ namespace VulkanCore {
 			VkDescriptorBufferInfo storageBufferInfo = {};
 			storageBufferInfo.buffer = shaderStorageBuffer;
 			storageBufferInfo.offset = 0;
-			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
+			storageBufferInfo.range = sizeof(Particle) * particleCount;
 
 			DescriptorWriter(*particleSystemComputeDescriptorSetLayout, *particleSystemDescriptorPool)
 				.WriteBuffer(0, storageBufferInfo)
@@ -291,7 +311,7 @@ namespace VulkanCore {
 			VkDescriptorBufferInfo storageBufferInfo = {};
 			storageBufferInfo.buffer = shaderStorageBuffer;
 			storageBufferInfo.offset = 0;
-			storageBufferInfo.range = sizeof(Particle) * PARTICLE_COUNT;
+			storageBufferInfo.range = sizeof(Particle) * particleCount;
 
 			DescriptorWriter(*particleSystemGraphicsDescriptorSetLayout, *particleSystemDescriptorPool)
 				.WriteBuffer(0, uniformBufferInfo)
@@ -358,6 +378,8 @@ namespace VulkanCore {
 			0.0f,
 			-1.0f
 		);
+		ubo.staticColor = ui.GetStaticColor();
+		ubo.dynamicColor = ui.GetDynamicColor();
 
 		std::memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
 	}
@@ -373,9 +395,9 @@ namespace VulkanCore {
 		// Initialize particles positions on a circle
 		std::default_random_engine randomEngine(static_cast<unsigned>(std::time(nullptr)));
 		std::uniform_real_distribution<float> randomDistribution(0.2f, 1.0f);
-		constexpr float step = 2.0f * glm::pi<float>() / static_cast<float>(PARTICLE_COUNT);
+		const float step = 2.0f * glm::pi<float>() / static_cast<float>(particleCount);
 
-		std::vector<Particle> particles(PARTICLE_COUNT);
+		std::vector<Particle> particles(particleCount);
 		for (size_t i = 0; i < particles.size(); ++i)
 		{
 			const float radius = randomDistribution(randomEngine);
@@ -386,7 +408,7 @@ namespace VulkanCore {
 			particles[i].color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 		}
 
-		VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
+		VkDeviceSize bufferSize = sizeof(Particle) * particleCount;
 
 		// Create a staging buffer used to upload data to the GPU
 		VkBuffer stagingBuffer;

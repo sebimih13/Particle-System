@@ -49,7 +49,13 @@ namespace VulkanCore {
 		void Update();
 		void Draw(VkCommandBuffer commandBuffer);
 
+		void ToggleShouldReset();
+
 		bool GetIsUIFocused() const;
+		inline bool GetShouldReset() const { return bShouldReset; }
+		inline uint32_t GetParticleCount() const { return particleCount; }
+		inline const glm::vec4& GetStaticColor() const { return staticColor; }
+		inline const glm::vec4& GetDynamicColor() const { return dynamicColor; }
 
 	private:
 		// TODO: DELETE? pentru a testa cat de mult duce GPU-ul
@@ -63,10 +69,11 @@ namespace VulkanCore {
 		std::unique_ptr<DescriptorPool> imGuiDescriptorPool;
 
 		bool bShowMainMenuBar;
-		bool bShowProgressBar;
+		bool bShouldReset;
 
 		uint32_t particleCount;
-		glm::vec4 baseColor;
+		glm::vec4 staticColor;
+		glm::vec4 dynamicColor;
 
 #ifdef DEBUG
 		static void CheckImGuiVulkanResult(VkResult err);
