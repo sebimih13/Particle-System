@@ -9,6 +9,8 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <algorithm>
+#include <numeric>
 
 // TODO: delete
 #include <queue>
@@ -398,14 +400,14 @@ namespace VulkanCore {
 			fpsHistory.erase(fpsHistory.begin());
 		}
 
-		ImGui::PlotLines("###FPS", fpsHistory.data(), fpsHistory.size(), 0, nullptr, 0.0f, static_cast<float>(maxFpsHistory), ImVec2(0, 80));
-		ImGui::SameLine();
 		ImGui::Text("FPS: %.2f", FPSCounter::GetInstance().GetFPS());
+		ImGui::SameLine();
+		ImGui::PlotLines("###FPS", fpsHistory.data(), static_cast<int>(fpsHistory.size()), 0, nullptr, 0.0f, static_cast<float>(maxFpsHistory), ImVec2(0, 80));
 
 		// Frame Time Graph
 		const float width = ImGui::GetWindowWidth();
 		const size_t frameCount = FrameTimeHistory::GetInstance().GetCount();
-		if (width > 0.f && frameCount > 0)
+		if (width > 0.0f && frameCount > 0)
 		{
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 			ImVec2 basePos = ImGui::GetCursorScreenPos();
@@ -427,8 +429,8 @@ namespace VulkanCore {
 				const FrameTimeHistory::Entry dt = FrameTimeHistory::GetInstance().GetEntry(frameIndex);
 				const float frameWidth = dt.deltaTime / minDT;
 				const float frameHeightFactor = (dt.log2DeltaTime - log2MinDT) / (log2MaxDT - log2MinDT);
-				const float frameHeightFactor_Nrm = std::min(std::max(0.0f, frameHeightFactor), 1.0f);
-				const float frameHeight = glm::mix(minHeight, maxHeight, frameHeightFactor_Nrm);
+				const float frameHeightFactorClamped = std::min(std::max(0.0f, frameHeightFactor), 1.0f);
+				const float frameHeight = glm::mix(minHeight, maxHeight, frameHeightFactorClamped);
 				const float begX = endX - frameWidth;
 				const uint32_t color = glm::packUnorm4x8(DeltaTimeToColor(dt.deltaTime));
 
@@ -441,7 +443,9 @@ namespace VulkanCore {
 				endX = begX;
 			}
 
-			ImGui::Dummy(ImVec2(width, maxHeight));
+			ImGui::Text("Frame time: %.2f ms", FrameTimeHistory::GetInstance().GetEntry(0).deltaTime);
+			ImGui::SameLine();
+			ImGui::Dummy(ImVec2(width - 100.0f, maxHeight));
 		}
 
 		// TODO
@@ -453,15 +457,19 @@ namespace VulkanCore {
 			maxFPS = std::max(maxFPS, FPSCounter::GetInstance().GetFPS());
 
 		}
-		static const float avg = 13.04f;
-		static const float low1 = 13.04f;
-		static const float low01 = 13.04f;
+		
+		std::vector<float> fpsHistorySorted = fpsHistory;
+		std::sort(fpsHistorySorted.begin(), fpsHistorySorted.end());
+		int onePercentLowIndex= static_cast<int>(0.01f * fpsHistorySorted.size());
+		onePercentLowIndex = std::max(1, onePercentLowIndex);
 
-		ImGui::Text("Avg: %.2f ms", avg);
-		ImGui::Text("Min: %.2f ms", minFPS);
-		ImGui::Text("Max: %.2f ms", maxFPS);
-		ImGui::Text("1%% Low: %.2f ms", low1);
-		ImGui::Text("0.1%% Low: %.2f ms", low01);
+		const float avg = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + fpsHistorySorted.size(), 0.0f) / static_cast<float>(fpsHistorySorted.size());
+		const float low1 = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + onePercentLowIndex, 0.0f) / static_cast<float>(onePercentLowIndex);
+
+		ImGui::Text("Avg: %.2f FPS", avg);
+		ImGui::Text("Min: %.2f FPS", minFPS);
+		ImGui::Text("Max: %.2f FPS", maxFPS);
+		ImGui::Text("1%% Low: %.2f FPS", low1);
 		
 		// Main body of GPU Metrics Window ends here
 		ImGui::End();
