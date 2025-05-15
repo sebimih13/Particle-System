@@ -405,7 +405,6 @@ namespace VulkanCore {
 
 			particles[i].position = glm::vec2(radius * glm::cos(angle), radius * glm::sin(angle));
 			particles[i].velocity = glm::vec2(0.0f, 0.0f);
-			particles[i].color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 		}
 
 		VkDeviceSize bufferSize = sizeof(Particle) * particleCount;

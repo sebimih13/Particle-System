@@ -119,9 +119,6 @@ namespace VulkanCore {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// TODO: DELETE - demo window
-		ImGui::ShowDemoWindow();
-
 		DrawImGui();
 		ImGui::Render();
 
@@ -399,9 +396,11 @@ namespace VulkanCore {
 		}
 
 		ImGui::Text("GPU used: %s", device.GetName().data());
-		ImGui::Text("Total VRAM used: %s", "TODO"); // TODO: de schimbat in intreg
-		ImGui::Text("GPU Load: %s", "TODO"); // TODO: de schimbat in intreg
-		ImGui::Text("GPU MHz: %s Mhz", "TODO"); // TODO: de schimbat in intreg
+
+		// TODO
+		//ImGui::Text("Total VRAM used: %s", "TODO"); // TODO: de schimbat in intreg
+		//ImGui::Text("GPU Load: %s", "TODO"); // TODO: de schimbat in intreg
+		//ImGui::Text("GPU MHz: %s Mhz", "TODO"); // TODO: de schimbat in intreg
 
 		// FPS Graph
 		static std::vector<float> fpsHistory;
