@@ -5,7 +5,7 @@
 
 namespace VulkanCore {
 
-	Time Now()
+	Time Time::Now()
 	{
         auto now = std::chrono::steady_clock::now();
         return { duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count() };

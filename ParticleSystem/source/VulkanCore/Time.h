@@ -8,6 +8,8 @@ namespace VulkanCore {
     {
         int64_t m_Value = 0;
 
+        static Time Now();
+
         bool IsZero() const { return m_Value == 0; }
         Time operator+(Time rhs) const { return { m_Value + rhs.m_Value }; }
         Time operator-(Time rhs) const { return { m_Value - rhs.m_Value }; }
@@ -20,10 +22,6 @@ namespace VulkanCore {
         bool operator<=(Time rhs) const { return m_Value <= rhs.m_Value; }
         bool operator>=(Time rhs) const { return m_Value >= rhs.m_Value; }
     };
-
-    void InitTime();
-
-    Time Now();
 
     // Use T = float, double
     template<typename T>

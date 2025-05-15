@@ -59,8 +59,7 @@ namespace VulkanCore {
 
 	void Application::Run()
 	{
-		const Time now = Now();
-		time.Start(now);
+		time.Start(Time::Now());
 		FPSCounter::GetInstance().Start(time);
 
 		while (!window.ShouldClose() && bIsRunning)
@@ -94,7 +93,12 @@ namespace VulkanCore {
 
 	void Application::Update()
 	{
-		// Check if we need to reset
+		// Update Delta Time
+		time.NewFrameFromNow(Time::Now());
+		FPSCounter::GetInstance().NewFrame(time);
+		FrameTimeHistory::GetInstance().Post(time.m_DeltaTime_Float);
+
+		// Check if we need to reset the simulation
 		if (ui.GetShouldReset())
 		{
 			Reset();
@@ -109,21 +113,13 @@ namespace VulkanCore {
 		// Update UI
 		ui.Update();
 
-		// TODO: de ce doar 15?
 		// Update the application, only tick once every 15 milliseconds
-		static const uint32_t TICK_MILLIS = 15;
-		const double deltaTime = glfwGetTime() - lastUpdate;
-
-		// TODO: aici sau in if() ???
-		const Time now = Now();
-		time.NewFrameFromNow(now);
-		FPSCounter::GetInstance().NewFrame(time);
-		FrameTimeHistory::GetInstance().Post(static_cast<float>(deltaTime));
-
-		if (deltaTime * 1000.0 >= TICK_MILLIS)
+		static constexpr float TICK_MILLIS = 0.015f; // TODO: suficient doar 15?
+		static float lastTickTime = time.m_Time_Float;
+		if (float deltaTickTime = time.m_Time_Float - lastTickTime; deltaTickTime >= TICK_MILLIS)
 		{
-			Tick(deltaTime);
-			lastUpdate = glfwGetTime();
+			Tick(deltaTickTime);
+			lastTickTime = time.m_Time_Float;
 		}
 	}
 
