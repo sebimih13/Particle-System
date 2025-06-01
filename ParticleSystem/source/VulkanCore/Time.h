@@ -37,6 +37,8 @@ namespace VulkanCore {
     template<typename T>
     Time MillisecondsToTime(T ms);
 
+    float SecondsToMiliseconds(float sec);
+
     // m_AbsoluteStartTime = fetched using Now() or 0 if uninitialized. Every other member is relative to this one
     // Time = time since AbsoluteStartTime
     // DeltaTime = time since previous frame

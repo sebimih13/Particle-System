@@ -85,4 +85,9 @@ namespace VulkanCore {
         ++m_FrameIndex;
     }
 
+    float SecondsToMiliseconds(float sec)
+    {
+        return sec * 1000.0f;
+    }
+
 } // namespace VulkanCore
