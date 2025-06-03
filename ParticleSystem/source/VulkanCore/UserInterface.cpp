@@ -24,9 +24,7 @@ namespace VulkanCore {
 
 	std::unordered_map<std::string, bool> UserInterface::UserDataWindow = {
 		{ "Settings", false },
-		{ "GPU Metrics", false },
-		{ "CPU Metrics", false },
-		{ "RAM Metrics", false }
+		{ "GPU Metrics", false }
 	};
 
 	void UserInterface::HelpMarker(const std::string desc)
@@ -98,18 +96,6 @@ namespace VulkanCore {
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C))
 		{
 			UserDataWindow["GPU Metrics"] = !UserDataWindow["GPU Metrics"];
-		}
-
-		// Toggle CPU Metrics Window - Shortcut
-		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_F))
-		{
-			UserDataWindow["CPU Metrics"] = !UserDataWindow["CPU Metrics"];
-		}
-
-		// Toggle RAM Metrics Window - Shortcut
-		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_R))
-		{
-			UserDataWindow["RAM Metrics"] = !UserDataWindow["RAM Metrics"];
 		}
 	}
 
@@ -253,8 +239,6 @@ namespace VulkanCore {
 
 		// UIs accessible from the "Tools" menu
 		if (UserDataWindow["GPU Metrics"]) { ShowGPUWindow(); }
-		if (UserDataWindow["CPU Metrics"]) { ShowCPUWindow(); }
-		if (UserDataWindow["RAM Metrics"]) { ShowRAMWindow(); }
 	}
 
 	void UserInterface::ShowMainMenuBar()
@@ -270,8 +254,6 @@ namespace VulkanCore {
 			if (ImGui::BeginMenu("Tools"))
 			{
 				ImGui::MenuItem("GPU Metrics", "Ctrl+C", &UserDataWindow["GPU Metrics"]);
-				ImGui::MenuItem("CPU Metrics", "Ctrl+F", &UserDataWindow["CPU Metrics"]);
-				ImGui::MenuItem("RAM Metrics", "Ctrl+R", &UserDataWindow["RAM Metrics"]);
 				ImGui::EndMenu();
 			}
 
@@ -367,15 +349,6 @@ namespace VulkanCore {
 			"Left-click to apply the new changes and reload the simulation with the updated data.\n"
 			"The simulation will refresh to reflect the new settings.\n"
 		);
-
-		// TODO: DELETE
-		// Load new data progress bar
-		//if (bShowProgressBar && ImGui::BeginTooltip())
-		//{
-		//	// TODO: change
-		//	ImGui::ProgressBar(sinf((float)ImGui::GetTime()) * 0.5f + 0.5f, ImVec2(ImGui::GetFontSize() * 25, 0.0f));
-		//	ImGui::EndTooltip();
-		//}
 
 		// Main body of Settings Window ends here
 		ImGui::End();
@@ -484,42 +457,6 @@ namespace VulkanCore {
 		ImGui::Text("1%% Low: %.2f FPS", low1);
 		
 		// Main body of GPU Metrics Window ends here
-		ImGui::End();
-	}
-
-	void UserInterface::ShowCPUWindow()
-	{
-		// We specify a default position/size in case there's no data in the .ini file
-		// TODO: default Window position
-
-		if (!ImGui::Begin("CPU Metrics", &UserDataWindow["CPU Metrics"]))
-		{
-			// Early out if the window is collapsed, as an optimization.
-			ImGui::End();
-			return;
-		}
-
-		// TODO
-
-		// Main body of CPU Metrics Window ends here
-		ImGui::End();
-	}
-
-	void UserInterface::ShowRAMWindow()
-	{
-		// We specify a default position/size in case there's no data in the .ini file
-		// TODO: default Window position
-
-		if (!ImGui::Begin("RAM Metrics", &UserDataWindow["RAM Metrics"]))
-		{
-			// Early out if the window is collapsed, as an optimization.
-			ImGui::End();
-			return;
-		}
-
-		// TODO
-		
-		// Main body of RAM Metrics Window ends here
 		ImGui::End();
 	}
 

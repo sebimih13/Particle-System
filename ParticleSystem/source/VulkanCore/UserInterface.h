@@ -83,7 +83,6 @@ namespace VulkanCore {
 
 		static glm::vec4 DeltaTimeToColor(float deltaTime);
 
-		static ImGuiWindowUserData* FindWindowUserDataByID(ImGuiID id);
 		static ImGuiWindowUserData* CreateNewWindowUserData(const char* name);
 
 		static void* UserData_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name);
@@ -101,8 +100,6 @@ namespace VulkanCore {
 		void ShowMainMenuBar();
 		void ShowSettingsWindow();
 		void ShowGPUWindow();
-		void ShowCPUWindow();
-		void ShowRAMWindow();
 	};
 
 } // namespace VulkanCore
