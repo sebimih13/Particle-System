@@ -1,5 +1,8 @@
 #pragma once
 
+#define DEFAULT_WINDOW_WIDTH 1200
+#define DEFAULT_WINDOW_HEIGHT 800
+
 #include <GLFW/glfw3.h>
 
 #include "glm/glm.hpp"
@@ -42,6 +45,9 @@ namespace VulkanCore {
         void CreateWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
         inline void ResetWindowResizedFlag() { framebufferResized = false; }
+
+        void BlockWindow();
+        void UnblockWindow();
 
         // Getters
         inline GLFWwindow* const GetGLFWWindow() const { return window; }

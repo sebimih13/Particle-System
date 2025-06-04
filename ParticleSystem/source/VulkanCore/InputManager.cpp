@@ -81,6 +81,7 @@ namespace VulkanCore {
 			{
 				// TODO: save + print results
 				benchmarkJSON = std::nullopt;
+				window.UnblockWindow();
 			}
 		}
 		else
@@ -92,8 +93,12 @@ namespace VulkanCore {
 
 	void InputManager::StartBenchmark(const Benchmark& benchmark)
 	{
-		// TODO: forteaza window size
-		// TODO: nu mai ai voie sa misti window
+		if (benchmarkJSON.has_value())
+		{
+			return;
+		}
+
+		window.BlockWindow();
 
 		try
 		{

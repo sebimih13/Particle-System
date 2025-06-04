@@ -56,6 +56,19 @@ namespace VulkanCore {
         }
     }
 
+    void Window::BlockWindow()
+    {
+        glfwSetWindowSize(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+        glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+    }
+
+    void Window::UnblockWindow()
+    {
+        glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_TRUE);
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
+    }
+
     // TODO: de revazut
     int Window::GetWidth() const
     {

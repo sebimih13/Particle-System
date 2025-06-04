@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        VulkanCore::WindowConfiguration WindowConfig(1200, 800, "Vulkan");
+        VulkanCore::WindowConfiguration WindowConfig(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Vulkan");
         VulkanCore::ApplicationConfiguration AppConfig(WindowConfig);
 
         VulkanCore::Application App(AppConfig);
