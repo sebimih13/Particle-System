@@ -25,7 +25,7 @@ namespace VulkanCore {
 
     void FPSCounter::Start(const TimeData& appTime)
     {
-        lastCalcTime = appTime.m_Time;
+        lastCalcTime = appTime.time;
         frameCount = 0.0f;
         FPS = 0.0f;
     }
@@ -33,10 +33,10 @@ namespace VulkanCore {
     void FPSCounter::NewFrame(const TimeData& appTime)
     {
         frameCount += 1.0f;
-        if (appTime.m_Time >= lastCalcTime + calcMinInterval)
+        if (appTime.time >= lastCalcTime + calcMinInterval)
         {
-            FPS = frameCount / TimeToSeconds<float>(appTime.m_Time - lastCalcTime);
-            lastCalcTime = appTime.m_Time;
+            FPS = frameCount / TimeToSeconds<float>(appTime.time - lastCalcTime);
+            lastCalcTime = appTime.time;
             frameCount = 0.0f;
 
             minFPS = std::min(minFPS, FPS);

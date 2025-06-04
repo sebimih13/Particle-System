@@ -17,7 +17,7 @@ namespace VulkanCore {
     template<typename T>
     T TimeToSeconds(Time t)
     {
-        return std::chrono::duration<T>(std::chrono::nanoseconds(t.m_Value)).count();
+        return std::chrono::duration<T>(std::chrono::nanoseconds(t.value)).count();
     }
     template float TimeToSeconds<float>(Time t);
     template double TimeToSeconds<double>(Time t);
@@ -41,7 +41,7 @@ namespace VulkanCore {
     template<typename T>
     T TimeToMilliseconds(Time t)
     {
-        return static_cast<T>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(t.m_Value)).count());
+        return static_cast<T>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(t.value)).count());
     }
 
     //////////////////////////////
@@ -57,32 +57,32 @@ namespace VulkanCore {
     void TimeData::Start(Time now)
     {
         *this = {};
-        m_AbsoluteStartTime = now;
+        absoluteStartTime = now;
     }
 
     void TimeData::NewFrameFromNow(Time now)
     {
         // Cannot be smaller than previous time
-        Time newTime = std::max(now - m_AbsoluteStartTime, m_PreviousTime);
-        m_DeltaTime = newTime - m_Time;
-        m_PreviousTime = m_Time;
-        m_Time = newTime;
-        m_Time_Float = TimeToSeconds<float>(newTime);
-        m_DeltaTime_Float = TimeToSeconds<float>(m_DeltaTime);
-        ++m_FrameIndex;
+        Time newTime = std::max(now - absoluteStartTime, previousTime);
+        deltaTime = newTime - time;
+        previousTime = time;
+        time = newTime;
+        timeFloat = TimeToSeconds<float>(newTime);
+        deltaTimeFloat = TimeToSeconds<float>(deltaTime);
+        ++frameIndex;
     }
 
     void TimeData::NewFrameFromDelta(Time delta)
     {
         // Cannot be smaller than previous time
         delta = std::max(delta, Time{ 0 });
-        Time newTime = m_Time + delta;
-        m_DeltaTime = delta;
-        m_PreviousTime = m_Time;
-        m_Time = newTime;
-        m_Time_Float = TimeToSeconds<float>(newTime);
-        m_DeltaTime_Float = TimeToSeconds<float>(m_DeltaTime);
-        ++m_FrameIndex;
+        Time newTime = time + delta;
+        deltaTime = delta;
+        previousTime = time;
+        time = newTime;
+        timeFloat = TimeToSeconds<float>(newTime);
+        deltaTimeFloat = TimeToSeconds<float>(deltaTime);
+        ++frameIndex;
     }
 
     float SecondsToMiliseconds(float sec)

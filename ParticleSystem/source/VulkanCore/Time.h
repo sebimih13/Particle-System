@@ -6,21 +6,21 @@ namespace VulkanCore {
 
     struct Time
     {
-        int64_t m_Value = 0;
+        int64_t value = 0;
 
         static Time Now();
 
-        bool IsZero() const { return m_Value == 0; }
-        Time operator+(Time rhs) const { return { m_Value + rhs.m_Value }; }
-        Time operator-(Time rhs) const { return { m_Value - rhs.m_Value }; }
-        Time& operator+=(Time rhs) { m_Value += rhs.m_Value; return *this; }
-        Time& operator-=(Time rhs) { m_Value -= rhs.m_Value; return *this; }
-        bool operator==(Time rhs) const { return m_Value == rhs.m_Value; }
-        bool operator!=(Time rhs) const { return m_Value != rhs.m_Value; }
-        bool operator<(Time rhs) const { return m_Value < rhs.m_Value; }
-        bool operator>(Time rhs) const { return m_Value > rhs.m_Value; }
-        bool operator<=(Time rhs) const { return m_Value <= rhs.m_Value; }
-        bool operator>=(Time rhs) const { return m_Value >= rhs.m_Value; }
+        bool IsZero() const { return value == 0; }
+        Time operator+(Time rhs) const { return { value + rhs.value }; }
+        Time operator-(Time rhs) const { return { value - rhs.value }; }
+        Time& operator+=(Time rhs) { value += rhs.value; return *this; }
+        Time& operator-=(Time rhs) { value -= rhs.value; return *this; }
+        bool operator==(Time rhs) const { return value == rhs.value; }
+        bool operator!=(Time rhs) const { return value != rhs.value; }
+        bool operator<(Time rhs) const { return value < rhs.value; }
+        bool operator>(Time rhs) const { return value > rhs.value; }
+        bool operator<=(Time rhs) const { return value <= rhs.value; }
+        bool operator>=(Time rhs) const { return value >= rhs.value; }
     };
 
     // Use T = float, double
@@ -44,13 +44,13 @@ namespace VulkanCore {
     // DeltaTime = time since previous frame
     struct TimeData
     {
-        Time m_AbsoluteStartTime = { 0 };
-        Time m_PreviousTime = { 0 };
-        Time m_Time = { 0 };
-        Time m_DeltaTime = { 0 };
-        float m_Time_Float = 0.f;
-        float m_DeltaTime_Float = 0.f;
-        uint32_t m_FrameIndex = 0;
+        Time absoluteStartTime = { 0 };
+        Time previousTime = { 0 };
+        Time time = { 0 };
+        Time deltaTime = { 0 };
+        float timeFloat = 0.f;
+        float deltaTimeFloat = 0.f;
+        uint32_t frameIndex = 0;
 
         void Start(Time now);
         void NewFrameFromNow(Time now);

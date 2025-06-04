@@ -100,7 +100,7 @@ namespace VulkanCore {
 		// Update Delta Time
 		time.NewFrameFromNow(Time::Now());
 		FPSCounter::GetInstance().NewFrame(time);
-		FrameTimeHistory::GetInstance().Post(time.m_DeltaTime_Float);
+		FrameTimeHistory::GetInstance().Post(time.deltaTimeFloat);
 
 		// Check if we need to reset the simulation
 		if (ui.GetShouldReset())
@@ -115,18 +115,18 @@ namespace VulkanCore {
 		}
 
 		// Update Input Manager
-		inputManager.Update(time.m_DeltaTime_Float);
+		inputManager.Update(time.deltaTimeFloat);
 		
 		// Update UI
 		ui.Update();
 
 		// Update the application, only tick once every 15 milliseconds
 		static constexpr float TICK_MILLIS = 0.015f;
-		static float lastTickTime = time.m_Time_Float;
-		if (float deltaTickTime = time.m_Time_Float - lastTickTime; deltaTickTime >= TICK_MILLIS)
+		static float lastTickTime = time.timeFloat;
+		if (float deltaTickTime = time.timeFloat - lastTickTime; deltaTickTime >= TICK_MILLIS)
 		{
 			Tick(deltaTickTime);
-			lastTickTime = time.m_Time_Float;
+			lastTickTime = time.timeFloat;
 		}
 	}
 
@@ -160,10 +160,6 @@ namespace VulkanCore {
 			currentMouseButtonLeftPressed["value"] = inputManager.GetMouseButtonLeftPressed();
 			currentMouseButtonLeftPressed["time"] = captureInputTimer;
 			captureInputJSON["mouseButtonLeftPressed"].push_back(currentMouseButtonLeftPressed);
-
-			// TODO: DELETE
-			//fout1 << "{ \"x\": " << inputManager.GetMousePosition().x << ", \"y\": " << inputManager.GetMousePosition().y << ", \"time\": " << captureInputTimer << ", \"interpolate\": true" << " }, \n";
-			//fout2 << "{ \"value\": " << (inputManager.GetMouseButtonLeftPressed() ? "true" : "false") << ", \"time\": " << captureInputTimer << " }, \n";
 		}
 		else
 		{
