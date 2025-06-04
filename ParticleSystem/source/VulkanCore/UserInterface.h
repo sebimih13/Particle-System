@@ -52,15 +52,15 @@ namespace VulkanCore {
 		void Draw(VkCommandBuffer commandBuffer);
 
 		void ToggleShouldReset();
+		inline void ResetCaptureInput() { bCaptureInput = false; }
 
+		// Getters
 		bool GetIsUIFocused() const;
 		inline bool GetShouldReset() const { return bShouldReset; }
 		inline bool GetCaptureInput() const { return bCaptureInput; }
 		inline uint32_t GetParticleCount() const { return particleCount; }
 		inline const glm::vec4& GetStaticColor() const { return staticColor; }
 		inline const glm::vec4& GetDynamicColor() const { return dynamicColor; }
-
-		void ResetCaptureInput() { bCaptureInput = false; }
 
 	private:
 		// TODO: DELETE? pentru a testa cat de mult duce GPU-ul

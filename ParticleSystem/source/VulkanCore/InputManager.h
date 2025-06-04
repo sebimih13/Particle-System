@@ -32,6 +32,7 @@ namespace VulkanCore {
 		void Update(float deltaTime);
 		void StartBenchmark(const Benchmark& benchmark);
 
+		// Getters
 		inline const glm::dvec2& GetMousePosition() const { return mousePosition; }
 		inline const bool GetMouseButtonLeftPressed() const { return mouseButtonLeftPressed; }
 		inline const bool GetIsInBenchmark() const { return benchmarkJSON.has_value(); }

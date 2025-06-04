@@ -70,9 +70,6 @@ namespace VulkanCore {
 
     GPUDevice::GPUDevice(Window& window)
         : name("NULL")
-        , maxComputeWorkGroupCount({ 0, 0, 0 })
-        , maxComputeWorkGroupInvocations(0)
-        , maxComputeWorkGroupSize({ 0, 0, 0 })
     {
         CreateInstance();
         SetupDebugMessenger();
@@ -428,18 +425,13 @@ namespace VulkanCore {
         vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
         name = deviceProperties.deviceName;
 
-        // Get Physical Device Limits
-        std::ranges::copy(deviceProperties.limits.maxComputeWorkGroupCount, maxComputeWorkGroupCount.begin());
-        maxComputeWorkGroupInvocations = deviceProperties.limits.maxComputeWorkGroupInvocations;
-        std::ranges::copy(deviceProperties.limits.maxComputeWorkGroupSize, maxComputeWorkGroupSize.begin());
-        
-        // TODO: move in ifdef DEBUG
-        std::cout << "maxComputeWorkGroupCount = [" << maxComputeWorkGroupCount[0] << ", " << maxComputeWorkGroupCount[1] << ", " << maxComputeWorkGroupCount[2] << "]\n";
-        std::cout << "maxComputeWorkGroupInvocations = " << maxComputeWorkGroupInvocations << '\n';
-        std::cout << "maxComputeWorkGroupSize = [" << maxComputeWorkGroupSize[0] << ", " << maxComputeWorkGroupSize[1] << ", " << maxComputeWorkGroupSize[2] << "]\n";
-
 #ifdef DEBUG
-        std::cout << "Selected GPU: " << name << '\n';
+        std::cout << "Selected GPU: " << name << "\n\n";
+
+        // Get Physical Device Limits
+        std::cout << "maxComputeWorkGroupCount = [" << deviceProperties.limits.maxComputeWorkGroupCount[0] << ", " << deviceProperties.limits.maxComputeWorkGroupCount[1] << ", " << deviceProperties.limits.maxComputeWorkGroupCount[2] << "]\n";
+        std::cout << "maxComputeWorkGroupInvocations = " << deviceProperties.limits.maxComputeWorkGroupInvocations << '\n';
+        std::cout << "maxComputeWorkGroupSize = [" << deviceProperties.limits.maxComputeWorkGroupSize[0] << ", " << deviceProperties.limits.maxComputeWorkGroupSize[1] << ", " << deviceProperties.limits.maxComputeWorkGroupSize[2] << "]\n\n";
 
         ListAvailableDeviceExtensions();
 #endif

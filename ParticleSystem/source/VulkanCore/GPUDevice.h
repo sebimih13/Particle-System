@@ -66,14 +66,9 @@ namespace VulkanCore {
         inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }
         inline VkQueue GetComputeQueue() const { return computeQueue; }
         inline VkQueue GetPresentQueue() const { return presentQueue; }
-
         inline const VkFence& GetComputeFence() const { return computeFence; }
         inline const VkFence& GetImageFence() const { return imageFence; }
-
         inline const std::string& GetName() const { return name; }
-        inline const std::array<uint32_t, 3>& GetMaxComputeWorkGroupCount() const { return maxComputeWorkGroupCount; }
-        inline const uint32_t GetMaxComputeWorkGroupInvocations() const { return maxComputeWorkGroupInvocations; }
-        inline const std::array<uint32_t, 3>& GetMaxComputeWorkGroupSize() const { return maxComputeWorkGroupSize; }
 
     private:
         VkInstance instance;
@@ -92,9 +87,6 @@ namespace VulkanCore {
         VkFence computeFence;
 
         std::string name;
-        std::array<uint32_t, 3> maxComputeWorkGroupCount;
-        uint32_t maxComputeWorkGroupInvocations;
-        std::array<uint32_t, 3> maxComputeWorkGroupSize;
 
         static const bool bEnableValidationLayers;
         static const std::vector<const char*> instanceExtensions;
