@@ -36,7 +36,7 @@ namespace VulkanCore {
         void Post(float deltaTime);
 
     private:
-        static constexpr size_t CAPACITY = 1024;
+        static constexpr size_t CAPACITY = 4096;
 
         size_t back;
         size_t front;

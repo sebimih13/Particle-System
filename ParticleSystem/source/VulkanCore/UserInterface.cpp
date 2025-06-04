@@ -62,7 +62,6 @@ namespace VulkanCore {
 		, bShowMainMenuBar(true)
 		, bShouldReset(false)
 		, bCaptureInput(false)
-		, bInBenchmark(false)
 		, particleCount(131072 * 64)
 		, staticColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 		, dynamicColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
@@ -361,7 +360,7 @@ namespace VulkanCore {
 		);
 
 		// Apply Button
-		if (ImGui::Button("Apply"))
+		if (ImGui::Button("Apply") && !inputManager.GetIsInBenchmark())
 		{
 			ToggleShouldReset();
 		}
@@ -415,7 +414,7 @@ namespace VulkanCore {
 			constexpr float minHeight = 2.0f;
 			constexpr float maxHeight = 64.0f;
 
-			constexpr float minDT = 1.0f / 120.0f;	// TODO: modifica MAX_FPS
+			constexpr float minDT = 1.0f / 120.0f;
 			constexpr float maxDT = 1.0f / 15.0f;
 			
 			const float log2MinDT = log2(minDT);
@@ -447,29 +446,26 @@ namespace VulkanCore {
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(width - 100.0f, maxHeight));
 		}
-
-		// TODO
-		static float minFPS = std::numeric_limits<float>::max();
-		static float maxFPS = std::numeric_limits<float>::min();
-		if (FPSCounter::GetInstance().GetFPS() != 0.0f)
-		{
-			minFPS = std::min(minFPS, FPSCounter::GetInstance().GetFPS());
-			maxFPS = std::max(maxFPS, FPSCounter::GetInstance().GetFPS());
-
-		}
 		
 		std::vector<float> fpsHistorySorted = fpsHistory;
 		std::sort(fpsHistorySorted.begin(), fpsHistorySorted.end());
 		int onePercentLowIndex= static_cast<int>(0.01f * fpsHistorySorted.size());
 		onePercentLowIndex = std::max(1, onePercentLowIndex);
 
-		const float avg = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + fpsHistorySorted.size(), 0.0f) / static_cast<float>(fpsHistorySorted.size());
-		const float low1 = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + onePercentLowIndex, 0.0f) / static_cast<float>(onePercentLowIndex);
+		const float avgFPS = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + fpsHistorySorted.size(), 0.0f) / static_cast<float>(fpsHistorySorted.size());
+		const float low1FPS = std::accumulate(fpsHistorySorted.begin(), fpsHistorySorted.begin() + onePercentLowIndex, 0.0f) / static_cast<float>(onePercentLowIndex);
 
-		ImGui::Text("Avg: %.2f FPS", avg);
-		ImGui::Text("Min: %.2f FPS", minFPS);
-		ImGui::Text("Max: %.2f FPS", maxFPS);
-		ImGui::Text("1%% Low: %.2f FPS", low1);
+		ImGui::Text("Avg FPS: %.2f", avgFPS);
+		ImGui::Text("Min FPS: %.2f", FPSCounter::GetInstance().GetMinFPS());
+		ImGui::Text("Max FPS: %.2f", FPSCounter::GetInstance().GetMaxFPS());
+		ImGui::Text("1%% Low: %.2f", low1FPS);
+
+		// Reset Button
+		if (ImGui::Button("Reset") && !inputManager.GetIsInBenchmark())
+		{
+			FrameTimeHistory::GetInstance().Reset();
+			FPSCounter::GetInstance().Reset();
+		}
 		
 		// Main body of GPU Metrics Window ends here
 		ImGui::End();
@@ -491,7 +487,7 @@ namespace VulkanCore {
 		};
 
 		constexpr float dts[] = {
-			1.0f / 120.0f, // TODO: MAX_FRAME
+			1.0f / 120.0f,
 			1.0f / 60.0f,
 			1.0f / 30.0f,
 			1.0f / 15.0f,

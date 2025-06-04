@@ -14,15 +14,24 @@ namespace VulkanCore {
 
         void Start(const TimeData& appTime);
         void NewFrame(const TimeData& appTime);
-        float GetFPS() const { return m_FPS; }
+        void Reset();
+
+        // Getters
+        float GetFPS() const { return FPS; }
+        float GetMinFPS() const { return minFPS; }
+        float GetMaxFPS() const { return maxFPS; }
+        float GetAvgFPS() const { return avgFPS; }
 
     private:
         static constexpr uint32_t CALC_MIN_INTERVAL_MILLISECONDS = 500;
 
-        Time m_CalcMinInterval = { 0 };
-        Time m_LastCalcTime = { 0 };
-        float m_FrameCount = 0.0f;
-        float m_FPS = 0.0f;
+        Time calcMinInterval;
+        Time lastCalcTime;
+        float frameCount;
+        float FPS;
+        float minFPS;
+        float maxFPS;
+        float avgFPS;
     };
 
 } // namespace VulkanCore

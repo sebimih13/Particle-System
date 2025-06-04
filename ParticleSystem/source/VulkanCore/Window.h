@@ -60,8 +60,6 @@ namespace VulkanCore {
 
         bool framebufferResized;
 
-        glm::vec2 mousePosition;
-
         // Callbacks
         static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
     };

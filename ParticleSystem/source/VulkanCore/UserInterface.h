@@ -77,7 +77,6 @@ namespace VulkanCore {
 		bool bShowMainMenuBar;
 		bool bShouldReset;
 		bool bCaptureInput;
-		bool bInBenchmark;
 
 		uint32_t particleCount;
 		glm::vec4 staticColor;

@@ -23,7 +23,7 @@ namespace VulkanCore {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
-        glfwSetWindowPos(window, 350, 150);     // TODO: de pus in WindowConfiguration?
+        glfwSetWindowPos(window, 350, 150);
 
         // Set GLFW callbacks
         glfwSetWindowUserPointer(window, this);
@@ -59,6 +59,7 @@ namespace VulkanCore {
     void Window::BlockWindow()
     {
         glfwSetWindowSize(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+        glfwSetWindowPos(window, 350, 150);
         glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
         glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
     }

@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "Time.h"
+#include "FrameTimeHistory.h"
 
 namespace VulkanCore {
 
@@ -99,6 +100,7 @@ namespace VulkanCore {
 		}
 
 		window.BlockWindow();
+		FrameTimeHistory::GetInstance().Reset();
 
 		try
 		{
