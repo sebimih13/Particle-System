@@ -28,6 +28,7 @@ namespace VulkanCore {
 
 	Application::Application(const ApplicationConfiguration& config)
 		: window(config.windowConfig)
+		, inputManager(window)
 		, device(window)
 		, renderer(window, device)
 		, ui(window, device, renderer)
@@ -65,6 +66,7 @@ namespace VulkanCore {
 		while (!window.ShouldClose() && bIsRunning)
 		{
 			window.Update();
+			inputManager.Update();
 
 			// Empty submission
 			renderer.SyncNewFrame();
@@ -125,21 +127,15 @@ namespace VulkanCore {
 
 	void Application::Tick(const double& deltaTime)
 	{
-		// Tick the application state based on the wall-clock time since the last tick
-		// deltaTime seconds since last frame
-
-		// TODO: doar test
-		double xPosMouse, yPosMouse;
-		glfwGetCursorPos(window.GetGLFWWindow(), &xPosMouse, &yPosMouse);
+		// Tick the application state based on the wall-clock time since the last tick deltaTime seconds since last frame
 		const float world_width = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
-		const bool mouseButtonLeftPressed = glfwGetMouseButton(window.GetGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? true : false;
 
 		// Update Push-Constants
 		PushConstants pushConstantsData = {};
-		pushConstantsData.enabled = (!ui.GetIsUIFocused() && mouseButtonLeftPressed) ? 1 : 0;
+		pushConstantsData.enabled = (!ui.GetIsUIFocused() && inputManager.getMouseButtonLeftPressed()) ? 1 : 0;
 		pushConstantsData.attractor = glm::vec2(
-			glm::mix(-world_width, world_width, xPosMouse / window.GetWidth()),
-			glm::mix(1.0f, -1.0f, yPosMouse / window.GetHeight())
+			glm::mix(-world_width, world_width, inputManager.getMousePosition().x / window.GetWidth()),
+			glm::mix(1.0f, -1.0f, inputManager.getMousePosition().y / window.GetHeight())
 		);
 		pushConstantsData.timestep = static_cast<float>(deltaTime);				// TODO: DOODLE update
 

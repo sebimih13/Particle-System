@@ -6,6 +6,7 @@
 
 // TODO: Forward Declarations
 #include "Window.h"
+#include "InputManager.h"
 #include "GPUDevice.h"
 #include "Renderer.h"
 #include "Descriptor.h"
@@ -56,6 +57,7 @@ namespace VulkanCore {
 
     private:
         Window window;
+        InputManager inputManager;
         GPUDevice device;
         Renderer renderer;
         UserInterface ui;
