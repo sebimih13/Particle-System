@@ -1,0 +1,23 @@
+{
+  "mousePosition": [
+    { "x": 10.0, "y": 50.0,     "time": 0.0,  "interpolate": false },
+    { "x": 10.0, "y": 50.0,     "time": 3.0,  "interpolate": false },
+    { "x": 1150.0, "y": 50.0,   "time": 8.0,  "interpolate": true },
+    { "x": 1150.0, "y": 750.0,  "time": 13.0,  "interpolate": true },
+    { "x": 10.0, "y": 750.0,    "time": 18.0, "interpolate": true },
+    { "x": 600.0, "y": 400.0,   "time": 23.0, "interpolate": true },
+
+    { "x": 10.0, "y": 50.0,     "time": 25.0,  "interpolate": false },
+    { "x": 1150.0, "y": 750.0,  "time": 36.0,  "interpolate": false }
+  ],
+
+  "mouseButtonLeftPressed": [
+    { "value": false, "time": 0.0 },
+    { "value": true,  "time": 1.0 },
+    { "value": false, "time": 24.0 },
+    { "value": true,  "time": 26.0 },
+    { "value": false, "time": 35.0 },
+    { "value": true,  "time": 36.0 },
+    { "value": false, "time": 50.0 }
+  ]
+}

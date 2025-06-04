@@ -13,7 +13,8 @@ project "ParticleSystem"
         "**.hpp",
         "**.vert", 
         "**.frag",
-        "**.comp"
+        "**.comp",
+        "**.json"
     }
 
     includedirs
@@ -23,6 +24,7 @@ project "ParticleSystem"
         "%{IncludeDir.glm}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.stb}",
+        "%{IncludeDir.json}",
         "%{IncludeDir.tinyobjloader}"
     }
 

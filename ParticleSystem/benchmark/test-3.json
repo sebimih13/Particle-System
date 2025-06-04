@@ -1,0 +1,26 @@
+{
+  "mousePosition": [
+    { "x": 0.0, "y": 400.0,     "time": 0.0,    "interpolate": false },
+    { "x": 0.0, "y": 400.0,     "time": 1.0,    "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 4.0,    "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 6.0,    "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 8.0,    "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 10.0,    "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 12.0,    "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 14.0,    "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 16.0,    "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 18.0,    "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 20.0,   "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 22.0,   "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 24.0,   "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 25.0,   "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 26.0,   "interpolate": true },
+    { "x": 0.0, "y": 400.0,     "time": 27.0,   "interpolate": true },
+    { "x": 1200.0, "y": 400.0,  "time": 28.0,   "interpolate": true }
+  ],
+
+  "mouseButtonLeftPressed": [
+    { "value": false, "time": 0.0 },
+    { "value": true,  "time": 1.0 }
+  ]
+}

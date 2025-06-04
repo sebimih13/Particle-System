@@ -40,6 +40,9 @@ jobs:
         mkdir -p ${{ env.ZIP_NAME }}/shaders
         cp -r ${{ env.PROJECT_NAME }}/shaders/*.spv ${{ env.ZIP_NAME }}/shaders/
 
+        mkdir -p ${{ env.ZIP_NAME }}/benchmark
+        cp -r ${{ env.PROJECT_NAME }}/benchmark/*.json ${{ env.ZIP_NAME }}/benchmark/
+
         cp -r ${{ env.PROJECT_NAME }}/resources/ ${{ env.ZIP_NAME }}/
 
         ls -la ${{ env.ZIP_NAME }}

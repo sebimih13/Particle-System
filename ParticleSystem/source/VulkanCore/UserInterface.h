@@ -9,6 +9,8 @@
 #include "GPUDevice.h"
 #include "Renderer.h"
 #include "Descriptor.h"
+#include "InputManager.h"
+#include "Benchmark.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -33,7 +35,7 @@ namespace VulkanCore {
 		static ImChunkStream<ImGuiWindowUserData>  UserDataWindows;
 
 		// Constructors
-		UserInterface(Window& window, GPUDevice& device, Renderer& renderer);
+		UserInterface(Window& window, InputManager& inputManager, GPUDevice& device, Renderer& renderer);
 
 		// Destructor
 		~UserInterface();
@@ -53,9 +55,12 @@ namespace VulkanCore {
 
 		bool GetIsUIFocused() const;
 		inline bool GetShouldReset() const { return bShouldReset; }
+		inline bool GetCaptureInput() const { return bCaptureInput; }
 		inline uint32_t GetParticleCount() const { return particleCount; }
 		inline const glm::vec4& GetStaticColor() const { return staticColor; }
 		inline const glm::vec4& GetDynamicColor() const { return dynamicColor; }
+
+		void ResetCaptureInput() { bCaptureInput = false; }
 
 	private:
 		// TODO: DELETE? pentru a testa cat de mult duce GPU-ul
@@ -63,6 +68,7 @@ namespace VulkanCore {
 		static std::unordered_map<std::string, bool> UserDataWindow;
 
 		Window& window;
+		InputManager& inputManager;
 		GPUDevice& device;
 		Renderer& renderer;
 
@@ -70,6 +76,8 @@ namespace VulkanCore {
 
 		bool bShowMainMenuBar;
 		bool bShouldReset;
+		bool bCaptureInput;
+		bool bInBenchmark;
 
 		uint32_t particleCount;
 		glm::vec4 staticColor;
@@ -100,6 +108,7 @@ namespace VulkanCore {
 		void ShowMainMenuBar();
 		void ShowSettingsWindow();
 		void ShowGPUWindow();
+		void StartBenchmark(const Benchmark benchmark);
 	};
 
 } // namespace VulkanCore

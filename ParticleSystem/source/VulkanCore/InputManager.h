@@ -1,9 +1,14 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
+#include <optional>
+
+#include <nlohmann/json.hpp>
 
 // TODO: Forward Declarations
 #include "Window.h"
+#include "Benchmark.h"
 
 namespace VulkanCore {
 
@@ -24,16 +29,26 @@ namespace VulkanCore {
 		InputManager(InputManager&&) = delete;
 		InputManager& operator = (InputManager&&) = delete;
 
-		void Update();
+		void Update(float deltaTime);
+		void StartBenchmark(const Benchmark& benchmark);
 
-		inline const glm::dvec2& getMousePosition() const { return mousePosition; }
-		inline const bool& getMouseButtonLeftPressed() const { return mouseButtonLeftPressed; }
+		inline const glm::dvec2& GetMousePosition() const { return mousePosition; }
+		inline const bool& GetMouseButtonLeftPressed() const { return mouseButtonLeftPressed; }
 
 	private:
 		Window& window;
+		std::optional<nlohmann::json> benchmarkJSON;
 
 		glm::dvec2 mousePosition;
 		bool mouseButtonLeftPressed;
+
+		float timer;
+		size_t mousePositionIndex;
+		size_t mouseButtonLeftPressedIndex;
+
+		const static std::unordered_map<Benchmark, std::string> benchmarkToFileName;
+
+		nlohmann::json LoadJSONBenchmarkTest(const std::string& fileName) const;
 	};
 
 } // namespace VulkanCore

@@ -54,12 +54,15 @@ namespace VulkanCore {
 	}
 #endif // DEBUG
 
-	UserInterface::UserInterface(Window& window, GPUDevice& device, Renderer& renderer)
+	UserInterface::UserInterface(Window& window, InputManager& inputManager, GPUDevice& device, Renderer& renderer)
 		: window(window)
+		, inputManager(inputManager)
 		, device(device)
 		, renderer(renderer)
 		, bShowMainMenuBar(true)
 		, bShouldReset(false)
+		, bCaptureInput(false)
+		, bInBenchmark(false)
 		, particleCount(131072 * 64)
 		, staticColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
 		, dynamicColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
@@ -96,6 +99,12 @@ namespace VulkanCore {
 		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C))
 		{
 			UserDataWindow["GPU Metrics"] = !UserDataWindow["GPU Metrics"];
+		}
+
+		// Toggle Capture Input Command - Shortcut
+		if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_R))
+		{
+			bCaptureInput = !bCaptureInput;
 		}
 	}
 
@@ -254,6 +263,17 @@ namespace VulkanCore {
 			if (ImGui::BeginMenu("Tools"))
 			{
 				ImGui::MenuItem("GPU Metrics", "Ctrl+C", &UserDataWindow["GPU Metrics"]);
+				ImGui::MenuItem("Capture Input", "Ctrl+R", &bCaptureInput);
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Benchmark"))
+			{
+				if (ImGui::MenuItem("Test 1", nullptr, nullptr)) { StartBenchmark(Benchmark::Test1); }
+				if (ImGui::MenuItem("Test 2", nullptr, nullptr)) { StartBenchmark(Benchmark::Test2); }
+				if (ImGui::MenuItem("Test 3", nullptr, nullptr)) { StartBenchmark(Benchmark::Test3); }
+				if (ImGui::MenuItem("Test 4", nullptr, nullptr)) { StartBenchmark(Benchmark::Test4); }
+				if (ImGui::MenuItem("Test 5", nullptr, nullptr)) { StartBenchmark(Benchmark::Test5); }
 				ImGui::EndMenu();
 			}
 
@@ -370,11 +390,6 @@ namespace VulkanCore {
 
 		ImGui::Text("GPU used: %s", device.GetName().data());
 
-		// TODO
-		//ImGui::Text("Total VRAM used: %s", "TODO"); // TODO: de schimbat in intreg
-		//ImGui::Text("GPU Load: %s", "TODO"); // TODO: de schimbat in intreg
-		//ImGui::Text("GPU MHz: %s Mhz", "TODO"); // TODO: de schimbat in intreg
-
 		// FPS Graph
 		static std::vector<float> fpsHistory;
 		const uint32_t maxFpsHistory = 240; // TODO
@@ -458,6 +473,12 @@ namespace VulkanCore {
 		
 		// Main body of GPU Metrics Window ends here
 		ImGui::End();
+	}
+
+	void UserInterface::StartBenchmark(const Benchmark benchmark)
+	{
+		bShowMainMenuBar = false;
+		inputManager.StartBenchmark(benchmark);
 	}
 
 	glm::vec4 UserInterface::DeltaTimeToColor(float deltaTime)

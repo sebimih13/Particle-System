@@ -68,6 +68,9 @@ namespace VulkanCore {
         double lastUpdate;
         TimeData time;
 
+        nlohmann::json captureInputJSON;
+        float captureInputTimer;
+
         // Particle System Descriptors
         std::unique_ptr<DescriptorPool> particleSystemDescriptorPool;
 
@@ -91,7 +94,7 @@ namespace VulkanCore {
         // Texture statueTexture;
 
         void Update();
-        void Tick(const double& deltaTime);
+        void Tick(const float deltaTime);
         void Draw();
 
         void CreateDescriptorPool();

@@ -11,6 +11,7 @@
 #include <random>
 #include <ctime>
 #include <iostream>
+#include <fstream> // TODO: delete
 
 // TODO: test
 #include "Model.h"
@@ -31,10 +32,11 @@ namespace VulkanCore {
 		, inputManager(window)
 		, device(window)
 		, renderer(window, device)
-		, ui(window, device, renderer)
+		, ui(window, inputManager, device, renderer)
 		, bIsRunning(true)
 		, particleCount(131072 * 64)
 		, lastUpdate(0.0)
+		, captureInputTimer(0.0f)
 		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
 	{
 		lastUpdate = glfwGetTime();
@@ -54,6 +56,7 @@ namespace VulkanCore {
 
 	Application::~Application()
 	{
+		// Cleanup
 		CleanupUniformBuffer();
 		CleanupShaderStorageBuffer();
 	}
@@ -66,7 +69,6 @@ namespace VulkanCore {
 		while (!window.ShouldClose() && bIsRunning)
 		{
 			window.Update();
-			inputManager.Update();
 
 			// Empty submission
 			renderer.SyncNewFrame();
@@ -111,12 +113,15 @@ namespace VulkanCore {
 		{
 			UpdateUniformBuffer();
 		}
+
+		// Update Input Manager
+		inputManager.Update(time.m_DeltaTime_Float);
 		
 		// Update UI
 		ui.Update();
 
 		// Update the application, only tick once every 15 milliseconds
-		static constexpr float TICK_MILLIS = 0.015f; // TODO: suficient doar 15?
+		static constexpr float TICK_MILLIS = 0.015f;
 		static float lastTickTime = time.m_Time_Float;
 		if (float deltaTickTime = time.m_Time_Float - lastTickTime; deltaTickTime >= TICK_MILLIS)
 		{
@@ -125,19 +130,59 @@ namespace VulkanCore {
 		}
 	}
 
-	void Application::Tick(const double& deltaTime)
+	// Tick the application state based on the wall-clock time since the last tick deltaTime seconds since last frame
+	void Application::Tick(const float deltaTime)
 	{
-		// Tick the application state based on the wall-clock time since the last tick deltaTime seconds since last frame
+		// Capture Input
+		static bool wasCapturingInput = false;
+		if (ui.GetCaptureInput())
+		{
+			if (!wasCapturingInput)
+			{
+				captureInputTimer = 0.0f;
+				wasCapturingInput = true;
+			}
+
+			captureInputTimer += deltaTime;
+			if (captureInputTimer > std::numeric_limits<double>::max())
+			{
+				ui.ResetCaptureInput();
+			}
+
+			nlohmann::json currentMousePosition;
+			currentMousePosition["x"] = inputManager.GetMousePosition().x;
+			currentMousePosition["y"] = inputManager.GetMousePosition().y;
+			currentMousePosition["time"] = captureInputTimer;
+			currentMousePosition["interpolate"] = true;
+			captureInputJSON["mousePosition"].push_back(currentMousePosition);
+
+			nlohmann::json currentMouseButtonLeftPressed;
+			currentMouseButtonLeftPressed["value"] = inputManager.GetMouseButtonLeftPressed();
+			currentMouseButtonLeftPressed["time"] = captureInputTimer;
+			captureInputJSON["mouseButtonLeftPressed"].push_back(currentMouseButtonLeftPressed);
+
+			// TODO: DELETE
+			//fout1 << "{ \"x\": " << inputManager.GetMousePosition().x << ", \"y\": " << inputManager.GetMousePosition().y << ", \"time\": " << captureInputTimer << ", \"interpolate\": true" << " }, \n";
+			//fout2 << "{ \"value\": " << (inputManager.GetMouseButtonLeftPressed() ? "true" : "false") << ", \"time\": " << captureInputTimer << " }, \n";
+		}
+		else
+		{
+			std::ofstream fout("captured-input.json");
+			fout << captureInputJSON.dump(4);
+			fout.close();
+			wasCapturingInput = false;
+		}
+
 		const float world_width = static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight());
 
 		// Update Push-Constants
 		PushConstants pushConstantsData = {};
-		pushConstantsData.enabled = (!ui.GetIsUIFocused() && inputManager.getMouseButtonLeftPressed()) ? 1 : 0;
+		pushConstantsData.enabled = (!ui.GetIsUIFocused() && inputManager.GetMouseButtonLeftPressed()) ? 1 : 0;
 		pushConstantsData.attractor = glm::vec2(
-			glm::mix(-world_width, world_width, inputManager.getMousePosition().x / window.GetWidth()),
-			glm::mix(1.0f, -1.0f, inputManager.getMousePosition().y / window.GetHeight())
+			glm::mix(-world_width, world_width, inputManager.GetMousePosition().x / window.GetWidth()),
+			glm::mix(1.0f, -1.0f, inputManager.GetMousePosition().y / window.GetHeight())
 		);
-		pushConstantsData.timestep = static_cast<float>(deltaTime);				// TODO: DOODLE update
+		pushConstantsData.timestep = deltaTime;
 
 		// Compute submission
 		if (VkCommandBuffer commandBuffer = renderer.BeginCompute())

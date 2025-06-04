@@ -46,6 +46,9 @@ jobs:
         mkdir -p "${{ env.ZIP_NAME }}\shaders"
         xcopy ${{ env.PROJECT_NAME }}\shaders\*.spv "${{ env.ZIP_NAME }}\shaders" /E /H
 
+        mkdir -p "${{ env.ZIP_NAME }}\benchmark"
+        xcopy ${{ env.PROJECT_NAME }}\benchmark\*.json "${{ env.ZIP_NAME }}\benchmark" /E /H
+
         mkdir -p "${{ env.ZIP_NAME }}\resources"
         xcopy ${{ env.PROJECT_NAME }}\resources\ "${{ env.ZIP_NAME }}\resources" /E /H
 

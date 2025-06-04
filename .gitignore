@@ -421,3 +421,6 @@ vendor/VulkanSDK/
 
 # Ignore imgui.ini
 imgui.ini
+
+# Ignore captured-input.json
+captured-input.json

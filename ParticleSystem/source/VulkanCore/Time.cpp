@@ -43,6 +43,8 @@ namespace VulkanCore {
     {
         return static_cast<T>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(t.m_Value)).count());
     }
+    template float TimeToSeconds<float>(Time t);
+    template double TimeToSeconds<double>(Time t);
 
     //////////////////////////////
     // MillisecondsToTime

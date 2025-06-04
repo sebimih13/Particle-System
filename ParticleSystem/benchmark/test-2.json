@@ -1,0 +1,34 @@
+{
+  "mousePosition": [
+    { "x": 600.0, "y": 400.0,   "time": 0.0, "interpolate": false },
+    { "x": 600.0, "y": 400.0,   "time": 0.0, "interpolate": false }
+  ],
+
+  "mouseButtonLeftPressed": [
+    { "value": false, "time": 0.0 },
+    { "value": true,  "time": 1.0 },
+    { "value": false,  "time": 2.0 },
+    { "value": true,  "time": 3.0 },
+    { "value": false,  "time": 4.0 },
+    { "value": true,  "time": 4.5 },
+    { "value": false,  "time": 5.5 },
+    { "value": true,  "time": 6.0 },
+    { "value": false,  "time": 6.5 },
+    { "value": true,  "time": 7.0 },
+    { "value": false,  "time": 7.2 },
+    { "value": true,  "time": 7.4 },
+    { "value": false,  "time": 7.6 },
+    { "value": true,  "time": 7.8 },
+    { "value": false,  "time": 8.0 },
+    { "value": true,  "time": 12.0 },
+    { "value": false,  "time": 16.0 },
+    { "value": true,  "time": 20.0 },
+    { "value": false,  "time": 22.0 },
+    { "value": true,  "time": 22.1 },
+    { "value": false,  "time": 22.2 },
+    { "value": true,  "time": 22.3 },
+    { "value": false,  "time": 22.4 },
+    { "value": true,  "time": 22.5 },
+    { "value": false,  "time": 23.0 }
+  ]
+}
