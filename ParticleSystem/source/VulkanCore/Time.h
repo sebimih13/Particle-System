@@ -39,7 +39,7 @@ namespace VulkanCore {
 
     float SecondsToMiliseconds(float sec);
 
-    // m_AbsoluteStartTime = fetched using Now() or 0 if uninitialized. Every other member is relative to this one
+    // absoluteStartTime = fetched using Now() or 0 if uninitialized. Every other member is relative to this one
     // Time = time since AbsoluteStartTime
     // DeltaTime = time since previous frame
     struct TimeData

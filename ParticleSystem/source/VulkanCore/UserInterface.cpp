@@ -442,7 +442,7 @@ namespace VulkanCore {
 				endX = begX;
 			}
 
-			ImGui::Text("Frame time: %.2f ms", SecondsToMiliseconds(FrameTimeHistory::GetInstance().GetEntry(0).deltaTime));
+			ImGui::Text("Frame time: %.2f ms", SecondsToMiliseconds(1.0f / FPSCounter::GetInstance().GetFPS()));
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(width - 100.0f, maxHeight));
 		}

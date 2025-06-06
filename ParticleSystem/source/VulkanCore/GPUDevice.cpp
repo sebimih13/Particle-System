@@ -668,7 +668,7 @@ namespace VulkanCore {
 
     QueueFamilyIndices GPUDevice::FindQueueFamilies(VkPhysicalDevice device) const
     {
-        QueueFamilyIndices indices = {}; // TODO: salveaza asta undeva, de ce sa fac find de de 4 ori?
+        QueueFamilyIndices indices = {};
 
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
