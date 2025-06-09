@@ -34,7 +34,7 @@ namespace VulkanCore {
 		, renderer(window, device)
 		, ui(window, inputManager, device, renderer)
 		, bIsRunning(true)
-		, particleCount(131072 * 64)
+		, particleCount(131072 * 64) // 8_388_608
 		, lastUpdate(0.0)
 		, captureInputTimer(0.0f)
 		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
@@ -297,7 +297,7 @@ namespace VulkanCore {
 			
 		particleSystemDescriptorPool = DescriptorPool::Builder(device)
 			.SetMaxSets(20 * SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 * SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// uniform buffer
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 20 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// x2 storage buffers
 			.Build();
 	}

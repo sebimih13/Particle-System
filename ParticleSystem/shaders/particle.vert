@@ -32,5 +32,5 @@ void main()
     vertColor = mix(ubo.staticColor, ubo.dynamicColor, intensity);
     
     gl_Position = ubo.projection * vec4(vertex.position, 0.0, 1.0);
-    gl_PointSize = 1.0; // TODO: delete?
+    gl_PointSize = 1.0;
 }
