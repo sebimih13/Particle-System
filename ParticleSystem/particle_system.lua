@@ -53,10 +53,45 @@ project "ParticleSystem"
     -- TODO: only the files existing at the time of executing this script will be considered
     --       any new addition will be ignored, so you have to run again generate_project script
 
+    -- Copy benchmark tests for Windows
+    filter { "files:benchmark/**.json", "system:windows" }
+        -- A message to display while this build step is running (optional)
+        buildmessage 'ParticleSystem: Copy benchmark %{file.name}'
+
+        -- One or more commands to run (required)
+        buildcommands
+        {
+            '{COPYFILE} "%{file.relpath}" "%{cfg.targetdir}/benchmark/"'
+        }
+
+        -- One or more outputs resulting from the build (required)
+        buildoutputs
+        { 
+            '%{cfg.targetdir}/benchmark/%{file.name}'
+        }
+
+    -- Copy benchmark tests for Linux
+    filter { "files:benchmark/**.json", "system:linux" }
+        -- A message to display while this build step is running (optional)
+        buildmessage 'ParticleSystem: Copy benchmark %{file.name}'
+
+        -- One or more commands to run (required)
+        buildcommands
+        {
+            'mkdir -p "%{cfg.targetdir}/benchmark" && cp "%{file.relpath}" "%{cfg.targetdir}/benchmark/"'
+        }
+
+        -- One or more outputs resulting from the build (required)
+        buildoutputs
+        { 
+            '%{cfg.targetdir}/benchmark/%{file.name}'
+        }
+
+
     -- prebuild command to automatically compile .vert/.frag/.comp files for Windows
     filter { "files:**.vert or **.frag or **.comp", "system:windows" }
         -- A message to display while this build step is running (optional)
-        buildmessage 'Compiling %{file.name}'
+        buildmessage 'ParticleSystem: Compiling %{file.name}'
 
         -- One or more commands to run (required)
         buildcommands 
@@ -75,7 +110,7 @@ project "ParticleSystem"
     -- prebuild command to automatically compile .vert/.frag/.comp files for Linux
     filter { "files:**.vert or **.frag or **.comp", "system:linux" }
         -- A message to display while this build step is running (optional)
-        buildmessage 'Compiling %{file.name}'
+        buildmessage 'ParticleSystem: Compiling %{file.name}'
 
         -- One or more commands to run (required)
         buildcommands 
