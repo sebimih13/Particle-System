@@ -1,0 +1,57 @@
+\chapter{Introducere}
+
+% Motivație
+% Contribuții originale în realizarea lucrării și motivații
+% ============================================================================================================
+\section{Contribuția proprie, obiective și motivații}
+% ============================================================================================================
+În prezent, una dintre cele mai mari provocări în domeniul graficii pe calculator este crearea unor soluții eficiente pentru a afișa în timp real un volum mare de informații, fără a compromite calitatea vizuală, fluiditatea sau timpul de răspuns al sistemului software. În industria filmelor și a animațiilor 2D/3D, unde timpul de execuție nu este o problemă critică, procesul poate dura zeci de ore sau zile \cite{Pixar-Animation-Rendering_citation}. Efectele vizuale și simulările din astfel de produse folosesc unități de calcul extrem de puternice pentru a putea construi rezultate cât mai realist posibil, cu o înaltă fidelitate vizuală. Accentul este pus pe calitatea finală a imaginii, iar timpul de procesare nu reprezintă o constrângere majoră ce trebuie luată în calcul. Pe de cealaltă parte, în aplicațiile interactive care necesită \textit{Real-Time Rendering}, cum ar fi jocurile video sau simulările, abordările de acest tip nu sunt deloc fezabile. Astfel de cazuri necesită o abordare diferită și mai atentă: se caută soluții care pot aproxima cu acuratețe rezultatele unor astfel de calcule costisitoare, menținând, în același timp, o performanță optimă, cu o rată de cadre pe secundă stabilă, pentru a putea oferi utilizatorilor o experiență cât mai fluidă și mai apropiată de realitate. 
+
+În cadrul acestei lucrări, contribuția mea principală constă în dezvoltarea unei aplicații care abordează această problemă, explorând o metodă de rendering accelerată, concentrându-se pe procesarea unui volum mare de date, menținând, în același timp, o experiență fluidă și realistă. Ca studiu de caz, am ales să implementez un sistem de particule modern, deoarece acestea sunt ideale pentru simularea și afișarea unui număr mare de entități dinamice, cum ar fi focul, fumul sau apa. Un astfel de sistem implică gestionarea a milioane de elemente care interacționează în mod continuu. Aplicația oferă un cadru și o platformă flexibilă pentru testarea tehnicilor de optimizare, axându-se pe utilizarea funcționalităților hardware-ului modern, în special pe proprietatea de a diviza și de a distribui pe cât este posibil munca computațională. În dezvoltarea acestui simulator, m-am bazat pe concepte validate în literatura de specialitate sau în aplicații grafice anterioare, dar am adaptat și extins aceste idei pentru un API grafic modern, valorificând noile funcționalități și capabilități, cu accent pe paralelizare, minimizarea transferurilor CPU-GPU (unitatea centrală de procesare - unitatea de procesare grafică) și optimizarea utilizării memoriei. 
+
+Motivul alegerii acestui subiect derivă din dorința de a maximiza performanța și de a utiliza capacitățile plăcilor video la potențialul lor maxim. Tehnologia modernă a GPU-urilor este capabilă să efectueze milioane de operațiuni paralele simultan, iar acest proiect pune în evidență beneficiile folosirii acestei arhitecturi pentru simularea particulelor. Paralelizarea întregului proces de calcul computațional este crucială pentru a face față cerințelor aplicațiilor interactive de simulare. 
+
+% ============================================================================================================
+\section{Evoluția tehnicilor de procesare a particulelor}
+% ============================================================================================================
+Printre primele implementări și definiții oficiale ale unui sistem de particule în grafica pe calculator au fost introduse de William T. Reeves \cite{ParticleSystemDefinition_citation}, care lucrat la dezvoltarea unui sistem de particule complex cu un rendering secvețial pentru filmul \textit{Star Trek II: The Wrath of Khan} din anul 1982. Cu tehnologia de la acea vreme, rezultatele obținute au fost spectaculoase, având o scenă cu 750.000 de particule. De-a lungul anilor au fost dezvoltate diferite metode de a face fezabil un sistem de particule și pentru \textit{Real-Time Rendering}. O primă idee a fost implementarea simulării pe CPU, iar procesarea grafică pe GPU \cite{CPUParticleSystem_citation}. Odată cu evoluția plăcilor video au apărut diverse metode de a exploata arhitectura paralelă a acestora și a devenit posibilă o nouă abordare, și anume, mutarea ambelor procese, atât partea de simulare, cât și cea de rendering, direct pe GPU \cite{GPUParticleSystem_citation}. Una dintre tehnologiile moderne care au incorporat o strategie bazată pe rularea sistemului de particule direct pe GPU este \textit{Unreal Engine}, un \textit{Real-Time Rendering engine}, folosit în mare parte pentru dezvoltarea celor mai avansate jocuri, cu bugete de milioane de dolari, dar și pentru domenii precum industria auto, arhitectură, producție cinematografică, animație și simulări \cite{UnrealEngine_citation}. Această tehnică a fost introdusă sub numele de GPU Sprites \cite{UnrealEngineGPUSprites_citation}, și datorită performanțelor pe care le oferă, a fost implementată la nivelul mai multor module și subsisteme \cite{UnrealEngineGPUSpritesNiagara_citation}. Într-o comparație directă \cite{ParticleEffectsUE4_citation}, un singur \textit{GPU particle emitter} poate înlocui aproximativ 20 de \textit{CPU particle emitters}. Totodată, acestă tehincă păstrează calitatea vizuală a efectelor, fără să aibă vreun impact negativ asupra rezultatului final, și este mult mai eficientă din punct de vedere al resurselor consumate. 
+
+% ============================================================================================================
+\section{Domenii abordate}
+% ============================================================================================================
+Această lucrare va aborda concepte și tehnici din mai multe domenii relevante, printre care se numără:
+\begin{itemize}
+    \item Grafică pe calculator, cu accent pe metode de optimizare și rendering pentru prelucrarea eficientă a unui volum mare de date folosind Vulkan.
+    \item Sisteme de operare, analizând în special interacțiunea cu placa video, mecanismele de alocare a resurselor hardware, și gestionarea memoriei.
+    \item Programare concurentă și multi-threading, utilizate pentru a îmbunătăți performanța întregului sistem care necesită calcule foarte costisitoare.
+    \item Dezvoltarea de aplicații Desktop în C++, demonstrând aplicarea practică a conceptelor prezentate prin implementarea unui sistem funcțional multi-platformă, compatibil atât cu Windows cât și cu Linux.
+\end{itemize}
+
+% ============================================================================================================
+\section{Structura lucrării}
+% ============================================================================================================
+Lucrarea de față este impărțită în două capitole principale:
+\begin{itemize}
+    \item Infrastructura din spatele aplicației.
+    \item Aplicația Desktop.
+\end{itemize}
+
+    % ============================================================================================================
+    \subsection{Infrastructura din spatele aplicației}
+    % ============================================================================================================
+    Secțiunea prezintă în detaliu infrastructura tehnică care susține dezvoltarea și funcționarea aplicației, punând accent pe automatizări pentru gestionarea întregului cod sursă și a procesului de livrare pentru produsul final destinat utilizatorilor. 
+    
+    % ============================================================================================================
+    \subsection{Aplicația Desktop}
+    % ============================================================================================================
+    În această secțiune, este analizat tot procesul de dezvoltare a aplicației, abordând tehnologiile utilizate, arhitectura aleasă și soluțiile tehnice implementate pentru optimizarea performanței. 
+
+
+
+
+% ============================================================================================================
+% TODO: DE SCRIS
+% ============================================================================================================ 
+% - TODO: de scris definitia pentru un sistem de particule cum e definita in "A Technique for Modeling a Class of Fuzzy Objects"
+
+
