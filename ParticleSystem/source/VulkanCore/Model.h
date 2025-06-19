@@ -8,7 +8,6 @@
 #include <array>
 #include <string>
 
-// TODO: Forward Declaration
 #include "GPUDevice.h"
 
 namespace VulkanCore {
@@ -20,7 +19,7 @@ namespace VulkanCore {
 		{
 			// Attributes
 			glm::vec3 position;
-			glm::vec3 color;	// TODO: change to glm::vec4
+			glm::vec3 color;
 			glm::vec2 texCoord;
 
 			// Constructors
@@ -56,7 +55,6 @@ namespace VulkanCore {
 	private:
 		GPUDevice& device;
 
-		// TODO: refactor
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;

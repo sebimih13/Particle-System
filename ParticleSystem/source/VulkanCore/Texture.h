@@ -4,7 +4,6 @@
 
 #include <string>
 
-// TODO: Forward Declaration
 #include "GPUDevice.h"
 
 namespace VulkanCore {
@@ -28,7 +27,7 @@ namespace VulkanCore {
 		VkImage textureImage;
 		VkDeviceMemory textureImageMemory;
 		VkImageView textureImageView;
-		VkSampler textureSampler;	// TODO: cred ca e suficient sa avem un sampler pentru toate texturile
+		VkSampler textureSampler;
 
 		void CreateTextureImage(const std::string& filePath);
 		void CreateTextureImageView();

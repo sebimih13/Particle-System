@@ -80,9 +80,6 @@ namespace VulkanCore {
 
 	Model::Data::Data(const std::string& objFilePath)
 	{
-		// check objFilePath
-		// TODO
-
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
@@ -115,7 +112,7 @@ namespace VulkanCore {
 					);
 				}
 
-				// TODO: add normal
+				// add normal
 				//if (index.normal_index >= 0)
 				//{
 				//	vertex.normal = glm::vec3(
@@ -155,7 +152,6 @@ namespace VulkanCore {
 
 	Model::~Model()
 	{
-		// TODO: refactor
 		vkDestroyBuffer(device.GetVKDevice(), indexBuffer, nullptr);
 		vkFreeMemory(device.GetVKDevice(), indexBufferMemory, nullptr);
 

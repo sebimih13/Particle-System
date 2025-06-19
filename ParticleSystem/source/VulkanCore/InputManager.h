@@ -6,7 +6,6 @@
 
 #include <nlohmann/json.hpp>
 
-// TODO: Forward Declarations
 #include "Window.h"
 #include "Benchmark.h"
 

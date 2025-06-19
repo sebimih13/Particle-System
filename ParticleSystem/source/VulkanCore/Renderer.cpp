@@ -18,15 +18,11 @@ namespace VulkanCore {
 
 	Renderer::~Renderer()
 	{
-		// TODO: check
-		// vkFreeCommandBuffers
-		// commandBuffers.clear()
+
 	}
 
 	VkCommandBuffer Renderer::BeginCompute()
 	{
-		// swapChain->AcquireNextCompute();
-
 		vkResetCommandBuffer(computeCommandBuffers[swapChain->GetCurrentFrameIndex()], 0);
 
 		VkCommandBufferBeginInfo beginInfo = {};
@@ -87,7 +83,7 @@ namespace VulkanCore {
 
 		VkCommandBufferBeginInfo beginInfo = {};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;		// TODO: pentru ImGui
+		beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;		// for ImGui
 		beginInfo.pInheritanceInfo = nullptr;	// optional
 
 		if (vkBeginCommandBuffer(commandBuffers[swapChain->GetCurrentFrameIndex()], &beginInfo) != VK_SUCCESS)
@@ -222,7 +218,7 @@ namespace VulkanCore {
 
 		vkDeviceWaitIdle(device.GetVKDevice());
 
-		swapChain.reset(nullptr); // TODO: delete this line
+		swapChain.reset(nullptr);
 		swapChain = std::make_unique<SwapChain>(device, window);
 	}
 

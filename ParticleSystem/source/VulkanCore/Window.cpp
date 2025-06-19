@@ -13,8 +13,6 @@ namespace VulkanCore {
     Window::Window(const WindowConfiguration& config)
         : framebufferResized(false)
     {
-        // TODO: glfwSetErrorCallback(glfw_error_callback);
-
         if (!glfwInit())
         {
             throw std::runtime_error("Could not initalize GLFW!");
@@ -28,13 +26,6 @@ namespace VulkanCore {
         // Set GLFW callbacks
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
-        // TODO: glfwSetWindowSizeCallback
-        // TODO: glfwSetWindowCloseCallback
-        // TODO: glfwSetKeyCallback
-        // TODO: glfwSetCharCallback
-        // TODO: glfwSetMouseButtonCallback
-        // TODO: glfwSetScrollCallback
-        // TODO: glfwSetCursorPosCallback
     }
 
     Window::~Window()
@@ -70,7 +61,6 @@ namespace VulkanCore {
         glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
     }
 
-    // TODO: de revazut
     int Window::GetWidth() const
     {
         int width;
@@ -79,7 +69,6 @@ namespace VulkanCore {
         return width;
     }
 
-    // TODO: de revazut
     int Window::GetHeight() const
     {
         int height;

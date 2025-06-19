@@ -4,7 +4,6 @@
 
 #include <memory>
 
-// TODO: forward declarations?
 #include "Window.h"
 #include "GPUDevice.h"
 #include "SwapChain.h"
@@ -41,8 +40,6 @@ namespace VulkanCore {
 		void EndSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
 		// Getters
-		// inline const SwapChain* const GetSwapChain() const { return swapChain.get(); }		// TODO: nu cred ca e suficient de safe
-		// TODO: inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 		inline const std::unique_ptr<SwapChain>& GetSwapChain() const { return swapChain; }
 
 		inline uint32_t GetCurrentImageIndex() const { return currentImageIndex; }

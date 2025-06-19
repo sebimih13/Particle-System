@@ -80,7 +80,6 @@ namespace VulkanCore {
 			const double mouseButtonLeftPressedMaxTime = benchmarkJSON.value()["mouseButtonLeftPressed"][benchmarkJSON.value()["mouseButtonLeftPressed"].size() - 1]["time"];
 			if (timer >= mousePositionMaxTime && timer >= mouseButtonLeftPressedMaxTime)
 			{
-				// TODO: save + print results
 				benchmarkJSON = std::nullopt;
 				window.UnblockWindow();
 			}

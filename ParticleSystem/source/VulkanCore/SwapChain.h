@@ -2,7 +2,6 @@
 
 #include <vector>
 
-// TODO: asta sau alt Window / GPUDevice
 #include "Window.h"
 #include "GPUDevice.h"
 
@@ -49,7 +48,7 @@ namespace VulkanCore {
         inline VkImageView GetSwapChainImageView(const size_t& index) const { return swapChainImageViews[index]; }
 
 	private:
-        GPUDevice& device; // TODO: const?
+        GPUDevice& device;
         const Window& window;
 
         VkRenderPass renderPass;
@@ -105,7 +104,7 @@ namespace VulkanCore {
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
         VkFormat FindDepthFormat() const;
-        bool HasStencilComponent(VkFormat format) const; // TODO: use
+        bool HasStencilComponent(VkFormat format) const;
 	};
 
 } // namespace VulkanCore

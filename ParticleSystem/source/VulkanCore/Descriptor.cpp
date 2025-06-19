@@ -22,8 +22,6 @@ namespace VulkanCore {
 
 	DescriptorSetLayout::Builder& DescriptorSetLayout::Builder::AddBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count)
 	{
-		// TODO: assert() - bindings[binding]
-
 		VkDescriptorSetLayoutBinding layoutBinding = {};
 		layoutBinding.binding = binding;
 		layoutBinding.descriptorType = descriptorType;
@@ -66,7 +64,7 @@ namespace VulkanCore {
 	DescriptorPool::Builder::Builder(GPUDevice& device)
 		: device(device)
 		, maxSets(0)
-		, descriptorPoolCreateFlags(0) // TODO: inlocuieste cu VK_NULL
+		, descriptorPoolCreateFlags(0) // = VK_NULL_HANDLE
 	{
 
 	}

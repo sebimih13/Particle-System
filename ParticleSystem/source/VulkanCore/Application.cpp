@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// TODO: test
 #include <vector>
 #include <chrono>
 #include <cstring>
@@ -11,9 +10,8 @@
 #include <random>
 #include <ctime>
 #include <iostream>
-#include <fstream> // TODO: delete
+#include <fstream>
 
-// TODO: test
 #include "Model.h"
 #include "Particle.h"
 #include "FrameTimeHistory.h"
@@ -37,7 +35,6 @@ namespace VulkanCore {
 		, particleCount(131072 * 64) // 8_388_608
 		, lastUpdate(0.0)
 		, captureInputTimer(0.0f)
-		// , statueTexture(device, "resources/textures/statue.jpg")	// TODO: DELETE
 	{
 		lastUpdate = glfwGetTime();
 
@@ -287,14 +284,6 @@ namespace VulkanCore {
 
 	void Application::CreateDescriptorPool()
 	{
-		// TODO [PARTICLE-SYSTEM] : test
-		//globalPool = DescriptorPool::Builder(device)
-		//	.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2)												// + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend
-		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)				// uniform buffer
-		//	.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT * 2)	// sampler + a set of MAX_FRAMES_IN_FLIGHT for ImGui backend fonts
-		//	.AddFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)									// required for ImGui backend
-		//	.Build();
-			
 		particleSystemDescriptorPool = DescriptorPool::Builder(device)
 			.SetMaxSets(20 * SwapChain::MAX_FRAMES_IN_FLIGHT)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 * SwapChain::MAX_FRAMES_IN_FLIGHT)			// uniform buffer
@@ -304,12 +293,6 @@ namespace VulkanCore {
 
 	void Application::CreateDescriptorSetLayout()
 	{
-		// TODO [PARTICLE-SYSTEM] : test
-		//globalSetLayout = DescriptorSetLayout::Builder(device)
-		//	.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1)			// ubo layout binding
-		//	.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)	// sampler layout binding
-		//	.Build();
-
 		particleSystemComputeDescriptorSetLayout = DescriptorSetLayout::Builder(device)
 			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT, 1)
 			.Build();
@@ -355,7 +338,6 @@ namespace VulkanCore {
 
 	void Application::CreatePipeline()
 	{
-		// TODO: test
 #if defined(PLATFORM_WINDOWS) || (defined(PLATFORM_LINUX) && defined(NDEBUG))
 		static const std::string triangleVertShaderFilePath = "shaders/triangle.vert.spv";
 		static const std::string triangleFragShaderFilePath = "shaders/triangle.frag.spv";

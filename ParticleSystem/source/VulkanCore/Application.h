@@ -1,10 +1,7 @@
 #pragma once
 
-// TODO: delete - test
-#include <vector>
 #include <memory>
 
-// TODO: Forward Declarations
 #include "Window.h"
 #include "InputManager.h"
 #include "GPUDevice.h"

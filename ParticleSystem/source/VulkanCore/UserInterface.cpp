@@ -20,7 +20,7 @@ namespace VulkanCore {
 
 	ImChunkStream<UserInterface::ImGuiWindowUserData> UserInterface::UserDataWindows;
 
-	const uint32_t UserInterface::MAX_PARTICLE_MULTIPLIER = 131072; // TODO: change max value
+	const uint32_t UserInterface::MAX_PARTICLE_MULTIPLIER = 131072;
 
 	std::unordered_map<std::string, bool> UserInterface::UserDataWindow = {
 		{ "Settings", false },
@@ -391,7 +391,7 @@ namespace VulkanCore {
 
 		// FPS Graph
 		static std::vector<float> fpsHistory;
-		const uint32_t maxFpsHistory = 240; // TODO
+		const uint32_t maxFpsHistory = 240;
 
 		fpsHistory.push_back(FPSCounter::GetInstance().GetFPS());
 		if (fpsHistory.size() > maxFpsHistory)

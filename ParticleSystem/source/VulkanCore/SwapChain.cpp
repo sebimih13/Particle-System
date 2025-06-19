@@ -15,8 +15,8 @@ namespace VulkanCore {
         CreateSwapChain();
         CreateRenderPass();
         CreateImageViews();
-        // CreateDepthResources(); // TODO [PARTICLE-SYSTEM] : test
-        CreateIntermediaryImageViews(); // TODO: DOODLE
+        // CreateDepthResources(); // [PARTICLE-SYSTEM]
+        CreateIntermediaryImageViews();
         CreateFramebuffers();
         CreateSyncObjects();
 
@@ -28,15 +28,6 @@ namespace VulkanCore {
 	SwapChain::~SwapChain()
 	{
         // cleanup synchronization objects
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            //vkDestroySemaphore(device.GetVKDevice(), imageAvailableSemaphores[i], nullptr);
-            //vkDestroySemaphore(device.GetVKDevice(), renderFinishedSemaphores[i], nullptr);
-
-            //vkDestroyFence(device.GetVKDevice(), inFlightFences[i], nullptr);
-        }
-
-        // TODO: DOODLE
         vkDestroySemaphore(device.GetVKDevice(), imageSemaphore, nullptr);
 
         // cleanup framebuffers
@@ -49,12 +40,6 @@ namespace VulkanCore {
         {
             vkDestroyFramebuffer(device.GetVKDevice(), framebuffer, nullptr);
         }
-
-        // TODO [PARTICLE-SYSTEM] : test
-        // cleanup depth resources
-        //vkDestroyImageView(device.GetVKDevice(), depthImageView, nullptr);
-        //vkDestroyImage(device.GetVKDevice(), depthImage, nullptr);
-        //vkFreeMemory(device.GetVKDevice(), depthImageMemory, nullptr);
 
         // cleanup render pass
         vkDestroyRenderPass(device.GetVKDevice(), imGuiRenderPass, nullptr);
@@ -83,11 +68,6 @@ namespace VulkanCore {
         // vkWaitForFences(device.GetVKDevice(), 1, &inFlightFences[currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
         return vkAcquireNextImageKHR(device.GetVKDevice(), swapChain, std::numeric_limits<uint64_t>::max(), imageSemaphore, VK_NULL_HANDLE, imageIndex);
     }
-
-    //void SwapChain::AcquireNextCompute()
-    //{
-    //    vkWaitForFences(device.GetVKDevice(), 1, &computeFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-    //}
 
     void SwapChain::SubmitComputeCommandBuffer(const VkCommandBuffer* buffer)
     {
@@ -210,7 +190,7 @@ namespace VulkanCore {
         }
         else
         {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;    // TODO: This option offers the best performance
+            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;    // This option offers the best performance
             createInfo.queueFamilyIndexCount = 0;       // optional
             createInfo.pQueueFamilyIndices = nullptr;   // optional
         }
@@ -218,7 +198,7 @@ namespace VulkanCore {
         createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_FALSE; // TODO: DOODLE
+        createInfo.clipped = VK_FALSE;
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
         if (vkCreateSwapchainKHR(device.GetVKDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS)
@@ -275,14 +255,12 @@ namespace VulkanCore {
         intermediaryImages.resize(swapChainImages.size());
         for (size_t i = 0; i < swapChainImages.size(); ++i)
         {
-            // TODO: DOODLE
-            // STORE images
             device.CreateImage(
                 swapChainImageFormat,
                 swapChainExtent.width,
                 swapChainExtent.height,
                 VK_IMAGE_TILING_OPTIMAL,
-                VK_SAMPLE_COUNT_8_BIT, // TODO: renderPass.subpass[0] -> first attachment = intermediaryAttachment
+                VK_SAMPLE_COUNT_8_BIT,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                 intermediaryImages[i],
@@ -299,10 +277,9 @@ namespace VulkanCore {
 
     void SwapChain::CreateRenderPass()
     {
-        // TODO: DOODLE
         VkAttachmentDescription intermediaryAttachment = {};
         intermediaryAttachment.format = swapChainImageFormat;
-        intermediaryAttachment.samples = VK_SAMPLE_COUNT_8_BIT;     // TODO: DOODLE => pickSampleCount()
+        intermediaryAttachment.samples = VK_SAMPLE_COUNT_8_BIT;
         intermediaryAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         intermediaryAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         intermediaryAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -310,7 +287,6 @@ namespace VulkanCore {
         intermediaryAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         intermediaryAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        // TODO: DOODLE
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = swapChainImageFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -337,7 +313,6 @@ namespace VulkanCore {
         subpass.pColorAttachments = &colorAttachmentRef;
         subpass.pResolveAttachments = &resolveAttachmentRef;
 
-        // TODO: DOODLE
         std::array<VkAttachmentDescription, 2> attachments = { intermediaryAttachment, colorAttachment };
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -358,13 +333,6 @@ namespace VulkanCore {
 
         for (size_t i = 0; i < swapChainImageViews.size(); ++i)
         {
-            // TODO [PARTICLE-SYSTEM] : test
-            //std::array<VkImageView, 2> attachments = {
-            //    swapChainImageViews[i],
-            //    depthImageView
-            //};
-
-            // TODO: DOODLE
             std::array<VkImageView, 2> attachments = {
                 intermediaryImageViews[i],
                 swapChainImageViews[i]
@@ -439,7 +407,7 @@ namespace VulkanCore {
     void SwapChain::CreateImGuiRenderPass()
     {
         VkAttachmentDescription colorAttachment = {};
-        colorAttachment.format = VK_FORMAT_B8G8R8A8_SRGB; // TODO: change to VK_COLORSPACE_SRGB_NONLINEAR_KHR
+        colorAttachment.format = VK_FORMAT_B8G8R8A8_SRGB;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -510,18 +478,14 @@ namespace VulkanCore {
 
     VkSurfaceFormatKHR SwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
-        // TODO: [DEBUG] list all available formats
-
         for (const VkSurfaceFormatKHR& availableFormat : availableFormats)
         {
-            // TODO: VK_FORMAT_B8G8R8A8_SRGB <-> VK_FORMAT_B8G8R8A8_UNORM
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
                 return availableFormat;
             }
         }
 
-        // TODO [OPTIONAL]: rank the available formats
         return availableFormats[0];
     }
 
@@ -531,6 +495,7 @@ namespace VulkanCore {
 
         for (const VkPresentModeKHR& availablePresentMode : availablePresentModes)
         {
+            // TODO: pe laptop e nevoie de VK_PRESENT_MODE_IMMEDIATE_KHR
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
             {
                 return availablePresentMode;

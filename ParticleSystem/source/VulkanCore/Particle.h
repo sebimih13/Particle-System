@@ -6,7 +6,6 @@
 
 #include <array>
 
-// TODO: move into ENGINE/APPLICATION namespace
 namespace VulkanCore {
 
 	struct Particle

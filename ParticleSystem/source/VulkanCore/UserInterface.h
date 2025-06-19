@@ -4,7 +4,6 @@
 #include <vector>
 #include <unordered_map>
 
-// TODO: Forward Declarations
 #include "Window.h"
 #include "GPUDevice.h"
 #include "Renderer.h"
@@ -63,7 +62,6 @@ namespace VulkanCore {
 		inline const glm::vec4& GetDynamicColor() const { return dynamicColor; }
 
 	private:
-		// TODO: DELETE? pentru a testa cat de mult duce GPU-ul
 		static const uint32_t MAX_PARTICLE_MULTIPLIER;
 		static std::unordered_map<std::string, bool> UserDataWindow;
 

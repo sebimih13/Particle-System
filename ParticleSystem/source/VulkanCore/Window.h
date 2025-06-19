@@ -39,7 +39,6 @@ namespace VulkanCore {
 
         void Update();
 
-        // TODO: se poate mai frumos
         inline bool ShouldClose() const { return glfwWindowShouldClose(window); }
 
         void CreateWindowSurface(VkInstance instance, VkSurfaceKHR* surface);

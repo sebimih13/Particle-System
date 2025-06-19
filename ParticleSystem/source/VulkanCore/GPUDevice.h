@@ -4,7 +4,6 @@
 #include <array>
 #include <optional>
 
-// TODO: sau Forward Declarations
 #include "Window.h"
 
 namespace VulkanCore {
@@ -60,8 +59,8 @@ namespace VulkanCore {
         inline VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
         inline VkSurfaceKHR GetSurface() const { return surface; }
         inline VkDevice GetVKDevice() const { return device; }
-        inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }    // TODO: return const &
-        inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }        // TODO: return const &
+        inline SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(physicalDevice); }
+        inline QueueFamilyIndices GetPhysicalQueueFamilies() const { return FindQueueFamilies(physicalDevice); }
         inline VkCommandPool GetCommandPool() const { return commandPool; }
         inline VkQueue GetGraphicsQueue() const { return graphicsQueue; }
         inline VkQueue GetComputeQueue() const { return computeQueue; }

@@ -79,8 +79,6 @@ namespace VulkanCore {
 
 	void Texture::CreateTextureImageView()
 	{
-		// TODO: use SwapChain::CreateImageView() function
-
 		VkImageViewCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = textureImage;

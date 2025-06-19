@@ -5,7 +5,6 @@
 #include <set>
 #include <ranges>
 
-// TODO: delete
 #include "SwapChain.h"
 #include "Pipeline.h"
 
@@ -29,22 +28,20 @@ namespace VulkanCore {
     const std::vector<const char*> GPUDevice::deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME,
-        // VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME, // TODO: not supported by INTEGRATED_GRAPHICS
+        // VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME, // not supported by INTEGRATED_GRAPHICS
         VK_KHR_SHADER_ATOMIC_INT64_EXTENSION_NAME,
         VK_KHR_8BIT_STORAGE_EXTENSION_NAME,
         VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME
     };
 
-    // TODO: de declarat static in .h
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
-        // TODO: DOODLE -> REZOLVA
+        // TODO: DOODLE -> REZOLVA EROAREA
         std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
 
         return VK_FALSE;
     }
 
-    // TODO: de declarat static in .h
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
     {
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -58,7 +55,6 @@ namespace VulkanCore {
         }
     }
 
-    // TODO: de declarat in static .h
     void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
     {
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -82,7 +78,6 @@ namespace VulkanCore {
 
     GPUDevice::~GPUDevice()
     {
-        // TODO: DOODLE
         vkDestroyFence(device, computeFence, nullptr);
         vkDestroyFence(device, imageFence, nullptr);
 
@@ -234,7 +229,6 @@ namespace VulkanCore {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        // TODO: DOODLE
         if (queue == VK_NULL_HANDLE)
         {
             throw std::runtime_error("Failed to submit to queue");
@@ -385,7 +379,6 @@ namespace VulkanCore {
 
     void GPUDevice::CreateSurface(Window& window)
     {
-        // TODO: pune functia asta aici, nu e nevoie de o metoda in clasa window
         window.CreateWindowSurface(instance, &surface);
     }
 
@@ -506,11 +499,6 @@ namespace VulkanCore {
         physicalDeviceFeatures2.pNext = &physicalDeviceBufferDeviceAddressFeaturesEXT;
         physicalDeviceFeatures2.features.robustBufferAccess = VK_TRUE;
         physicalDeviceFeatures2.features.largePoints = VK_TRUE;
-
-        //VkPhysicalDeviceFeatures deviceFeatures = {};
-        //deviceFeatures.robustBufferAccess = VK_TRUE;
-        //deviceFeatures.largePoints = VK_TRUE;
-        // deviceFeatures.samplerAnisotropy = VK_TRUE; // TODO: adauga pentru texturi
 
         // Create Device
         VkDeviceCreateInfo createInfo = {};
@@ -643,7 +631,6 @@ namespace VulkanCore {
     {
         QueueFamilyIndices indices = FindQueueFamilies(device);
 
-        // TODO: nu stiu daca o sa le folosesc
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
@@ -659,7 +646,6 @@ namespace VulkanCore {
             bSwapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
-        // TODO: include mai multe criterii
         return indices.IsComplete() 
             && bExtensionsSupported && bSwapChainAdequate 
             && deviceFeatures.samplerAnisotropy
@@ -691,8 +677,6 @@ namespace VulkanCore {
                 indices.presentFamily = i;
             }
 
-            // TODO: add logic to explicitly prefer a physical device that supports drawing and presentation in the same queue for improved performance
-
             if (indices.IsComplete())
             {
                 break;
@@ -704,7 +688,7 @@ namespace VulkanCore {
         return indices;
     }
 
-    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const // TODO: [TRY] return const SwapChainSupportDetails?
+    SwapChainSupportDetails GPUDevice::QuerySwapChainSupport(VkPhysicalDevice device) const
     {
         SwapChainSupportDetails details;
 

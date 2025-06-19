@@ -5,7 +5,6 @@
 #include <memory>
 #include <unordered_map>
 
-// TODO: Forward Declaration
 #include "GPUDevice.h"
 
 namespace VulkanCore {
@@ -29,7 +28,6 @@ namespace VulkanCore {
 			VkDescriptorPoolCreateFlags descriptorPoolCreateFlags;
 		};
 
-		// TODO: de pus in private si de facut clasa Builder friend
 		// Constructors
 		DescriptorSetLayout(GPUDevice& device, const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings);
 

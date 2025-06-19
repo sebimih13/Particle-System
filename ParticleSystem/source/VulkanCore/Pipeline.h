@@ -5,16 +5,13 @@
 #include <memory>
 #include <optional>
 
-// TODO: sau Forward Declarations
+#include <glm/glm.hpp>
+
 #include "GPUDevice.h"
 #include "SwapChain.h"
 
-// TODO: move - doar pentru PushConstants
-#include <glm/glm.hpp>
-
 namespace VulkanCore {
 
-	// TODO: move
 	struct PushConstants
 	{
 		uint32_t enabled;
