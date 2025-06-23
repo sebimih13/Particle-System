@@ -491,12 +491,20 @@ namespace VulkanCore {
 
     VkPresentModeKHR SwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
     {
-        // TODO: [DEBUG] list all available present modes
+        // [DEBUG] list all available present modes
 
         for (const VkPresentModeKHR& availablePresentMode : availablePresentModes)
         {
-            // TODO: pe laptop e nevoie de VK_PRESENT_MODE_IMMEDIATE_KHR
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            {
+                return availablePresentMode;
+            }
+        }
+
+        for (const VkPresentModeKHR& availablePresentMode : availablePresentModes)
+        {
+            // Integrated GPU -> VK_PRESENT_MODE_IMMEDIATE_KHR
+            if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
             {
                 return availablePresentMode;
             }

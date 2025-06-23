@@ -73,7 +73,7 @@ namespace VulkanCore {
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkSurfaceKHR surface;
-        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // TODO: de pus in Constructor
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkDevice device;
 
         VkQueue graphicsQueue;

@@ -17,12 +17,10 @@ namespace VulkanCore {
     {
         const WindowConfiguration windowConfig;
 
-        // TODO: add
-
+        // Constructor
         ApplicationConfiguration(const WindowConfiguration& windowConfig);
     };
 
-    // TODO: move FrameInfo.h
     struct UniformBufferObject
     {
         glm::mat4 projection;
@@ -30,7 +28,6 @@ namespace VulkanCore {
         glm::vec4 dynamicColor;
     };
 
-    // TODO: de facut clasa virtuala
     class Application
     {
     public:
@@ -48,7 +45,6 @@ namespace VulkanCore {
         Application(Application&&) = delete;
         Application& operator = (Application&&) = delete;
 
-        // TODO: move
         void Run();
         void Reset();
 
@@ -59,7 +55,7 @@ namespace VulkanCore {
         Renderer renderer;
         UserInterface ui;
 
-        bool bIsRunning; // TODO: de facut o functie Close()
+        bool bIsRunning;
         uint32_t particleCount;
 
         double lastUpdate;
@@ -86,9 +82,6 @@ namespace VulkanCore {
 
         VkBuffer shaderStorageBuffer;
         VkDeviceMemory shaderStorageBufferMemory;
-
-        // TODO: delete
-        // Texture statueTexture;
 
         void Update();
         void Tick(const float deltaTime);

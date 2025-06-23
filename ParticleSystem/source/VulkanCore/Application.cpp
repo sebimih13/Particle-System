@@ -190,10 +190,8 @@ namespace VulkanCore {
 
 	void Application::Draw()
 	{
-		// TODO: eroare pentru primul frame pentru ca are semaforul on
-
 		// Graphics submission
-		if (VkCommandBuffer commandBuffer = renderer.BeginFrame()) // TODO: DOODLE: aici trebuie sa schimb logica putin
+		if (VkCommandBuffer commandBuffer = renderer.BeginFrame())
 		{
 			// Pipeline Barrier
 			{
@@ -279,7 +277,7 @@ namespace VulkanCore {
 			// Draw UI
 			ui.Draw(commandBuffer);
 		}
-		renderer.EndFrame(); // TODO: DOODLE SCHIMBA LOGICA
+		renderer.EndFrame();
 	}
 
 	void Application::CreateDescriptorPool()
